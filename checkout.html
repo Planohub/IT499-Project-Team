@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFoodLink+ — Checkout</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-icon">🍽️</span>
+                <span class="brand-name">CampusFoodLink+</span>
+            </div>
+            <div class="nav-links">
+                <a href="vendors.html">Vendors</a>
+                <a href="checkout.html" class="active">🛒 Cart (<span id="cart-count">0</span>)</a>
+                <a href="tracking.html">📦 Orders</a>
+                <a href="index.html" class="logout-link">Logout</a>
+            </div>
+            <div class="nav-user">
+                <span class="user-badge">🎓 John Smith</span>
+                <span class="balance-badge">💰 $250.00</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <main class="content full-width">
+            <h2>Checkout</h2>
+
+            <div class="checkout-container">
+                <!-- Order Summary -->
+                <div class="checkout-section">
+                    <h3>Order Summary</h3>
+                    <div id="checkout-items"></div>
+                    <div class="order-total">
+                        <span>Order Total:</span>
+                        <span id="checkout-total">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Balance Check -->
+                <div class="checkout-section">
+                    <h3>Payment</h3>
+                    <div class="balance-check">
+                        <p><strong>Meal Plan Balance:</strong> <span id="checkout-balance">$250.00</span></p>
+                        <p id="balance-status" class="balance-ok">✅ Sufficient balance</p>
+                    </div>
+                </div>
+
+                <!-- Order Notes -->
+                <div class="checkout-section">
+                    <h3>Special Instructions</h3>
+                    <textarea id="order-notes" placeholder="Any special requests? (e.g., no pickles, extra sauce)"></textarea>
+                </div>
+
+                <!-- Place Order -->
+                <button id="place-order-btn" class="btn-place-order">Place Order</button>
+                <a href="vendors.html" class="btn-back-cart">← Continue Shopping</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
