@@ -167,12 +167,12 @@ Alternate views for phones,laptops and tablets
 
 @media (max-width: 480px) 
 {
-    .login-card 
+    .loginCredentials 
     {
         padding: 25px 20px 20px;
     }
 
-    .login-header h1 
+    .loginHeader h1 
     {
         font-size: 1.8rem;
     }
@@ -218,7 +218,7 @@ End of CSS throughout website
 //Login/Index page 
 //////////////// */
 
-.login-container 
+.loginBox 
 {
     display: flex;
     flex-direction: column;
@@ -228,13 +228,13 @@ End of CSS throughout website
     padding: 20px;
 }
 
-.login-header 
+.loginHeader 
 {
     text-align: center;
     margin-bottom: 30px;
 }
 
-.login-header h1 
+.loginHeader h1 
 {
     font-size: 2.5rem;
     color: #000000;
@@ -242,7 +242,7 @@ End of CSS throughout website
     letter-spacing: 1px;
 }
 
-.login-header .login-subtitle 
+.loginHeader .login-subtitle 
 {
     color: #555555;
     font-size: 1rem;
@@ -250,7 +250,7 @@ End of CSS throughout website
     font-weight: 300;
 }
 
-.login-card 
+.loginCredentials 
 {
     border: 2px solid #cccccc;
     border-radius: 8px;
@@ -260,7 +260,7 @@ End of CSS throughout website
     background: #ffffff;
 }
 
-.login-card h2 
+.loginCredentials h2 
 {
     font-size: 1.3rem;
     color: #000000;
@@ -275,12 +275,12 @@ End of CSS throughout website
 // Login form
 /////////////////// */
 
-.form-group 
+.credentialForm 
 {
     margin-bottom: 16px;
 }
 
-.form-group label 
+.credentialForm label 
 {
     display: block;
     font-weight: 600;
@@ -289,7 +289,7 @@ End of CSS throughout website
     margin-bottom: 4px;
 }
 
-.form-group input 
+.credentialForm input 
 {
     width: 100%;
     padding: 8px 12px;
@@ -300,7 +300,7 @@ End of CSS throughout website
     color: #000000;
 }
 
-.form-group input:focus 
+.credentialForm input:focus 
 {
     outline: none;
     border-color: #666666;
