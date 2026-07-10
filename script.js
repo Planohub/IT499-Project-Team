@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function()
         button.addEventListener('click', function() 
         {
             const itemName = this.closest('.menu-item-info').querySelector('h4').textContent;
-            const itemPrice = this.closest('.menu-item-bottom').querySelector('.menu-item-price').textContent;
+            const itemPrice = this.closest('.menu-item-bottom').querySelector('.menu-itemPrice').textContent;
             
             // Change button to show added
             this.textContent = '✓ Added';
