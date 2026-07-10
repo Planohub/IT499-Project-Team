@@ -4,122 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CampusFoodLink+ — Login</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #ffffff;
-            color: #000000;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .login-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            width: 100%;
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .login-header h1 {
-            font-size: 2.5rem;
-            color: #000000;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        .login-header .subtitle {
-            color: #555555;
-            font-size: 1rem;
-            margin-top: 5px;
-            font-weight: 300;
-        }
-
-        .login-card {
-            border: 2px solid #cccccc;
-            border-radius: 8px;
-            padding: 35px 35px 30px;
-            max-width: 350px;
-            width: 100%;
-            background: #ffffff;
-        }
-
-        .login-card h2 {
-            font-size: 1.3rem;
-            color: #000000;
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            color: #000000;
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 2px solid #cccccc;
-            border-radius: 4px;
-            font-size: 1rem;
-            background: #ffffff;
-            color: #000000;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #666666;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 10px;
-            background: #000000;
-            color: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 4px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-
-        .login-btn:hover {
-            background: #ffffff;
-            color: #000000;
-        }
-
-        @media (max-width: 480px) {
-            .login-card {
-                padding: 25px 20px 20px;
-            }
-            .login-header h1 {
-                font-size: 1.8rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="login-container">
@@ -131,7 +16,7 @@
         <div class="login-card">
             <h2>Login</h2>
 
-            <form id="login-form" action="vendors.html">
+            <form action="vendors.html">
                 <div class="form-group">
                     <label for="username">Username</label>
                     <input type="text" id="username">
@@ -142,7 +27,7 @@
                     <input type="password" id="password">
                 </div>
 
-                <button type="submit" class="login-btn">Sign In</button>
+                <button type="submit" class="btn-primary">Sign In</button>
             </form>
         </div>
     </div>
