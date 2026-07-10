@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFoodLink+ — Order Confirmation</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">CampusFoodLink+</div>
+            <div class="nav-links">
+                <a href="vendors.html">Vendors</a>
+                <a href="#">Cart (0)</a>
+                <a href="confirmation.html" class="active">Orders</a>
+                <a href="index.html">Logout</a>
+            </div>
+            <div class="nav-user">
+                <span class="user-badge">Student</span>
+                <span class="balance-badge">$231.53</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="confirmation-box">
+            <div class="confirmation-icon">✅</div>
+            <h2>Order Placed!</h2>
+            <p class="confirmation-message">Your order has been received and is being prepared.</p>
+
+            <div class="order-details-box">
+                <div class="order-detail-row">
+                    <span class="detail-label">Order #</span>
+                    <span class="detail-value">#1001</span>
+                </div>
+                <div class="order-detail-row">
+                    <span class="detail-label">Vendor</span>
+                    <span class="detail-value">Campus Grill</span>
+                </div>
+                <div class="order-detail-row">
+                    <span class="detail-label">Total</span>
+                    <span class="detail-value">$18.47</span>
+                </div>
+                <div class="order-detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value status-confirmed">Confirmed</span>
+                </div>
+            </div>
+
+            <p class="order-note">You will receive an update when your order is ready.</p>
+
+            <div class="confirmation-actions">
+                <a href="vendors.html" class="btn-secondary">← Continue Shopping</a>
+                <a href="vendors.html" class="btn-primary">Order Another</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
