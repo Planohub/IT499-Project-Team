@@ -1,21 +1,221 @@
-/* ========================================
-   GLOBAL RESET & BASE
-   ======================================== */
+/* ////////////////////////////////////////
+   All website page characteristics
+   //////////////////////////////////////// */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
+body 
+{
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #ffffff;
     color: #000000;
     min-height: 100vh;
 }
 
+
+
+/* /////////////////////////////////////////
+   Navigation at the top
+   /////////////////////////////////////////*/
+
+.navbar 
+{
+    border-bottom: 2px solid #cccccc;
+    padding: 15px 30px;
+    background: #ffffff;
+}
+
+.nav-container 
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.nav-brand 
+{
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #000000;
+}
+
+.nav-links 
+{
+    display: flex;
+    gap: 25px;
+}
+
+.nav-links a 
+{
+    color: #000000;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 5px 0;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-links a:hover,
+
+.nav-links a.active 
+{
+    border-bottom-color: #000000;
+}
+
+.nav-user 
+{
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 0.9rem;
+}
+
+.user-badge 
+{
+    border: 1px solid #cccccc;
+    padding: 4px 14px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.balance-badge 
+{
+    border: 1px solid #cccccc;
+    padding: 4px 14px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+
+
+/* //////////////////////////////////////
+   Buttons
+   //////////////////////////////////////*/
+
+   .btn-primary 
+{
+    width: 100%;
+    padding: 10px;
+    background: #000000;
+    color: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.btn-primary:hover 
+{
+    background: #ffffff;
+    color: #000000;
+}
+
+.btn-secondary 
+{
+    display: inline-block;
+    padding: 8px 24px;
+    border: 2px solid #000000;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #000000;
+    background: #ffffff;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-secondary:hover 
+{
+    background: #000000;
+    color: #ffffff;
+}
+
+
+
+/*//////////////////////////////////
+Alternate views for phones,laptops and tablets
+////////////////////////////////////*/
+
+@media (max-width: 768px) 
+{
+    .nav-container {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .nav-links 
+    {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .vendor-grid 
+    {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 480px) 
+{
+    .login-card 
+    {
+        padding: 25px 20px 20px;
+    }
+
+    .login-header h1 
+    {
+        font-size: 1.8rem;
+    }
+
+    .page-header h2 
+    {
+        font-size: 1.4rem;
+    }
+
+    .nav-user 
+    {
+        font-size: 0.8rem;
+    }
+
+    .user-badge,
+    .balance-badge 
+    {
+        padding: 2px 10px;
+    }
+
+    .vendor-grid 
+    {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .vendor-card 
+    {
+        min-height: 140px;
+        padding: 20px 15px;
+    }
+}
+
+
+
+/*//////////////////////////////
+End of CSS throughout website
+//////////////////////////////*/
+
+
+
+
 /* ////////////////
-//Login page 
+//Login/Index page 
 //////////////// */
 
 .login-container 
@@ -69,15 +269,19 @@ body {
     margin-bottom: 20px;
 }
 
+
+
 /* ///////////////////
 // Login form
 /////////////////// */
 
-.form-group {
+.form-group 
+{
     margin-bottom: 16px;
 }
 
-.form-group label {
+.form-group label 
+{
     display: block;
     font-weight: 600;
     color: #000000;
@@ -85,7 +289,8 @@ body {
     margin-bottom: 4px;
 }
 
-.form-group input {
+.form-group input 
+{
     width: 100%;
     padding: 8px 12px;
     border: 2px solid #cccccc;
@@ -95,142 +300,51 @@ body {
     color: #000000;
 }
 
-.form-group input:focus {
+.form-group input:focus 
+{
     outline: none;
     border-color: #666666;
 }
 
-/* ========================================
-   BUTTONS
-   ======================================== */
-.btn-primary {
-    width: 100%;
-    padding: 10px;
-    background: #000000;
-    color: #ffffff;
-    border: 2px solid #000000;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 5px;
-}
 
-.btn-primary:hover {
-    background: #ffffff;
-    color: #000000;
-}
 
-.btn-secondary {
-    display: inline-block;
-    padding: 8px 24px;
-    border: 2px solid #000000;
-    border-radius: 4px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #000000;
-    background: #ffffff;
-    cursor: pointer;
-    text-decoration: none;
-}
+/* /////////////////////////////////////////
+   List of vendors page
+   /////////////////////////////////////////*/
 
-.btn-secondary:hover {
-    background: #000000;
-    color: #ffffff;
-}
-
-/* ========================================
-   NAVIGATION BAR
-   ======================================== */
-.navbar {
-    border-bottom: 2px solid #cccccc;
-    padding: 15px 30px;
-    background: #ffffff;
-}
-
-.nav-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.nav-brand {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #000000;
-}
-
-.nav-links {
-    display: flex;
-    gap: 25px;
-}
-
-.nav-links a {
-    color: #000000;
-    font-weight: 500;
-    text-decoration: none;
-    padding: 5px 0;
-    border-bottom: 2px solid transparent;
-}
-
-.nav-links a:hover,
-.nav-links a.active {
-    border-bottom-color: #000000;
-}
-
-.nav-user {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    font-size: 0.9rem;
-}
-
-.user-badge {
-    border: 1px solid #cccccc;
-    padding: 4px 14px;
-    border-radius: 4px;
-    font-weight: 500;
-}
-
-.balance-badge {
-    border: 1px solid #cccccc;
-    padding: 4px 14px;
-    border-radius: 4px;
-    font-weight: 600;
-}
-
-/* ========================================
-   VENDOR SELECTION PAGE
-   ======================================== */
-.main-container {
+.main-container 
+{
     max-width: 1200px;
     margin: 30px auto;
     padding: 0 20px;
 }
 
-.page-header {
+.page-header 
+{
     margin-bottom: 25px;
 }
 
-.page-header h2 {
+.page-header h2 
+{
     font-size: 1.8rem;
     font-weight: 600;
 }
 
-.page-header p {
+.page-header p 
+{
     color: #555555;
     margin-top: 5px;
 }
 
-.vendor-grid {
+.vendor-grid 
+{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 20px;
 }
 
-.vendor-card {
+.vendor-card 
+{
     border: 2px solid #cccccc;
     border-radius: 8px;
     padding: 30px 20px;
@@ -245,75 +359,26 @@ body {
     min-height: 180px;
 }
 
-.vendor-card:hover {
+.vendor-card:hover 
+{
     border-color: #666666;
 }
 
-.vendor-card h4 {
+.vendor-card h4 
+{
     font-size: 1.2rem;
     font-weight: 600;
     margin-bottom: 15px;
 }
 
-/* ========================================
-   RESPONSIVE
-   ======================================== */
-@media (max-width: 768px) {
-    .nav-container {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
 
-    .nav-links {
-        order: 3;
-        width: 100%;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
 
-    .vendor-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    }
-}
+/* //////////////////////////
+   Checkout page
+   //////////////////////////*/
 
-@media (max-width: 480px) {
-    .login-card {
-        padding: 25px 20px 20px;
-    }
-
-    .login-header h1 {
-        font-size: 1.8rem;
-    }
-
-    .page-header h2 {
-        font-size: 1.4rem;
-    }
-
-    .nav-user {
-        font-size: 0.8rem;
-    }
-
-    .user-badge,
-    .balance-badge {
-        padding: 2px 10px;
-    }
-
-    .vendor-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .vendor-card {
-        min-height: 140px;
-        padding: 20px 15px;
-    }
-}
-
-/* ========================================
-   CHECKOUT PAGE
-   ======================================== */
-
-.checkout-items {
+.checkout-items 
+{
     border: 2px solid #cccccc;
     border-radius: 8px;
     padding: 20px;
@@ -321,7 +386,8 @@ body {
     margin-bottom: 20px;
 }
 
-.checkout-item {
+.checkout-item 
+{
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -329,33 +395,39 @@ body {
     border-bottom: 1px solid #eeeeee;
 }
 
-.checkout-item:last-child {
+.checkout-item:last-child 
+{
     border-bottom: none;
 }
 
-.item-details {
+.item-details 
+{
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.item-name {
+.item-name 
+{
     font-weight: 600;
     font-size: 1rem;
     color: #000000;
 }
 
-.item-qty {
+.item-qty 
+{
     color: #666666;
     font-size: 0.9rem;
 }
 
-.item-price {
+.item-price 
+{
     font-weight: 600;
     color: #000000;
 }
 
-.order-summary {
+.order-summary 
+{
     border: 2px solid #cccccc;
     border-radius: 8px;
     padding: 20px;
@@ -363,14 +435,16 @@ body {
     margin-bottom: 25px;
 }
 
-.summary-row {
+.summary-row 
+{
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
     color: #333333;
 }
 
-.summary-row.total {
+.summary-row.total 
+{
     font-weight: 700;
     font-size: 1.2rem;
     border-top: 2px solid #000000;
@@ -379,28 +453,34 @@ body {
     color: #000000;
 }
 
-.checkout-actions {
+.checkout-actions 
+{
     display: flex;
     gap: 15px;
     align-items: center;
     flex-wrap: wrap;
 }
 
-.checkout-actions .btn-primary {
+.checkout-actions .btn-primary 
+{
     width: auto;
     padding: 10px 30px;
     margin-top: 0;
 }
 
-.checkout-actions .btn-secondary {
+.checkout-actions .btn-secondary 
+{
     padding: 10px 20px;
 }
 
-/* ========================================
-   CONFIRMATION PAGE
-   ======================================== */
 
-.confirmation-box {
+
+/*///////////////////////////////////////
+   Confirmation Page
+   ////////////////////////////////////// */
+
+.confirmation-box 
+{
     max-width: 500px;
     margin: 40px auto;
     text-align: center;
@@ -410,26 +490,30 @@ body {
     background: #ffffff;
 }
 
-.confirmation-icon {
+.confirmation-icon 
+{
     font-size: 4rem;
     display: block;
     margin-bottom: 15px;
 }
 
-.confirmation-box h2 {
+.confirmation-box h2 
+{
     font-size: 1.8rem;
     font-weight: 700;
     color: #000000;
     margin-bottom: 10px;
 }
 
-.confirmation-message {
+.confirmation-message 
+{
     color: #555555;
     font-size: 1.1rem;
     margin-bottom: 25px;
 }
 
-.order-details-box {
+.order-details-box 
+{
     text-align: left;
     border: 1px solid #eeeeee;
     border-radius: 6px;
@@ -438,50 +522,59 @@ body {
     background: #f9f9f9;
 }
 
-.order-detail-row {
+.order-detail-row 
+{
     display: flex;
     justify-content: space-between;
     padding: 6px 0;
     border-bottom: 1px solid #eeeeee;
 }
 
-.order-detail-row:last-child {
+.order-detail-row:last-child 
+{
     border-bottom: none;
 }
 
-.detail-label {
+.detail-label 
+{
     font-weight: 500;
     color: #666666;
 }
 
-.detail-value {
+.detail-value 
+{
     font-weight: 600;
     color: #000000;
 }
 
-.detail-value.status-confirmed {
+.detail-value.status-confirmed 
+{
     color: #000000;
 }
 
-.order-note {
+.order-note 
+{
     color: #666666;
     font-size: 0.9rem;
     margin-bottom: 25px;
 }
 
-.confirmation-actions {
+.confirmation-actions 
+{
     display: flex;
     gap: 15px;
     justify-content: center;
     flex-wrap: wrap;
 }
 
-.confirmation-actions .btn-primary {
+.confirmation-actions .btn-primary 
+{
     width: auto;
     padding: 10px 25px;
     margin-top: 0;
 }
 
-.confirmation-actions .btn-secondary {
+.confirmation-actions .btn-secondary 
+{
     padding: 10px 20px;
 }

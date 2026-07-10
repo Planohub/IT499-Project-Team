@@ -7,107 +7,82 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="nav-container">
-            <div class="nav-brand">
-                <span class="brand-icon">🍽️</span>
-                <span class="brand-name">CampusFoodLink+</span>
-            </div>
+            <div class="nav-brand">CampusFoodLink+</div>
             <div class="nav-links">
                 <a href="vendors.html">Vendors</a>
-                <a href="checkout.html">🛒 Cart (<span id="cart-count">0</span>)</a>
-                <a href="tracking.html">📦 Orders</a>
-                <a href="index.html" class="logout-link">Logout</a>
+                <a href="#">Cart (0)</a>
+                <a href="#">Orders</a>
+                <a href="index.html">Logout</a>
             </div>
             <div class="nav-user">
-                <span class="user-badge">🎓 John Smith</span>
-                <span class="balance-badge">💰 $250.00</span>
+                <span class="user-badge">Student</span>
+                <span class="balance-badge">$250.00</span>
             </div>
         </div>
     </nav>
 
+    <!-- Main Content -->
     <div class="main-container">
-        <main class="content full-width">
-            <!-- Back Button -->
+        <!-- Back Button & Vendor Name -->
+        <div class="menu-header">
             <a href="vendors.html" class="back-link">← Back to Vendors</a>
+            <h2 id="vendor-name">Campus Grill</h2>
+            <p id="vendor-location" class="vendor-location">Student Union, 1st Floor</p>
+        </div>
 
-            <!-- Vendor Info -->
-            <div class="vendor-info-header">
-                <h2 id="vendor-name">🔥 Campus Grill</h2>
-                <p id="vendor-location">📍 Student Union, 1st Floor</p>
+        <!-- Menu Items -->
+        <div class="menu-grid">
+            <!-- Item 1 -->
+            <div class="menu-item-card">
+                <div class="menu-item-info">
+                    <h4>Classic Burger</h4>
+                    <p class="menu-item-desc">1/2 lb beef patty with cheese, lettuce, tomato</p>
+                    <div class="menu-item-bottom">
+                        <span class="menu-item-price">$8.99</span>
+                        <button class="btn-add">+ Add to Cart</button>
+                    </div>
+                </div>
             </div>
 
-            <!-- Menu Items -->
-            <section class="menu-section">
-                <h3>Menu</h3>
-                <div class="menu-grid">
-                    <!-- Item 1 -->
-                    <div class="menu-item-card" data-item-id="1" data-item-name="Classic Burger" data-item-price="8.99">
-                        <div class="menu-item-image">🍔</div>
-                        <div class="menu-item-info">
-                            <h4>Classic Burger</h4>
-                            <p class="menu-item-desc">1/2 lb beef patty with cheese, lettuce, tomato</p>
-                            <div class="menu-item-bottom">
-                                <span class="menu-item-price">$8.99</span>
-                                <button class="add-to-cart-btn">+ Add to Cart</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Item 2 -->
-                    <div class="menu-item-card" data-item-id="2" data-item-name="Chicken Wrap" data-item-price="7.49">
-                        <div class="menu-item-image">🌯</div>
-                        <div class="menu-item-info">
-                            <h4>Chicken Wrap</h4>
-                            <p class="menu-item-desc">Grilled chicken with avocado and greens</p>
-                            <div class="menu-item-bottom">
-                                <span class="menu-item-price">$7.49</span>
-                                <button class="add-to-cart-btn">+ Add to Cart</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Item 3 -->
-                    <div class="menu-item-card" data-item-id="3" data-item-name="Onion Rings" data-item-price="3.99">
-                        <div class="menu-item-image">🧅</div>
-                        <div class="menu-item-info">
-                            <h4>Onion Rings</h4>
-                            <p class="menu-item-desc">Crispy battered onion rings</p>
-                            <div class="menu-item-bottom">
-                                <span class="menu-item-price">$3.99</span>
-                                <button class="add-to-cart-btn">+ Add to Cart</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Item 4 -->
-                    <div class="menu-item-card" data-item-id="4" data-item-name="Milkshake" data-item-price="5.49">
-                        <div class="menu-item-image">🥤</div>
-                        <div class="menu-item-info">
-                            <h4>Milkshake</h4>
-                            <p class="menu-item-desc">Chocolate, vanilla, or strawberry</p>
-                            <div class="menu-item-bottom">
-                                <span class="menu-item-price">$5.49</span>
-                                <button class="add-to-cart-btn">+ Add to Cart</button>
-                            </div>
-                        </div>
+            <!-- Item 2 -->
+            <div class="menu-item-card">
+                <div class="menu-item-info">
+                    <h4>Chicken Wrap</h4>
+                    <p class="menu-item-desc">Grilled chicken with avocado and greens</p>
+                    <div class="menu-item-bottom">
+                        <span class="menu-item-price">$7.49</span>
+                        <button class="btn-add">+ Add to Cart</button>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <!-- Cart Summary -->
-            <section class="cart-summary">
-                <h3>Your Cart</h3>
-                <div id="cart-items">
-                    <p class="empty-cart">Your cart is empty</p>
+            <!-- Item 3 -->
+            <div class="menu-item-card">
+                <div class="menu-item-info">
+                    <h4>Onion Rings</h4>
+                    <p class="menu-item-desc">Crispy battered onion rings</p>
+                    <div class="menu-item-bottom">
+                        <span class="menu-item-price">$3.99</span>
+                        <button class="btn-add">+ Add to Cart</button>
+                    </div>
                 </div>
-                <div class="cart-total">
-                    <span>Total:</span>
-                    <span id="cart-total">$0.00</span>
+            </div>
+
+            <!-- Item 4 -->
+            <div class="menu-item-card">
+                <div class="menu-item-info">
+                    <h4>Milkshake</h4>
+                    <p class="menu-item-desc">Chocolate, vanilla, or strawberry</p>
+                    <div class="menu-item-bottom">
+                        <span class="menu-item-price">$5.49</span>
+                        <button class="btn-add">+ Add to Cart</button>
+                    </div>
                 </div>
-                <a href="checkout.html" class="btn-checkout">Proceed to Checkout →</a>
-            </section>
-        </main>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
