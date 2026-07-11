@@ -421,9 +421,43 @@ End of CSS throughout website
 
 
 
-/////////////////////////
-/* Menu Grid */
-/////////////////////////
+/*//////////////////////////////////
+   Menu page
+//////////////////////////////////// */
+
+.menuPageHeader 
+{
+    margin-bottom: 30px;
+}
+
+.menuPageHeader h2 
+{
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.menuPageHeader .vendor-location 
+{
+    color: #555555;
+    font-size: 1rem;
+}
+
+.goBackLink 
+{
+    color: #000000;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    padding: 5px 0;
+    border-bottom: 2px solid transparent;
+}
+
+.goBackLink:hover 
+{
+    border-bottom-color: #000000;
+}
+
 .menuItemGrid 
 {
     display: grid;
@@ -441,7 +475,7 @@ End of CSS throughout website
     text-align: center;
 }
 
-.menuItemName 
+.itemNameAbove 
 {
     font-weight: 600;
     font-size: 1rem;
@@ -467,17 +501,17 @@ End of CSS throughout website
     transform: translateY(-4px);
 }
 
-/* Will be added later*/
+/* Will be added later */
 .menuItemPicture 
 {
     position: relative;
     background: #f5f5f5;
-    padding: 30px 20px 20px 20px;
+    padding: 40px 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 140px;
+    min-height: 120px;
     transition: background 0.3s;
 }
 
@@ -509,7 +543,7 @@ End of CSS throughout website
     opacity: 1;
 }
 
-.menuItemName 
+.menuItemPriceArea 
 {
     padding: 10px 16px 14px 16px;
     border-top: 1px solid #eeeeee;
@@ -527,6 +561,17 @@ End of CSS throughout website
     border-color: #000000;
 }
 
+.menuItemBox.added .menuItemPicture 
+{
+    background: #d4edda;
+}
+
+.menuItemBox.added .menuItemPictureOverlay 
+{
+    opacity: 1;
+    background: rgba(0, 100, 0, 0.8);
+}
+
 @media (max-width: 768px) 
 {
     .menuItemGrid 
@@ -537,11 +582,11 @@ End of CSS throughout website
 
     .menuItemPicture 
     {
-        min-height: 110px;
-        padding: 20px 15px 15px 15px;
+        min-height: 100px;
+        padding: 30px 15px;
     }
 
-    .menuItemName 
+    .itemNameAbove 
     {
         font-size: 0.9rem;
     }
@@ -550,6 +595,11 @@ End of CSS throughout website
     {
         font-size: 1rem;
         padding: 8px 18px;
+    }
+
+    .menuItemPrice 
+    {
+        font-size: 1rem;
     }
 }
 
@@ -563,11 +613,11 @@ End of CSS throughout website
 
     .menuItemPicture 
     {
-        min-height: 90px;
-        padding: 15px 10px 10px 10px;
+        min-height: 80px;
+        padding: 20px 10px;
     }
 
-    .menuItemName 
+    .menuItemPriceArea 
     {
         padding: 8px 10px 10px 10px;
     }
@@ -577,7 +627,7 @@ End of CSS throughout website
         font-size: 0.9rem;
     }
 
-    .menuItemName 
+    .itemNameAbove 
     {
         font-size: 0.8rem;
         margin-bottom: 5px;
@@ -589,6 +639,7 @@ End of CSS throughout website
         padding: 6px 14px;
     }
 }
+
 
 
 /* //////////////////////////
