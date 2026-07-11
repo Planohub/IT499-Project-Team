@@ -556,21 +556,7 @@ End of CSS throughout website
     color: #000000;
 }
 
-.menuItemBox.added 
-{
-    border-color: #000000;
-}
 
-.menuItemBox.added .menuItemPicture 
-{
-    background: #d4edda;
-}
-
-.menuItemBox.added .menuItemPictureOverlay 
-{
-    opacity: 1;
-    background: rgba(0, 100, 0, 0.8);
-}
 
 @media (max-width: 768px) 
 {
