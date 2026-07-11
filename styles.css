@@ -419,7 +419,11 @@ End of CSS throughout website
     border-bottom-color: #000000;
 }
 
+
+
+/////////////////////////
 /* Menu Grid */
+/////////////////////////
 .menuItemGrid 
 {
     display: grid;
@@ -429,7 +433,6 @@ End of CSS throughout website
     margin: 0 auto;
 }
 
-/* Menu Item Wrapper (name above box) */
 .menuItemWrapper 
 {
     display: flex;
@@ -438,7 +441,6 @@ End of CSS throughout website
     text-align: center;
 }
 
-/* Item name above the box */
 .menuItemName 
 {
     font-weight: 600;
@@ -447,7 +449,6 @@ End of CSS throughout website
     margin-bottom: 8px;
 }
 
-/* Menu Item Card */
 .menuItemBox 
 {
     border: 2px solid #cccccc;
@@ -480,7 +481,6 @@ End of CSS throughout website
     transition: background 0.3s;
 }
 
-/* Add overlay (visible on hover) */
 .menuItemPictureOverlay 
 {
     position: absolute;
@@ -499,7 +499,6 @@ End of CSS throughout website
     letter-spacing: 1px;
 }
 
-/* Hover effects */
 .menuItemBox:hover .menuItemPicture 
 {
     background: #aaaaaa;
@@ -510,7 +509,6 @@ End of CSS throughout website
     opacity: 1;
 }
 
-/* Menu Item Info (price) */
 .menuItemName 
 {
     padding: 10px 16px 14px 16px;
@@ -524,13 +522,11 @@ End of CSS throughout website
     color: #000000;
 }
 
-/* Added state (after click) */
 .menuItemBox.added 
 {
     border-color: #000000;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) 
 {
     .menuItemGrid 
