@@ -382,6 +382,195 @@ End of CSS throughout website
 
 
 
+/*//////////////////////////////////
+   Temp menu page
+//////////////////////////////////// */
+
+/* ========================================
+   MENU PAGE — GRID WITH IMAGES
+   ======================================== */
+
+/* Vendor header */
+.menu-header {
+    margin-bottom: 30px;
+}
+
+.menu-header h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.menu-header .vendor-location {
+    color: #555555;
+    font-size: 1rem;
+}
+
+.back-link {
+    color: #000000;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    padding: 5px 0;
+    border-bottom: 2px solid transparent;
+}
+
+.back-link:hover {
+    border-bottom-color: #000000;
+}
+
+/* Menu Grid */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 30px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Menu Item Wrapper (name above box) */
+.menu-item-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Item name above the box */
+.item-name-above {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #000000;
+    margin-bottom: 8px;
+}
+
+/* Menu Item Card */
+.menu-item-card {
+    border: 2px solid #cccccc;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #ffffff;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+}
+
+.menu-item-card:hover {
+    border-color: #666666;
+    transform: translateY(-4px);
+}
+
+/* Menu Item Image */
+.menu-item-image {
+    position: relative;
+    background: #f5f5f5;
+    padding: 30px 20px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+    transition: background 0.3s;
+}
+
+/* Add overlay (visible on hover) */
+.add-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.75);
+    padding: 10px 24px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    letter-spacing: 1px;
+}
+
+/* Hover effects */
+.menu-item-card:hover .menu-item-image {
+    background: #aaaaaa;
+}
+
+.menu-item-card:hover .add-overlay {
+    opacity: 1;
+}
+
+/* Menu Item Info (price) */
+.menu-item-info {
+    padding: 10px 16px 14px 16px;
+    border-top: 1px solid #eeeeee;
+}
+
+.menu-itemPrice {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #000000;
+}
+
+/* Added state (after click) */
+.menu-item-card.added {
+    border-color: #000000;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .menu-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 20px;
+    }
+
+    .menu-item-image {
+        min-height: 110px;
+        padding: 20px 15px 15px 15px;
+    }
+
+    .item-name-above {
+        font-size: 0.9rem;
+    }
+
+    .add-overlay {
+        font-size: 1rem;
+        padding: 8px 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .menu-item-image {
+        min-height: 90px;
+        padding: 15px 10px 10px 10px;
+    }
+
+    .menu-item-info {
+        padding: 8px 10px 10px 10px;
+    }
+
+    .menu-itemPrice {
+        font-size: 0.9rem;
+    }
+
+    .item-name-above {
+        font-size: 0.8rem;
+        margin-bottom: 5px;
+    }
+
+    .add-overlay {
+        font-size: 0.85rem;
+        padding: 6px 14px;
+    }
+}
+
+
 /* //////////////////////////
    Checkout page
    //////////////////////////*/

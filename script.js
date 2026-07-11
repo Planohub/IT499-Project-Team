@@ -1,31 +1,45 @@
-//////////////////////////////////////
-//Menu buttons and interactions
-/////////////////////////////////////
+// ===================================
+// Menu buttons and interactions
+// ===================================
 
-document.addEventListener('DOMContentLoaded', function() 
-{
-    // Add to Cart button
-    const addButtons = document.querySelectorAll('.btn-add');
-    
-    addButtons.forEach(button => 
-        {
-        button.addEventListener('click', function() 
-        {
-            const itemName = this.closest('.menu-item-info').querySelector('h4').textContent;
-            const itemPrice = this.closest('.menu-item-bottom').querySelector('.menu-itemPrice').textContent;
-            
-            // Change button to show added
-            this.textContent = '✓ Added';
+document.addEventListener('DOMContentLoaded', function() {
+    // Get cart count element
+    const cartLink = document.querySelector('.navigationLinks a[href="checkout.html"]');
+    let cartCount = 0;
+
+    // Menu item cards
+    const menuCards = document.querySelectorAll('.menu-item-card');
+
+    menuCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Get item name and price from data attributes
+            const itemName = this.getAttribute('data-item');
+            const itemPrice = this.getAttribute('data-price');
+
+            // Increment cart count
+            cartCount++;
+            if (cartLink) {
+                cartLink.textContent = `Cart (${cartCount})`;
+            }
+
+            // Visual feedback - show added state
             this.classList.add('added');
-            
-            // Resets button after 1.5 seconds
-            setTimeout(() => 
-            {
-                this.textContent = '+ Add to Cart';
+
+            // Change overlay text to "Added!"
+            const overlay = this.querySelector('.add-overlay');
+            if (overlay) {
+                overlay.textContent = 'Added!';
+            }
+
+            // Reset after 1.5 seconds
+            setTimeout(() => {
                 this.classList.remove('added');
-            }, 500);
-            
-            console.log(`Added: ${itemName} (${itemPrice})`);
+                if (overlay) {
+                    overlay.textContent = 'Add';
+                }
+            }, 1500);
+
+            console.log(`Added: ${itemName} ($${itemPrice}) - Cart: ${cartCount}`);
         });
     });
 });
