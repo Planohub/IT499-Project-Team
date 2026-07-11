@@ -386,27 +386,26 @@ End of CSS throughout website
    Temp menu page
 //////////////////////////////////// */
 
-/* ========================================
-   MENU PAGE — GRID WITH IMAGES
-   ======================================== */
-
-/* Vendor header */
-.menu-header {
+.menuPageHeader 
+{
     margin-bottom: 30px;
 }
 
-.menu-header h2 {
+.menuPageHeader h2 
+{
     font-size: 1.8rem;
     font-weight: 600;
     margin-top: 10px;
 }
 
-.menu-header .vendor-location {
+.menuPageHeader .vendor-location 
+{
     color: #555555;
     font-size: 1rem;
 }
 
-.back-link {
+.goBackLink 
+{
     color: #000000;
     font-weight: 500;
     text-decoration: none;
@@ -415,12 +414,14 @@ End of CSS throughout website
     border-bottom: 2px solid transparent;
 }
 
-.back-link:hover {
+.goBackLink:hover 
+{
     border-bottom-color: #000000;
 }
 
 /* Menu Grid */
-.menu-grid {
+.menuItemGrid 
+{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 30px;
@@ -429,7 +430,8 @@ End of CSS throughout website
 }
 
 /* Menu Item Wrapper (name above box) */
-.menu-item-wrapper {
+.menuItemWrapper 
+{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -437,7 +439,8 @@ End of CSS throughout website
 }
 
 /* Item name above the box */
-.item-name-above {
+.menuItemName 
+{
     font-weight: 600;
     font-size: 1rem;
     color: #000000;
@@ -445,7 +448,8 @@ End of CSS throughout website
 }
 
 /* Menu Item Card */
-.menu-item-card {
+.menuItemBox 
+{
     border: 2px solid #cccccc;
     border-radius: 8px;
     overflow: hidden;
@@ -456,13 +460,15 @@ End of CSS throughout website
     width: 100%;
 }
 
-.menu-item-card:hover {
+.menuItemBox:hover 
+{
     border-color: #666666;
     transform: translateY(-4px);
 }
 
-/* Menu Item Image */
-.menu-item-image {
+/* Will be added later*/
+.menuItemPicture 
+{
     position: relative;
     background: #f5f5f5;
     padding: 30px 20px 20px 20px;
@@ -475,7 +481,8 @@ End of CSS throughout website
 }
 
 /* Add overlay (visible on hover) */
-.add-overlay {
+.menuItemPictureOverlay 
+{
     position: absolute;
     top: 50%;
     left: 50%;
@@ -493,78 +500,95 @@ End of CSS throughout website
 }
 
 /* Hover effects */
-.menu-item-card:hover .menu-item-image {
+.menuItemBox:hover .menuItemPicture 
+{
     background: #aaaaaa;
 }
 
-.menu-item-card:hover .add-overlay {
+.menuItemBox:hover .menuItemPictureOverlay 
+{
     opacity: 1;
 }
 
 /* Menu Item Info (price) */
-.menu-item-info {
+.menuItemName 
+{
     padding: 10px 16px 14px 16px;
     border-top: 1px solid #eeeeee;
 }
 
-.menu-itemPrice {
+.menuItemPrice 
+{
     font-weight: 700;
     font-size: 1.1rem;
     color: #000000;
 }
 
 /* Added state (after click) */
-.menu-item-card.added {
+.menuItemBox.added 
+{
     border-color: #000000;
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
-    .menu-grid {
+@media (max-width: 768px) 
+{
+    .menuItemGrid 
+    {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 20px;
     }
 
-    .menu-item-image {
+    .menuItemPicture 
+    {
         min-height: 110px;
         padding: 20px 15px 15px 15px;
     }
 
-    .item-name-above {
+    .menuItemName 
+    {
         font-size: 0.9rem;
     }
 
-    .add-overlay {
+    .menuItemPictureOverlay 
+    {
         font-size: 1rem;
         padding: 8px 18px;
     }
 }
 
-@media (max-width: 480px) {
-    .menu-grid {
+@media (max-width: 480px) 
+{
+    .menuItemGrid 
+    {
         grid-template-columns: 1fr 1fr;
         gap: 15px;
     }
 
-    .menu-item-image {
+    .menuItemPicture 
+    {
         min-height: 90px;
         padding: 15px 10px 10px 10px;
     }
 
-    .menu-item-info {
+    .menuItemName 
+    {
         padding: 8px 10px 10px 10px;
     }
 
-    .menu-itemPrice {
+    .menuItemPrice 
+    {
         font-size: 0.9rem;
     }
 
-    .item-name-above {
+    .menuItemName 
+    {
         font-size: 0.8rem;
         margin-bottom: 5px;
     }
 
-    .add-overlay {
+    .menuItemPictureOverlay 
+    {
         font-size: 0.85rem;
         padding: 6px 14px;
     }

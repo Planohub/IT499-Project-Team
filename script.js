@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let cartCount = 0;
 
     // Menu item cards
-    const menuCards = document.querySelectorAll('.menu-item-card');
+    const menuCards = document.querySelectorAll('.menuItemBox');
 
     menuCards.forEach(card => {
         card.addEventListener('click', function() {
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('added');
 
             // Change overlay text to "Added!"
-            const overlay = this.querySelector('.add-overlay');
+            const overlay = this.querySelector('.menuItemPictureOverlay');
             if (overlay) {
                 overlay.textContent = 'Added!';
             }
