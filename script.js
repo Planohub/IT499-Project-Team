@@ -11,34 +11,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const menuCards = document.querySelectorAll('.menuItemBox');
 
     menuCards.forEach(card => {
-        card.addEventListener('click', function() {
+        card.addEventListener('click', () => {
             // Get item name and price from data attributes
-            const itemName = this.getAttribute('data-item');
-            const itemPrice = this.getAttribute('data-price');
+            const itemName = card.getAttribute('data-item');
+            const itemPrice = card.getAttribute('data-price');
 
             // Increment cart count
             cartCount++;
+
             if (cartLink) {
                 cartLink.textContent = `Cart (${cartCount})`;
             }
 
-            // Visual feedback - show added state
-            this.classList.add('added');
+            // Add visual feedback
+            card.classList.add('added');
 
-            // Change overlay text to "Added!"
-            const overlay = this.querySelector('.menuItemPictureOverlay');
+            const overlay = card.querySelector('.menuItemPictureOverlay');
+
             if (overlay) {
                 overlay.textContent = 'Added!';
             }
 
-            // Reset after 1.5 seconds
+            // Reset visual feedback after 1.5 seconds
             setTimeout(() => {
-                this.classList.remove('added');
+                card.classList.remove('added');
+
                 if (overlay) {
                     overlay.textContent = 'Add';
                 }
             }, 1500);
 
+            // For later debugging, log the item added and current cart count
             console.log(`Added: ${itemName} ($${itemPrice}) - Cart: ${cartCount}`);
         });
     });
