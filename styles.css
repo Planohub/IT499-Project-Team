@@ -675,10 +675,6 @@ body {
     color: var(--black);
 }
 
-.detailsOfOrder.statusConfirmed {
-    color: var(--black);
-}
-
 .orderNote {
     color: var(--grey);
     font-size: 0.9rem;
