@@ -461,6 +461,19 @@ body {
     color: var(--black);
 }
 
+/* Menu Page - Actions */
+.menuActions {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.menuActions .defaultButton {
+    width: auto;
+    margin-top: 2rem;
+    padding: .5rem 1.7rem;
+    text-decoration: none;
+}
 
 /* -------------------
    Mobile menu queries
