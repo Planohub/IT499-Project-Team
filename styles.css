@@ -1,6 +1,6 @@
-/* ////////////////////////////////////////
-   All website page characteristics
-   //////////////////////////////////////// */
+/* ----------------------
+   Root and global styles
+   ---------------------- */
 
 * {
     margin: 0;
@@ -8,114 +8,47 @@
     box-sizing: border-box;
 }
 
-body 
-{
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #ffffff;
-    color: #000000;
+:root {
+    --white: #fafafa;
+    --black: #000000;
+    --grey: #555555;
+    --lightGrey: #cccccc;
+
+}
+
+body {
+    font-family: Verdana, sans-serif;
+    background: var(--white);
+    color: var(--black);
     min-height: 100vh;
 }
 
-.pageHeader 
-{
+.pageHeader {
     margin-bottom: 25px;
 }
 
-.pageHeader h2 
-{
+.pageHeader h2 {
     font-size: 1.8rem;
     font-weight: 600;
 }
 
-.pageHeader p 
-{
-    color: #555555;
+.pageHeader p {
+    color: var(--grey);
     margin-top: 5px;
 }
 
 
-
-/*//////////////////////////////////
-Alternate views for phones,laptops and tablets
-////////////////////////////////////*/
-
-@media (max-width: 768px) 
-{
-    .navigationContainer
-    {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .navigationLinks 
-    {
-        order: 3;
-        width: 100%;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    .vendorGrid 
-    {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    }
-}
-
-@media (max-width: 480px) 
-{
-    .loginCredentials 
-    {
-        padding: 25px 20px 20px;
-    }
-
-    .loginHeader h1 
-    {
-        font-size: 1.8rem;
-    }
-
-    .pageHeader h2 
-    {
-        font-size: 1.4rem;
-    }
-
-    .navigationUser 
-    {
-        font-size: 0.8rem;
-    }
-
-    .userBadge,
-    .balanceBadge 
-    {
-        padding: 2px 10px;
-    }
-
-    .vendorGrid 
-    {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .vendorBox 
-    {
-        min-height: 140px;
-        padding: 20px 15px;
-    }
-}
-
-
-/* /////////////////////////////////////////
+/* ---------------------
    Navigation at the top
-   /////////////////////////////////////////*/
+   --------------------- */
 
-.navigationBar 
-{
-    border-bottom: 2px solid #cccccc;
+.navigationBar {
+    border-bottom: 2px solid var(--grey);
     padding: 15px 30px;
-    background: #ffffff;
+    background: var(--white);
 }
 
-.navigationContainer 
-{
+.navigationContainer {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -123,22 +56,25 @@ Alternate views for phones,laptops and tablets
     margin: 0 auto;
 }
 
-.navigationBrand 
-{
+.navigationBrand {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #000000;
+    color: var(--black);
 }
 
-.navigationLinks 
-{
+.navigationBrand a {
+    color: var(--black);
+    text-decoration: underline;
+}
+
+
+.navigationLinks {
     display: flex;
     gap: 25px;
 }
 
-.navigationLinks a 
-{
-    color: #000000;
+.navigationLinks a {
+    color: var(--black);
     font-weight: 500;
     text-decoration: none;
     padding: 5px 0;
@@ -146,36 +82,31 @@ Alternate views for phones,laptops and tablets
 }
 
 .navigationLinks a:hover,
-
-.navigationLinks a.active 
-{
-    border-bottom-color: #000000;
+.navigationLinks a.active {
+    border-bottom-color: var(--black);
 }
 
-.navigationUser 
-{
+.navigationUser {
     display: flex;
     align-items: center;
     gap: 15px;
     font-size: 0.9rem;
 }
 
-.userBadge 
-{
-    border: 1px solid #cccccc;
+.userBadge {
+    border: 1px solid var(--grey);
     padding: 4px 14px;
     border-radius: 4px;
     font-weight: 500;
 }
 
-.balanceBadge 
-{
-  position: fixed;
+.balanceBadge {
+    position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: #ffffff;
-    border: 2px solid #000000;
+    background: var(--white);
+    border: 2px solid var(--black);
     border-radius: 8px;
     padding: 10px 24px;
     font-size: 1.1rem;
@@ -184,19 +115,47 @@ Alternate views for phones,laptops and tablets
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+@media (max-width: 768px) {
+    .navigationContainer {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .navigationLinks {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pageHeader h2 {
+        font-size: 1.4rem;
+    }
+
+    .navigationUser {
+        font-size: 0.8rem;
+    }
+
+    .userBadge,
+    .balanceBadge {
+        padding: 2px 10px;
+    }
+}
 
 
-/* //////////////////////////////////////
+/* --------
    Buttons
-   //////////////////////////////////////*/
+   -------- */
 
-   .defaultButton 
-{
+.defaultButton {
     width: 100%;
     padding: 10px;
-    background: #000000;
-    color: #ffffff;
-    border: 2px solid #000000;
+    background: var(--black);
+    color: var(--white);
+    border: 2px solid var(--black);
     border-radius: 4px;
     font-size: 1rem;
     font-weight: 600;
@@ -204,46 +163,35 @@ Alternate views for phones,laptops and tablets
     margin-top: 5px;
 }
 
-.defaultButton:hover 
-{
-    background: #ffffff;
-    color: #000000;
+.defaultButton:hover {
+    background: var(--white);
+    color: var(--black);
 }
 
-.secondaryButton 
-{
+.secondaryButton {
     display: inline-block;
     padding: 8px 24px;
-    border: 2px solid #000000;
+    border: 2px solid var(--black);
     border-radius: 4px;
     font-weight: 600;
     font-size: 0.9rem;
-    color: #000000;
-    background: #ffffff;
+    color: var(--black);
+    background: var(--white);
     cursor: pointer;
     text-decoration: none;
 }
 
-.secondaryButton:hover 
-{
-    background: #000000;
-    color: #ffffff;
+.secondaryButton:hover {
+    background: var(--black);
+    color: var(--white);
 }
 
 
+/* ----------
+   Login Page
+   ---------- */
 
-/*//////////////////////////////
-End of CSS throughout website
-//////////////////////////////*/
-
-
-
-/* ////////////////
-//Login/Index page 
-//////////////// */
-
-.loginBox 
-{
+.loginBox {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -252,115 +200,109 @@ End of CSS throughout website
     padding: 20px;
 }
 
-.loginHeader 
-{
+.loginHeader {
     text-align: center;
     margin-bottom: 30px;
 }
 
-.loginHeader h1 
-{
+.loginHeader h1 {
     font-size: 2.5rem;
-    color: #000000;
+    color: var(--black);
     font-weight: 700;
     letter-spacing: 1px;
 }
 
-.loginHeader .login-subtitle 
-{
-    color: #555555;
+.loginHeader .loginSubtitle {
+    color: var(--grey);
     font-size: 1rem;
     margin-top: 5px;
     font-weight: 300;
 }
 
-.loginCredentials 
-{
-    border: 2px solid #cccccc;
+.loginCredentials {
+    border: 2px solid var(--grey);
     border-radius: 8px;
     padding: 35px 35px 30px;
     max-width: 350px;
     width: 100%;
-    background: #ffffff;
+    background: var(--white);
 }
 
-.loginCredentials h2 
-{
+.loginCredentials h2 {
     font-size: 1.3rem;
-    color: #000000;
+    color: var(--black);
     text-align: center;
     font-weight: 600;
     margin-bottom: 20px;
 }
 
 
+/* ----------
+   Login form
+   ---------- */
 
-/* ///////////////////
-// Login form
-/////////////////// */
-
-.credentialForm 
-{
+.credentialForm {
     margin-bottom: 16px;
 }
 
-.credentialForm label 
-{
+.credentialForm label {
     display: block;
     font-weight: 600;
-    color: #000000;
+    color: var(--black);
     font-size: 0.85rem;
     margin-bottom: 4px;
 }
 
-.credentialForm input 
-{
+.credentialForm input {
     width: 100%;
     padding: 8px 12px;
-    border: 2px solid #cccccc;
+    border: 2px solid var(--lightGrey);
     border-radius: 4px;
     font-size: 1rem;
-    background: #ffffff;
-    color: #000000;
+    background: var(--white);
+    color: var(--black);
 }
 
-.credentialForm input:focus 
-{
+.credentialForm input:focus {
     outline: none;
-    border-color: #666666;
+    border-color: var(--grey);
+}
+
+@media (max-width: 480px) {
+    .loginCredentials {
+        padding: 25px 20px 20px;
+    }
+
+    .loginHeader h1 {
+        font-size: 1.8rem;
+    }
 }
 
 
-
-/* /////////////////////////////////////////
+/* --------------------
    List of vendors page
-   /////////////////////////////////////////*/
+   -------------------- */
 
-.vendorSelectionContainer 
-{
+.vendorSelectionContainer {
     max-width: 1200px;
     margin: 30px auto;
     padding: 0 20px;
 }
 
-
-
-.vendorGrid 
-{
+.vendorGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 20px;
 }
 
-.vendorBox 
-{
-    border: 2px solid #cccccc;
+.vendorBox {
+    border: 2px solid var(--lightGrey);
     border-radius: 8px;
     padding: 30px 20px;
-    background: #ffffff;
+    background: var(--white);
     transition: border-color 0.2s;
     text-decoration: none;
-    color: #000000;
+    color: var(--black);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -368,45 +310,55 @@ End of CSS throughout website
     min-height: 180px;
 }
 
-.vendorBox:hover 
-{
-    border-color: #666666;
+.vendorBox:hover {
+    border-color: var(--grey);
 }
 
-.vendorBox h4 
-{
+.vendorBox h4 {
     font-size: 1.2rem;
     font-weight: 600;
     margin-bottom: 15px;
 }
 
+@media (max-width: 768px) {
+    .vendorGrid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .vendorGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .vendorBox {
+        min-height: 140px;
+        padding: 20px 15px;
+    }
+}
 
 
-/*//////////////////////////////////
-   Temp menu page
-//////////////////////////////////// */
+/* --------------
+   Temp Menu Page
+   -------------- */
 
-.menuPageHeader 
-{
+.menuPageHeader {
     margin-bottom: 30px;
 }
 
-.menuPageHeader h2 
-{
+.menuPageHeader h2 {
     font-size: 1.8rem;
     font-weight: 600;
     margin-top: 10px;
 }
 
-.menuPageHeader .vendor-location 
-{
-    color: #555555;
+.menuPageHeader .vendorLocation {
+    color: var(--grey);
     font-size: 1rem;
 }
 
-.goBackLink 
-{
-    color: #000000;
+.goBackLink {
+    color: var(--black);
     font-weight: 500;
     text-decoration: none;
     display: inline-block;
@@ -414,52 +366,11 @@ End of CSS throughout website
     border-bottom: 2px solid transparent;
 }
 
-.goBackLink:hover 
-{
-    border-bottom-color: #000000;
+.goBackLink:hover {
+    border-bottom-color: var(--black);
 }
 
-
-
-/*//////////////////////////////////
-   Menu page
-//////////////////////////////////// */
-
-.menuPageHeader 
-{
-    margin-bottom: 30px;
-}
-
-.menuPageHeader h2 
-{
-    font-size: 1.8rem;
-    font-weight: 600;
-    margin-top: 10px;
-}
-
-.menuPageHeader .vendor-location 
-{
-    color: #555555;
-    font-size: 1rem;
-}
-
-.goBackLink 
-{
-    color: #000000;
-    font-weight: 500;
-    text-decoration: none;
-    display: inline-block;
-    padding: 5px 0;
-    border-bottom: 2px solid transparent;
-}
-
-.goBackLink:hover 
-{
-    border-bottom-color: #000000;
-}
-
-.menuItemGrid 
-{
+.menuItemGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 30px;
@@ -467,45 +378,44 @@ End of CSS throughout website
     margin: 0 auto;
 }
 
-.menuItemWrapper 
-{
+.menuItemWrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
 }
 
-.itemNameAbove 
-{
+.itemNameAbove {
     font-weight: 600;
     font-size: 1rem;
-    color: #000000;
+    color: var(--black);
     margin-bottom: 8px;
 }
 
-.menuItemBox 
-{
-    border: 2px solid #cccccc;
+.menuItemBox {
+    border: 2px solid var(--lightGrey);
     border-radius: 8px;
     overflow: hidden;
-    background: #ffffff;
+    background: var(--white);
     transition: border-color 0.2s, transform 0.2s;
     cursor: pointer;
     text-align: center;
     width: 100%;
 }
 
-.menuItemBox:hover 
-{
-    border-color: #666666;
-    transform: translateY(-4px);
+.menuItemBox.added {
+    border-color: var(--black);
 }
 
-/* Will be added later */
-.menuItemPicture 
-{
+.menuItemBox:hover {
+    border-color: var(--grey);
+    transform: scale(1.05);
+}
+
+/* Menu Item Picture/Price Areas */
+.menuItemPicture {
     position: relative;
-    background: #f5f5f5;
+    background: var(--lightGrey);
     padding: 40px 20px;
     display: flex;
     flex-direction: column;
@@ -515,15 +425,18 @@ End of CSS throughout website
     transition: background 0.3s;
 }
 
-.menuItemPictureOverlay 
-{
+.menuItemBox:hover .menuItemPicture {
+    background: var(--grey);
+}
+
+.menuItemPictureOverlay {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 1.2rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--white);
     background: rgba(0, 0, 0, 0.75);
     padding: 10px 24px;
     border-radius: 4px;
@@ -533,94 +446,89 @@ End of CSS throughout website
     letter-spacing: 1px;
 }
 
-.menuItemBox:hover .menuItemPicture 
-{
-    background: #aaaaaa;
-}
-
-.menuItemBox:hover .menuItemPictureOverlay 
-{
+.menuItemBox:hover .menuItemPictureOverlay {
     opacity: 1;
 }
 
-.menuItemPriceArea 
-{
+.menuItemPriceArea {
     padding: 10px 16px 14px 16px;
-    border-top: 1px solid #eeeeee;
+    border-top: 1px solid var(--grey);
 }
 
-.menuItemPrice 
-{
+.menuItemPrice {
     font-weight: 700;
     font-size: 1.1rem;
-    color: #000000;
+    color: var(--black);
 }
 
+/* Menu Page - Actions */
+.menuActions {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
 
+.menuActions .defaultButton {
+    width: auto;
+    margin-top: 2rem;
+    padding: .5rem 1.7rem;
+    text-decoration: none;
+}
 
-@media (max-width: 768px) 
-{
-    .menuItemGrid 
-    {
+/* -------------------
+   Mobile menu queries
+   ------------------- */
+
+@media (max-width: 768px) {
+    .menuItemGrid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 20px;
     }
 
-    .menuItemPicture 
-    {
+    .menuItemPicture {
         min-height: 100px;
         padding: 30px 15px;
     }
 
-    .itemNameAbove 
-    {
+    .itemNameAbove {
         font-size: 0.9rem;
     }
 
-    .menuItemPictureOverlay 
-    {
+    .menuItemPictureOverlay {
         font-size: 1rem;
         padding: 8px 18px;
     }
 
-    .menuItemPrice 
-    {
+    .menuItemPrice {
         font-size: 1rem;
     }
 }
 
-@media (max-width: 480px) 
-{
-    .menuItemGrid 
-    {
+@media (max-width: 480px) {
+    .menuItemGrid {
         grid-template-columns: 1fr 1fr;
         gap: 15px;
     }
 
-    .menuItemPicture 
-    {
+    .menuItemPicture {
         min-height: 80px;
         padding: 20px 10px;
     }
 
-    .menuItemPriceArea 
-    {
+    .menuItemPriceArea {
         padding: 8px 10px 10px 10px;
     }
 
-    .menuItemPrice 
-    {
+    .menuItemPrice {
         font-size: 0.9rem;
     }
 
-    .itemNameAbove 
-    {
+    .itemNameAbove {
         font-size: 0.8rem;
         margin-bottom: 5px;
     }
 
-    .menuItemPictureOverlay 
-    {
+    .menuItemPictureOverlay {
         font-size: 0.85rem;
         padding: 6px 14px;
     }
@@ -628,208 +536,177 @@ End of CSS throughout website
 
 
 
-/* //////////////////////////
+/* ----------------
    Checkout page
-   //////////////////////////*/
+   ---------------- */
 
-.checkoutItems 
-{
-    border: 2px solid #cccccc;
+.checkoutItems {
+    border: 2px solid var(--grey);
     border-radius: 8px;
     padding: 20px;
-    background: #ffffff;
+    background: var(--white);
     margin-bottom: 20px;
 }
 
-.checkoutItem 
-{
+.checkoutItem {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px solid #eeeeee;
+    border-bottom: 1px solid var(--grey);
 }
 
-.checkoutItem:last-child 
-{
+.checkoutItem:last-child {
     border-bottom: none;
 }
 
-.itemSummary 
-{
+.itemSummary {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.itemName 
-{
+.itemName {
     font-weight: 600;
     font-size: 1rem;
-    color: #000000;
+    color: var(--black);
 }
 
-.itemQty 
-{
-    color: #666666;
+.itemQty {
+    color: var(--grey);
     font-size: 0.9rem;
 }
 
-.itemPrice 
-{
+.itemPrice {
     font-weight: 600;
-    color: #000000;
+    color: var(--black);
 }
 
-.orderSummary 
-{
-    border: 2px solid #cccccc;
+.orderSummary {
+    border: 2px solid var(--grey);
     border-radius: 8px;
     padding: 20px;
-    background: #ffffff;
+    background: var(--white);
     margin-bottom: 25px;
 }
 
-.summaryRow 
-{
+.summaryRow {
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
-    color: #333333;
+    color: var(--grey);
 }
 
-.summaryRow.total 
-{
+.summaryRow.total {
     font-weight: 700;
     font-size: 1.2rem;
-    border-top: 2px solid #000000;
+    border-top: 2px solid var(--black);
     padding-top: 12px;
     margin-top: 8px;
-    color: #000000;
+    color: var(--black);
 }
 
-.checkoutOptions 
-{
+.checkoutOptions {
     display: flex;
     gap: 15px;
     align-items: center;
     flex-wrap: wrap;
 }
 
-.checkoutOptions .defaultButton 
-{
+.checkoutOptions .defaultButton {
     width: auto;
     padding: 10px 30px;
     margin-top: 0;
 }
 
-.checkoutOptions .secondaryButton 
-{
+.checkoutOptions .secondaryButton {
     padding: 10px 20px;
 }
 
 
 
-/*///////////////////////////////////////
+/* -------------------
    Confirmation Page
-   ////////////////////////////////////// */
+   ------------------- */
 
-.confirmationBox 
-{
+.confirmationBox {
     max-width: 500px;
     margin: 40px auto;
     text-align: center;
-    border: 2px solid #cccccc;
+    border: 2px solid var(--grey);
     border-radius: 8px;
     padding: 40px 30px;
-    background: #ffffff;
+    background: var(--white);
 }
 
-.confirmationIcon 
-{
+.confirmationIcon {
     font-size: 4rem;
     display: block;
     margin-bottom: 15px;
 }
 
-.confirmationBox h2 
-{
+.confirmationBox h2 {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #000000;
+    color: var(--black);
     margin-bottom: 10px;
 }
 
-.confirmationMessage 
-{
-    color: #555555;
+.confirmationMessage {
+    color: var(--grey);
     font-size: 1.1rem;
     margin-bottom: 25px;
 }
 
-.orderDetailsBox 
-{
+.orderDetailsBox {
     text-align: left;
-    border: 1px solid #eeeeee;
+    border: 1px solid var(--grey);
     border-radius: 6px;
     padding: 16px 20px;
     margin-bottom: 20px;
-    background: #f9f9f9;
+    background: var(--white);
 }
 
-.orderDetailRow 
-{
+.orderDetailRow {
     display: flex;
     justify-content: space-between;
     padding: 6px 0;
-    border-bottom: 1px solid #eeeeee;
+    border-bottom: 1px solid var(--grey);
 }
 
-.orderDetailRow:last-child 
-{
+.orderDetailRow:last-child {
     border-bottom: none;
 }
 
-.orderDetailLabel 
-{
+.orderDetailLabel {
     font-weight: 500;
-    color: #666666;
+    color: var(--grey);
 }
 
-.detailsOfOrder 
-{
+.detailsOfOrder {
     font-weight: 600;
-    color: #000000;
+    color: var(--black);
 }
 
-.detailsOfOrder.status-confirmed 
-{
-    color: #000000;
-}
-
-.orderNote 
-{
-    color: #666666;
+.orderNote {
+    color: var(--grey);
     font-size: 0.9rem;
     margin-bottom: 25px;
 }
 
-.confirmationButtons 
-{
+.confirmationButtons {
     display: flex;
     gap: 15px;
     justify-content: center;
     flex-wrap: wrap;
 }
 
-.confirmationButtons .defaultButton 
-{
+.confirmationButtons .defaultButton {
     width: auto;
     padding: 10px 25px;
     margin-top: 0;
 }
 
-.confirmationButtons .secondaryButton 
-{
+.confirmationButtons .secondaryButton {
     padding: 10px 20px;
 }

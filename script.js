@@ -1,45 +1,48 @@
-// ===================================
-// Menu buttons and interactions
-// ===================================
+document.addEventListener('DOMContentLoaded', function () {
+    const cartLink = document.querySelector(
+        '.navigationLinks a[href="checkout.html"]'
+    );
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Get cart count element
-    const cartLink = document.querySelector('.navigationLinks a[href="checkout.html"]');
     let cartCount = 0;
 
-    // Menu item cards
+    // Select all menu item cards (querySelectorAll)
     const menuCards = document.querySelectorAll('.menuItemBox');
 
     menuCards.forEach(card => {
-        card.addEventListener('click', function() {
-            // Get item name and price from data attributes
-            const itemName = this.getAttribute('data-item');
-            const itemPrice = this.getAttribute('data-price');
+        card.addEventListener('click', () => {
+            console.log('Card clicked', card);
 
-            // Increment cart count
+            const itemName = card.getAttribute('data-item');
+            const itemPrice = card.getAttribute('data-price');
+
             cartCount++;
+
+            // Template literal to update the cart link text with the new count
             if (cartLink) {
                 cartLink.textContent = `Cart (${cartCount})`;
             }
 
-            // Visual feedback - show added state
-            this.classList.add('added');
+            // Add CSS to show the item has been added to the cart
+            card.classList.add('added');
 
-            // Change overlay text to "Added!"
-            const overlay = this.querySelector('.menuItemPictureOverlay');
+            const overlay = card.querySelector('.menuItemPictureOverlay');
+
             if (overlay) {
                 overlay.textContent = 'Added!';
             }
 
-            // Reset after 1.5 seconds
+            // Reset the visible confirmation after 1.5 seconds
             setTimeout(() => {
-                this.classList.remove('added');
+                card.classList.remove('added');
+
                 if (overlay) {
                     overlay.textContent = 'Add';
                 }
             }, 1500);
 
-            console.log(`Added: ${itemName} ($${itemPrice}) - Cart: ${cartCount}`);
+            console.log(
+                `Added ${itemName} ($${itemPrice}) - Cart: ${cartCount}`
+            );
         });
     });
 });

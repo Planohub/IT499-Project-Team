@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CampusFoodLink+ — Menu</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <!-- Navigation Bar -->
     <nav class="navigationBar">
         <div class="navigationContainer">
-            <div class="navigationBrand">CampusFoodLink+</div>
+            <div class="navigationBrand"><a href="index.html">CampusFoodLink+</a></div>
             <div class="navigationLinks">
                 <a href="vendors.html">Vendors</a>
                 <a href="checkout.html">Cart (0)</a>
@@ -29,7 +31,7 @@
         <div class="menuPageHeader">
             <a href="vendors.html" class="goBackLink">← Back to Vendors</a>
             <h2 id="vendor-name">Campus Grill</h2>
-            <p id="vendor-location" class="vendor-location">Student Union, 1st Floor</p>
+            <p id="vendorLocation" class="vendorLocation">Student Union, 1st Floor</p>
         </div>
 
         <!-- Menu Items Grid -->
@@ -89,10 +91,14 @@
 
         </div>
     </div>
-
+    <!-- View Cart Button -->
+     <div class="menuActions">
+        <a href="checkout.html" class="defaultButton">View Cart</a>
+     </div>
+    <footer>
+        <span class="balanceBadge">Meal-Plan Balance:&nbsp;$250.00</span>
+    </footer>
     <script src="script.js"></script>
 </body>
-<footer>
-    <span class="balanceBadge">$250.00</span>
-</footer>
+
 </html>
