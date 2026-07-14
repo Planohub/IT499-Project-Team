@@ -1,29 +1,28 @@
-// ===================================
-// Menu buttons and interactions
-// ===================================
+document.addEventListener('DOMContentLoaded', function () {
+    const cartLink = document.querySelector(
+        '.navigationLinks a[href="checkout.html"]'
+    );
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Get cart count element
-    const cartLink = document.querySelector('.navigationLinks a[href="checkout.html"]');
     let cartCount = 0;
 
-    // Menu item cards
+    // Select all menu item cards (querySelectorAll)
     const menuCards = document.querySelectorAll('.menuItemBox');
 
     menuCards.forEach(card => {
         card.addEventListener('click', () => {
-            // Get item name and price from data attributes
+            console.log('Card clicked', card);
+
             const itemName = card.getAttribute('data-item');
             const itemPrice = card.getAttribute('data-price');
 
-            // Increment cart count
             cartCount++;
 
+            // Template literal to update the cart link text with the new count
             if (cartLink) {
                 cartLink.textContent = `Cart (${cartCount})`;
             }
 
-            // Add visual feedback
+            // Add CSS to show the item has been added to the cart
             card.classList.add('added');
 
             const overlay = card.querySelector('.menuItemPictureOverlay');
@@ -32,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 overlay.textContent = 'Added!';
             }
 
-            // Reset visual feedback after 1.5 seconds
+            // Reset the visible confirmation after 1.5 seconds
             setTimeout(() => {
                 card.classList.remove('added');
 
@@ -41,8 +40,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, 1500);
 
-            // For later debugging, log the item added and current cart count
-            console.log(`Added: ${itemName} ($${itemPrice}) - Cart: ${cartCount}`);
+            console.log(
+                `Added ${itemName} ($${itemPrice}) - Cart: ${cartCount}`
+            );
         });
     });
 });
