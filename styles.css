@@ -186,6 +186,98 @@ body {
     color: var(--white);
 }
 
+/* ========================================
+   CHECKOUT REMOVE BUTTON
+   ======================================== */
+
+.checkout-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.checkout-item:last-child {
+    border-bottom: none;
+}
+
+.item-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.remove-item-btn {
+    background: none;
+    border: none;
+    color: #cc0000;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.remove-item-btn:hover {
+    background: #ffebeb;
+}
+
+.dark-mode .remove-item-btn:hover {
+    background: #3a1a1a;
+}
+
+/* ========================================
+   CONFIRMATION ORDER ITEMS
+   ======================================== */
+
+.order-item-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.order-item-row:last-child {
+    border-bottom: none;
+}
+
+.order-item-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.order-item-price {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Empty cart message */
+#empty-cart-message {
+    text-align: center;
+    padding: 40px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    background: var(--bg-card);
+}
+
+#empty-cart-message p {
+    color: var(--text-secondary);
+}
+
+#empty-cart-message .secondaryButton {
+    margin-top: 15px;
+}
+
+/* Order not found state */
+.confirmationBox.order-not-found .confirmationIcon {
+    display: none;
+}
+
+.confirmationBox.order-not-found h2 {
+    color: #cc0000;
+}
 
 /* ----------
    Login Page
