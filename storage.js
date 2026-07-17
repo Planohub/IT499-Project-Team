@@ -15,7 +15,7 @@ function getCart() {
     try {
         const cart = JSON.parse(savedCart);
 
-        if(!Array.isArray(cart)) {
+        if (!Array.isArray(cart)) {
             console.error('Cart data in localStorage is not an array');
             // return empty array
             return [];
@@ -25,5 +25,21 @@ function getCart() {
     } catch (e) {
         console.error('Unable to read cart from localStorage', e);
         return [];
+    }
+}
+
+function saveCart(cart) {
+    if (!Array.isArray(cart)) {
+        console.error('Cart must be an array before it can be saved');
+        return false;
+    }
+
+    try {
+        const cartJSON = JSON.stringify(cart);
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+        return true;
+    } catch (e) {
+        console.error('Unable to save cart to localStorage', e);
+        return false;
     }
 }
