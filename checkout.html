@@ -7,7 +7,6 @@
     <title>CampusFoodLink+ — Checkout</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
     <!-- Navigation Bar -->
     <nav class="navigationBar">
@@ -15,7 +14,7 @@
             <div class="navigationBrand"><a href="index.html">CampusFoodLink+</a></div>
             <div class="navigationLinks">
                 <a href="vendors.html">Vendors</a>
-                <a href="checkout.html" class="active">Cart (3)</a>
+                <a href="checkout.html" class="active" id="cartLink">Cart (0)</a>
                 <a href="#">Orders</a>
                 <a href="index.html">Logout</a>
             </div>
@@ -33,45 +32,21 @@
         </div>
 
         <!-- Cart Items -->
-        <div class="checkoutItems">
-            <div class="checkoutItem">
-                <div class="itemSummary">
-                    <span class="itemName">Classic Burger</span>
-                    <span class="itemQty">x4</span>
-                </div>
-                <span class="itemPrice">$10.25</span>
-            </div>
-
-            <div class="checkoutItem">
-                <div class="itemSummary">
-                    <span class="itemName">Onion Rings</span>
-                    <span class="itemQty">x4</span>
-                </div>
-                <span class="itemPrice">$5.50</span>
-            </div>
-
-            <div class="checkoutItem">
-                <div class="itemSummary">
-                    <span class="itemName">Milkshake</span>
-                    <span class="itemQty">x1</span>
-                </div>
-                <span class="itemPrice">$4.75</span>
-            </div>
-        </div>
+        <div class="checkoutItems" id="checkoutItems"></div>
 
         <!-- Order Summary -->
         <div class="orderSummary">
             <div class="summaryRow">
                 <span>Subtotal</span>
-                <span>$67.75</span>
+                <span id="subtotal">$0.00</span>
             </div>
             <div class="summaryRow">
                 <span>Tax</span>
-                <span>$0.00</span>
+                <span id="tax">$0.00</span>
             </div>
             <div class="summaryRow total">
                 <span>Total</span>
-                <span>$67.75</span>
+                <span id="total">$0.00</span>
             </div>
         </div>
 
@@ -84,6 +59,8 @@
     <footer>
         <span class="balanceBadge">Meal-Plan Balance:&nbsp;$250.00</span>
     </footer>
+    <script src="storage.js"></script>
+    <script src="checkout.js"></script>
 </body>
 
 </html>

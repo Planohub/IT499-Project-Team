@@ -1,6 +1,7 @@
 // GLOBAL CONSTS - Keys used to identify saved data in localStorage (user's browser)
 const CART_STORAGE_KEY = 'campusFoodLinkCart';
 const ORDER_STORAGE_KEY = 'campusFoodLinkLatestOrder';
+const VENDOR_STORAGE_KEY = 'campusFoodLinkSelectedVendor';
 
 
 // Retrieve saved cart from localStorage
@@ -35,7 +36,6 @@ function saveCart(cart) {
     }
 
     try {
-        const cartJSON = JSON.stringify(cart);
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
         return true;
     } catch (e) {
@@ -43,3 +43,66 @@ function saveCart(cart) {
         return false;
     }
 }
+
+function clearCart() {
+    localStorage.removeItem(CART_STORAGE_KEY);
+}
+
+function saveLatestOrder(order) {
+    try {
+        localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(order));
+        return true;
+    } catch (e) {
+        console.error('Unable to save order to localStorage', e);
+        return false;
+    }
+}
+
+function saveSelectedVendor(vendor) {
+    if (!vendor || typeof vendor !== 'object') {
+        console.error('A valid vendor must be provided');
+        return false;
+    }
+
+    try {
+        localStorage.setItem(
+            VENDOR_STORAGE_KEY,
+            JSON.stringify(vendor)
+        );
+        return true;
+    } catch (e) {
+        console.error('Unable to save selected vendor', e);
+        return false;
+    }
+}
+
+function getSelectedVendor() {
+    const savedVendor = localStorage.getItem(VENDOR_STORAGE_KEY);
+
+    if(savedVendor === null) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(savedVendor);
+    } catch (e) {
+        console.error('Unable to read selected vendor', e);
+        return null;
+    }
+}
+
+function getLatestOrder() {
+    const savedOrder = localStorage.getItem(ORDER_STORAGE_KEY);
+
+    if (savedOrder === null) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(savedOrder);
+    } catch (e) {
+        console.error('Unable to read order from localStorage', e);
+        return null;
+    }
+}
+
