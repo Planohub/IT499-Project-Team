@@ -2,7 +2,7 @@
 // CONFIRMATION.JS — Order Confirmation Logic
 // ========================================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Get order ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('orderId');
@@ -19,6 +19,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const orderGrandTotalElement = document.getElementById('orderGrandTotal');
     const errorMessage = document.getElementById('error-message');
 
+    const mealPlanBalanceElement =
+        document.getElementById('mealPlanBalance');
+
+    if (mealPlanBalanceElement) {
+        mealPlanBalanceElement.textContent =
+            `$${getMealPlanBalance().toFixed(2)}`;
+    }
+
     // ========================================
     // 1. LOAD ORDER
     // ========================================
@@ -26,15 +34,24 @@ document.addEventListener('DOMContentLoaded', function() {
         // Try to get orders from localStorage
         let orders = [];
 
-        // Method 1: Try 'orders' key (from checkout page)
+        // Method 1: Try the saved order-history array
         const ordersData = localStorage.getItem('orders');
+
         if (ordersData) {
-            orders = JSON.parse(ordersData);
+            try {
+                const parsedOrders = JSON.parse(ordersData);
+
+                if (Array.isArray(parsedOrders)) {
+                    orders = parsedOrders;
+                }
+            } catch (e) {
+                console.error('Unable to read order history', e);
+            }
         }
 
         // Method 2: Try 'latestOrder' key (from storage.js)
         if (orders.length === 0) {
-            const latestOrder = JSON.parse(localStorage.getItem('latestOrder'));
+            const latestOrder = getLatestOrder();
             if (latestOrder) {
                 orders = [latestOrder];
             }
@@ -100,9 +117,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // "Order Another" button
     const orderAnotherBtn = document.getElementById('orderAnotherBtn');
     if (orderAnotherBtn) {
-        orderAnotherBtn.addEventListener('click', function(e) {
+        orderAnotherBtn.addEventListener('click', function (e) {
             e.preventDefault();
-            localStorage.removeItem('cart');
+            clearCart();
             window.location.href = 'vendors.html';
         });
     }
@@ -110,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // "Continue Shopping" button
     const continueShoppingBtn = document.getElementById('continueShoppingBtn');
     if (continueShoppingBtn) {
-        continueShoppingBtn.addEventListener('click', function(e) {
+        continueShoppingBtn.addEventListener('click', function (e) {
             e.preventDefault();
             window.location.href = 'vendors.html';
         });

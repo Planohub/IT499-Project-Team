@@ -29,7 +29,8 @@
     <div class="vendorSelectionContainer">
         <div class="confirmationBox">
             <!-- Error Message -->
-            <div id="error-message" style="display: none; color: #cc0000; padding: 15px; border: 2px solid #cc0000; border-radius: 8px; margin-bottom: 20px;">
+            <div id="error-message"
+                style="display: none; color: #cc0000; padding: 15px; border: 2px solid #cc0000; border-radius: 8px; margin-bottom: 20px;">
             </div>
 
             <div class="confirmationIcon">✅</div>
@@ -60,7 +61,8 @@
             </div>
 
             <!-- Order Items -->
-            <div style="text-align: left; border: 1px solid #eeeeee; border-radius: 6px; padding: 16px 20px; margin-bottom: 20px; background: #f9f9f9;">
+            <div
+                style="text-align: left; border: 1px solid #eeeeee; border-radius: 6px; padding: 16px 20px; margin-bottom: 20px; background: #f9f9f9;">
                 <h4 style="margin-bottom: 10px; color: #333;">Items</h4>
                 <div id="orderItems">
                     <!-- Items will be rendered by JavaScript -->
@@ -90,7 +92,9 @@
         </div>
     </div>
     <footer>
-        <span class="balanceBadge">Meal-Plan Balance:&nbsp;$182.25</span>
+        <span class="balanceBadge">
+            Meal-Plan Balance:&nbsp;<span id="mealPlanBalance">$250.00</span>
+        </span>
     </footer>
 
     <script src="storage.js"></script>

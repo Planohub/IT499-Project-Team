@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalElement = document.getElementById('total');
     const cartLink = document.getElementById('cartLink');
     const placeOrderButton = document.getElementById('placeOrderButton');
+    const mealPlanBalanceElement = document.getElementById('mealPlanBalance');
+
+    const mealPlanBalance = getMealPlanBalance();
+    if (mealPlanBalanceElement) {
+        mealPlanBalanceElement.textContent = `$${mealPlanBalance.toFixed(2)}`;
+    }
 
     const cartCount = cart.reduce((total, item) => {
         return total + item.quantity;
@@ -92,6 +98,16 @@ document.addEventListener('DOMContentLoaded', function () {
             const orderTax = orderSubtotal * 0.075;
             const orderTotal = orderSubtotal + orderTax;
 
+            const currentBalance = getMealPlanBalance();
+
+            if (orderTotal > currentBalance) {
+                alert('Insufficient meal-plan balance.');
+                return;
+            }
+
+            const updatedBalance = currentBalance - orderTotal;
+
+
             const order = {
                 orderId: getNextOrderId(),
                 studentId: 101,
@@ -112,11 +128,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 completedTime: null
             };
 
-            // Save to 'orders' in localStorage (for confirmation page)
-            const orders = JSON.parse(localStorage.getItem('orders')) || [];
-            orders.push(order);
-            localStorage.setItem('orders', JSON.stringify(orders));
-
             const wasSaved = saveLatestOrder(order);
 
             if (!wasSaved) {
@@ -124,6 +135,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            const balanceWasSaved = saveMealPlanBalance(updatedBalance);
+
+            if (!balanceWasSaved) {
+                alert('Unable to update the meal-plan balance.');
+                return;
+            }
+
+            // Retrieve existing order history from localStorage
+            let orders = [];
+
+            try {
+                const savedOrders = JSON.parse(localStorage.getItem('orders'));
+
+                if (Array.isArray(savedOrders)) {
+                    orders = savedOrders;
+                }
+            } catch (e) {
+                console.error('Unable to read order history', e);
+            }
+
+            // Add the new order and save the updated history
+            orders.push(order);
+            localStorage.setItem('orders', JSON.stringify(orders));
+
+            // Clear cart after saving the order to localStorage
             clearCart();
             window.location.href = `confirmation.html?orderId=${order.orderId}`;
         });
