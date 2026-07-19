@@ -51,8 +51,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     const taxRate = 0.075; // 7.5% tax
-    const tax = subtotal * taxRate;
-    const total = subtotal + tax;
+    const tax = Number((subtotal * taxRate).toFixed(2));
+    const total = Number((subtotal + tax).toFixed(2));
 
     subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
     taxElement.textContent = `$${tax.toFixed(2)}`;
@@ -95,8 +95,8 @@ document.addEventListener('DOMContentLoaded', function () {
             currentCart.forEach(item => {
                 orderSubtotal += item.price * item.quantity;
             });
-            const orderTax = orderSubtotal * 0.075;
-            const orderTotal = orderSubtotal + orderTax;
+            const orderTax = Number((orderSubtotal * 0.075).toFixed(2));
+            const orderTotal = Number((orderSubtotal + orderTax).toFixed(2));
 
             const currentBalance = getMealPlanBalance();
 
