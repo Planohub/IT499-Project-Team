@@ -3,21 +3,42 @@ document.addEventListener('DOMContentLoaded', function () {
         '.navigationLinks a[href="checkout.html"]'
     );
 
-    let cartCount = 0;
-
     // Select all menu item cards (querySelectorAll)
     const menuCards = document.querySelectorAll('.menuItemBox');
 
+    let cart = getCart();
+
+    let cartCount = cart.reduce((total, item) => {
+        return total + item.quantity;
+    }, 0);
+
+    if (cartLink) {
+        cartLink.textContent = `Cart (${cartCount})`;
+    }
+
     menuCards.forEach(card => {
         card.addEventListener('click', () => {
-            console.log('Card clicked', card);
-
             const itemName = card.getAttribute('data-item');
             const itemPrice = card.getAttribute('data-price');
 
-            cartCount++;
+            const existingItem = cart.find(item => item.item === itemName);
 
-            // Template literal to update the cart link text with the new count
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({
+                    item: itemName,
+                    price: Number(itemPrice),
+                    quantity: 1
+                });
+            }
+            saveCart(cart);
+
+            cartCount = cart.reduce((total, item) => {
+                return total + item.quantity;
+            }, 0);
+
+            // Update the cart link text with the new count
             if (cartLink) {
                 cartLink.textContent = `Cart (${cartCount})`;
             }
