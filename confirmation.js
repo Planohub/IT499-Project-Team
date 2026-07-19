@@ -8,34 +8,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const orderId = urlParams.get('orderId');
 
     // Elements
-    const orderNumberElement = document.getElementById('order-number');
-    const orderVendorElement = document.getElementById('order-vendor');
-    const orderTotalElement = document.getElementById('order-total');
-    const orderStatusElement = document.getElementById('order-status');
-    const orderDateElement = document.getElementById('order-date');
-    const orderItemsContainer = document.getElementById('order-items');
-    const orderSubtotalElement = document.getElementById('order-subtotal');
-    const orderTaxElement = document.getElementById('order-tax');
-    const orderGrandTotalElement = document.getElementById('order-grand-total');
+    const orderNumberElement = document.getElementById('orderNumber');
+    const orderVendorElement = document.getElementById('orderVendor');
+    const orderTotalElement = document.getElementById('orderTotal');
+    const orderStatusElement = document.getElementById('orderStatus');
+    const orderDateElement = document.getElementById('orderDate');
+    const orderItemsContainer = document.getElementById('orderItems');
+    const orderSubtotalElement = document.getElementById('orderSubtotal');
+    const orderTaxElement = document.getElementById('orderTax');
+    const orderGrandTotalElement = document.getElementById('orderGrandTotal');
     const errorMessage = document.getElementById('error-message');
 
     // ========================================
     // 1. LOAD ORDER
     // ========================================
     function loadOrder() {
-        // Get orders from localStorage
-        const orders = JSON.parse(localStorage.getItem('orders')) || [];
+        // Try to get orders from localStorage
+        let orders = [];
+
+        // Method 1: Try 'orders' key (from checkout page)
+        const ordersData = localStorage.getItem('orders');
+        if (ordersData) {
+            orders = JSON.parse(ordersData);
+        }
+
+        // Method 2: Try 'latestOrder' key (from storage.js)
+        if (orders.length === 0) {
+            const latestOrder = JSON.parse(localStorage.getItem('latestOrder'));
+            if (latestOrder) {
+                orders = [latestOrder];
+            }
+        }
 
         // Find the order
         let order = null;
 
         if (orderId) {
-            order = orders.find(o => o.orderId === orderId);
+            order = orders.find(o => String(o.orderId) === String(orderId));
         }
 
         // If no order found, get the most recent order
         if (!order && orders.length > 0) {
             order = orders[orders.length - 1];
+            console.log('📦 Using most recent order:', order.orderId);
         }
 
         // Handle missing order error
@@ -44,17 +59,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorMessage.style.display = 'block';
                 errorMessage.textContent = '⚠️ Order not found. Please place an order first.';
             }
-            // Show empty state
             document.querySelector('.confirmationBox')?.classList.add('order-not-found');
             console.warn('❌ No order found');
             return;
         }
 
         // Display order details
-        if (orderNumberElement) orderNumberElement.textContent = order.orderId;
-        if (orderVendorElement) orderVendorElement.textContent = order.vendor || 'Campus Grill';
+        if (orderNumberElement) orderNumberElement.textContent = `#${order.orderId}`;
+        if (orderVendorElement) orderVendorElement.textContent = order.vendorName || 'Campus Grill';
         if (orderTotalElement) orderTotalElement.textContent = `$${order.total.toFixed(2)}`;
-        if (orderStatusElement) orderStatusElement.textContent = order.status || 'Confirmed';
+        if (orderStatusElement) orderStatusElement.textContent = order.currentStatus || 'Confirmed';
         if (orderDateElement) orderDateElement.textContent = order.orderDate || new Date().toLocaleString();
 
         // Display items
@@ -83,19 +97,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // 2. EVENT LISTENERS
     // ========================================
 
-    // "Order Another" button - clear cart and go to vendors
-    const orderAnotherBtn = document.getElementById('order-another-btn');
+    // "Order Another" button
+    const orderAnotherBtn = document.getElementById('orderAnotherBtn');
     if (orderAnotherBtn) {
         orderAnotherBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            // Clear cart just in case
             localStorage.removeItem('cart');
             window.location.href = 'vendors.html';
         });
     }
 
     // "Continue Shopping" button
-    const continueShoppingBtn = document.getElementById('continue-shopping-btn');
+    const continueShoppingBtn = document.getElementById('continueShoppingBtn');
     if (continueShoppingBtn) {
         continueShoppingBtn.addEventListener('click', function(e) {
             e.preventDefault();
