@@ -410,6 +410,7 @@ body {
 .vendorBox h4 {
     font-size: 1.2rem;
     font-weight: 600;
+    text-align: center;
     margin-bottom: 15px;
 }
 
