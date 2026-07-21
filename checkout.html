@@ -7,6 +7,7 @@
     <title>CampusFoodLink+ — Checkout</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <!-- Navigation Bar -->
     <nav class="navigationBar">
@@ -52,12 +53,15 @@
 
         <!-- Action Buttons -->
         <div class="checkoutOptions">
-            <a href="vendors.html" class="secondaryButton">← Continue Shopping</a>
+            <a href="vendors.html" class="secondaryButton">&larr; Continue Shopping</a>
+            <button id="clearCartButton" class="secondaryButton">❌ Clear Cart</button>
             <button id="placeOrderButton" class="defaultButton">Place Order</button>
         </div>
     </div>
     <footer>
-        <span class="balanceBadge">Meal-Plan Balance:&nbsp;$250.00</span>
+        <span class="balanceBadge">
+            Meal-Plan Balance:&nbsp;<span id="mealPlanBalance">$250.00</span>
+        </span>
     </footer>
     <script src="storage.js"></script>
     <script src="checkout.js"></script>

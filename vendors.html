@@ -14,7 +14,7 @@
             <div class="navigationBrand"><a href="index.html">CampusFoodLink+</a></div>
             <div class="navigationLinks">
                 <a href="vendors.html" class="active">Vendors</a>
-                <a href="checkout.html">Cart (0)</a>
+                <a id="cartLink" href="checkout.html">Cart (0)</a>
                 <a href="#">Orders</a>
                 <a href="index.html">Logout</a>
             </div>
@@ -31,31 +31,31 @@
         </div>
 
         <div class="vendorGrid">
-            <a href="menu.html" class="vendorBox" data-vendor-id="1" data-vendor-name="Quad Side Cafe">
+            <a href="menu.html" class="vendorBox" data-vendor-id="1" data-vendor-name="Quad Side Cafe" data-vendor-location="Student Union, Room 102">
                 <h4>Quad Side Café</h4>
                 <p>Student Union, Room 102</p>
                 <span class="secondaryButton">View Menu →</span>
             </a>
 
-            <a href="menu.html" class="vendorBox" data-vendor-id="2" data-vendor-name="Brick Oven Pizza">
+            <a href="menu.html" class="vendorBox" data-vendor-id="2" data-vendor-name="Brick Oven Pizza" data-vendor-location="Dining Hall North">
                 <h4>Brick Oven Pizza</h4>
                 <p>Dining Hall North</p>
                 <span class="secondaryButton">View Menu →</span>
             </a>
 
-            <a href="menu.html" class="vendorBox" data-vendor-id="3" data-vendor-name="East Hall Market">
+            <a href="menu.html" class="vendorBox" data-vendor-id="3" data-vendor-name="East Hall Market" data-vendor-location="Dining Hall East">
                 <h4>East Hall Market</h4>
                 <p>Dining Hall East</p>
                 <span class="secondaryButton">View Menu →</span>
             </a>
 
-            <a href="menu.html" class="vendorBox" data-vendor-id="4" data-vendor-name="South Campus Kitchen">
+            <a href="menu.html" class="vendorBox" data-vendor-id="4" data-vendor-name="South Campus Kitchen" data-vendor-location="Dining Hall South">
                 <h4>South Campus Kitchen</h4>
                 <p>Dining Hall South</p>
                 <span class="secondaryButton">View Menu →</span>
             </a>
 
-            <a href="menu.html" class="vendorBox" data-vendor-id="5" data-vendor-name="West Hall Deli">
+            <a href="menu.html" class="vendorBox" data-vendor-id="5" data-vendor-name="West Hall Deli" data-vendor-location="Dining Hall West">
                 <h4>West Hall Deli</h4>
                 <p>Dining Hall West</p>
                 <span class="secondaryButton">View Menu →</span>
@@ -63,7 +63,9 @@
         </div>
     </div>
     <footer>
-        <span class="balanceBadge">Meal-Plan Balance:&nbsp;$250.00</span>
+        <span class="balanceBadge">
+            Meal-Plan Balance:&nbsp;<span id="mealPlanBalance">$250.00</span>
+        </span>
     </footer>
     <script src="storage.js"></script>
     <script src="vendors.js"></script>
