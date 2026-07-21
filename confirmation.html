@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFoodLink+ — Order Confirmation</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navigationBar">
+        <div class="navigationContainer">
+            <div class="navigationBrand"><a href="index.html">CampusFoodLink+</a></div>
+            <div class="navigationLinks">
+                <a href="vendors.html">Vendors</a>
+                <a href="#">Cart (0)</a>
+                <a href="confirmation.html" class="active">Orders</a>
+                <a href="index.html">Logout</a>
+            </div>
+            <div class="navigationUser">
+                <span class="userBadge">Student</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="vendorSelectionContainer">
+        <div class="confirmationBox">
+            <!-- Error Message -->
+            <div id="error-message"
+                style="display: none; color: #cc0000; padding: 15px; border: 2px solid #cc0000; border-radius: 8px; margin-bottom: 20px;">
+            </div>
+
+            <div class="confirmationIcon">✅</div>
+            <h2>Order Placed!</h2>
+            <p class="confirmationMessage">Your order has been received and is being prepared.</p>
+
+            <div class="orderDetailsBox">
+                <div class="orderDetailRow">
+                    <span class="orderDetailLabel">Order #</span>
+                    <span class="detailsOfOrder" id="orderNumber">#1001</span>
+                </div>
+                <div class="orderDetailRow">
+                    <span class="orderDetailLabel">Vendor</span>
+                    <span class="detailsOfOrder" id="orderVendor">Campus Grill</span>
+                </div>
+                <div class="orderDetailRow">
+                    <span class="orderDetailLabel">Total</span>
+                    <span class="detailsOfOrder" id="orderTotal">$67.75</span>
+                </div>
+                <div class="orderDetailRow">
+                    <span class="orderDetailLabel">Status</span>
+                    <span class="detailsOfOrder statusConfirmed" id="orderStatus">Confirmed</span>
+                </div>
+                <div class="orderDetailRow">
+                    <span class="orderDetailLabel">Date</span>
+                    <span class="detailsOfOrder" id="orderDate">Just now</span>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div
+                style="text-align: left; border: 1px solid #eeeeee; border-radius: 6px; padding: 16px 20px; margin-bottom: 20px; background: #f9f9f9;">
+                <h4 style="margin-bottom: 10px; color: #333;">Items</h4>
+                <div id="orderItems">
+                    <!-- Items will be rendered by JavaScript -->
+                </div>
+                <div style="border-top: 1px solid #eeeeee; margin-top: 10px; padding-top: 10px;">
+                    <div class="orderDetailRow">
+                        <span class="orderDetailLabel">Subtotal</span>
+                        <span class="detailsOfOrder" id="orderSubtotal">$0.00</span>
+                    </div>
+                    <div class="orderDetailRow">
+                        <span class="orderDetailLabel">Tax</span>
+                        <span class="detailsOfOrder" id="orderTax">$0.00</span>
+                    </div>
+                    <div class="orderDetailRow" style="font-weight: 700; font-size: 1.1rem;">
+                        <span class="orderDetailLabel">Total</span>
+                        <span class="detailsOfOrder" id="orderGrandTotal">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="orderNote">You will receive an update when your order is ready.</p>
+
+            <div class="confirmationButtons">
+                <a href="vendors.html" id="continueShoppingBtn" class="secondaryButton">← Continue Shopping</a>
+                <a href="vendors.html" id="orderAnotherBtn" class="defaultButton">Order Another</a>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <span class="balanceBadge">
+            Meal-Plan Balance:&nbsp;<span id="mealPlanBalance">$250.00</span>
+        </span>
+    </footer>
+
+    <script src="storage.js"></script>
+    <script src="confirmation.js"></script>
+</body>
+
+</html>

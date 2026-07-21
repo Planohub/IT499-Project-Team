@@ -1,0 +1,844 @@
+/* ----------------------
+   Root and global styles
+   ---------------------- */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --white: #fafafa;
+    --black: #000000;
+    --grey: #555555;
+    --lightGrey: #cccccc;
+
+}
+
+body {
+    font-family: Verdana, sans-serif;
+    background: var(--white);
+    color: var(--black);
+    min-height: 100vh;
+}
+
+.pageHeader {
+    margin-bottom: 25px;
+}
+
+.pageHeader h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.pageHeader p {
+    color: var(--grey);
+    margin-top: 5px;
+}
+
+
+/* ---------------------
+   Navigation at the top
+   --------------------- */
+
+.navigationBar {
+    border-bottom: 2px solid var(--grey);
+    padding: 15px 30px;
+    background: var(--white);
+}
+
+.navigationContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.navigationBrand {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--black);
+}
+
+.navigationBrand a {
+    color: var(--black);
+    text-decoration: underline;
+}
+
+
+.navigationLinks {
+    display: flex;
+    gap: 25px;
+}
+
+.navigationLinks a {
+    color: var(--black);
+    font-weight: 500;
+    text-decoration: none;
+    padding: 5px 0;
+    border-bottom: 2px solid transparent;
+}
+
+.navigationLinks a:hover,
+.navigationLinks a.active {
+    border-bottom-color: var(--black);
+}
+
+.navigationUser {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 0.9rem;
+}
+
+.userBadge {
+    border: 1px solid var(--grey);
+    padding: 4px 14px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.balanceBadge {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--white);
+    border: 2px solid var(--black);
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    .navigationContainer {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .navigationLinks {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pageHeader h2 {
+        font-size: 1.4rem;
+    }
+
+    .navigationUser {
+        font-size: 0.8rem;
+    }
+
+    .userBadge,
+    .balanceBadge {
+        padding: 2px 10px;
+    }
+}
+
+
+/* --------
+   Buttons
+   -------- */
+
+.defaultButton {
+    width: 100%;
+    padding: 10px;
+    background: var(--black);
+    color: var(--white);
+    border: 2px solid var(--black);
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.defaultButton:hover {
+    background: var(--white);
+    color: var(--black);
+}
+
+.secondaryButton {
+    display: inline-block;
+    padding: 8px 24px;
+    border: 2px solid var(--black);
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--black);
+    background: var(--white);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.secondaryButton:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+/* ========================================
+   CHECKOUT REMOVE BUTTON
+   ======================================== */
+
+.checkout-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.checkout-item:last-child {
+    border-bottom: none;
+}
+
+.item-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.remove-item-btn {
+    background: none;
+    border: none;
+    color: #cc0000;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.remove-item-btn:hover {
+    background: #ffebeb;
+}
+
+.dark-mode .remove-item-btn:hover {
+    background: #3a1a1a;
+}
+
+/* ========================================
+   CONFIRMATION ORDER ITEMS
+   ======================================== */
+
+.order-item-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.order-item-row:last-child {
+    border-bottom: none;
+}
+
+.order-item-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.order-item-price {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Empty cart message */
+#empty-cart-message {
+    text-align: center;
+    padding: 40px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    background: var(--bg-card);
+}
+
+#empty-cart-message p {
+    color: var(--text-secondary);
+}
+
+#empty-cart-message .secondaryButton {
+    margin-top: 15px;
+}
+
+/* Order not found state */
+.confirmationBox.order-not-found .confirmationIcon {
+    display: none;
+}
+
+.confirmationBox.order-not-found h2 {
+    color: #cc0000;
+}
+
+/* ----------
+   Login Page
+   ---------- */
+
+.loginBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.loginHeader {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.loginHeader h1 {
+    font-size: 2.5rem;
+    color: var(--black);
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.loginHeader .loginSubtitle {
+    color: var(--grey);
+    font-size: 1rem;
+    margin-top: 5px;
+    font-weight: 300;
+}
+
+.loginCredentials {
+    border: 2px solid var(--grey);
+    border-radius: 8px;
+    padding: 35px 35px 30px;
+    max-width: 350px;
+    width: 100%;
+    background: var(--white);
+}
+
+.loginCredentials h2 {
+    font-size: 1.3rem;
+    color: var(--black);
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+
+/* ----------
+   Login form
+   ---------- */
+
+.credentialForm {
+    margin-bottom: 16px;
+}
+
+.credentialForm label {
+    display: block;
+    font-weight: 600;
+    color: var(--black);
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+}
+
+.credentialForm input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--lightGrey);
+    border-radius: 4px;
+    font-size: 1rem;
+    background: var(--white);
+    color: var(--black);
+}
+
+.credentialForm input:focus {
+    outline: none;
+    border-color: var(--grey);
+}
+
+@media (max-width: 480px) {
+    .loginCredentials {
+        padding: 25px 20px 20px;
+    }
+
+    .loginHeader h1 {
+        font-size: 1.8rem;
+    }
+}
+
+
+/* --------------------
+   List of vendors page
+   -------------------- */
+
+.vendorSelectionContainer {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.vendorGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.vendorBox {
+    border: 2px solid var(--lightGrey);
+    border-radius: 8px;
+    padding: 30px 20px;
+    background: var(--white);
+    transition: border-color 0.2s;
+    text-decoration: none;
+    color: var(--black);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    min-height: 180px;
+}
+
+.vendorBox:hover {
+    border-color: var(--grey);
+}
+
+.vendorBox h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.vendorBox p {
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .vendorGrid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .vendorGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .vendorBox {
+        min-height: 140px;
+        padding: 20px 15px;
+    }
+}
+
+
+/* --------------
+   Temp Menu Page
+   -------------- */
+
+.menuPageHeader {
+    margin-bottom: 30px;
+}
+
+.menuPageHeader h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.menuPageHeader .vendorLocation {
+    color: var(--grey);
+    font-size: 1rem;
+}
+
+.goBackLink {
+    color: var(--black);
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    padding: 5px 0;
+    border-bottom: 2px solid transparent;
+}
+
+.goBackLink:hover {
+    border-bottom-color: var(--black);
+}
+
+.menuItemGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 30px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.menuItemWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.itemNameAbove {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--black);
+    margin-bottom: 8px;
+}
+
+.menuItemBox {
+    border: 2px solid var(--lightGrey);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--white);
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+}
+
+.menuItemBox.added {
+    border-color: var(--black);
+}
+
+.menuItemBox:hover {
+    border-color: var(--grey);
+    transform: scale(1.05);
+}
+
+/* Menu Item Picture/Price Areas */
+.menuItemPicture {
+    position: relative;
+    background: var(--lightGrey);
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+    transition: background 0.3s;
+}
+
+.menuItemBox:hover .menuItemPicture {
+    background: var(--grey);
+}
+
+.menuItemPictureOverlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--white);
+    background: rgba(0, 0, 0, 0.75);
+    padding: 10px 24px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    letter-spacing: 1px;
+}
+
+.menuItemBox:hover .menuItemPictureOverlay {
+    opacity: 1;
+}
+
+.menuItemPriceArea {
+    padding: 10px 16px 14px 16px;
+    border-top: 1px solid var(--grey);
+}
+
+.menuItemPrice {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--black);
+}
+
+/* Menu Page - Actions */
+.menuActions {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.menuActions .defaultButton {
+    width: auto;
+    margin-top: 2rem;
+    padding: .5rem 1.7rem;
+    text-decoration: none;
+}
+
+/* -------------------
+   Mobile menu queries
+   ------------------- */
+
+@media (max-width: 768px) {
+    .menuItemGrid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 20px;
+    }
+
+    .menuItemPicture {
+        min-height: 100px;
+        padding: 30px 15px;
+    }
+
+    .itemNameAbove {
+        font-size: 0.9rem;
+    }
+
+    .menuItemPictureOverlay {
+        font-size: 1rem;
+        padding: 8px 18px;
+    }
+
+    .menuItemPrice {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .menuItemGrid {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .menuItemPicture {
+        min-height: 80px;
+        padding: 20px 10px;
+    }
+
+    .menuItemPriceArea {
+        padding: 8px 10px 10px 10px;
+    }
+
+    .menuItemPrice {
+        font-size: 0.9rem;
+    }
+
+    .itemNameAbove {
+        font-size: 0.8rem;
+        margin-bottom: 5px;
+    }
+
+    .menuItemPictureOverlay {
+        font-size: 0.85rem;
+        padding: 6px 14px;
+    }
+}
+
+
+
+/* ----------------
+   Checkout page
+   ---------------- */
+
+.checkoutItems {
+    border: 2px solid var(--grey);
+    border-radius: 8px;
+    padding: 20px;
+    background: var(--white);
+    margin-bottom: 20px;
+}
+
+.checkoutItem {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 140px 40px;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--grey);
+}
+
+.checkoutItem:last-child {
+    border-bottom: none;
+}
+
+.itemSummary {
+    display: grid;
+    grid-template-columns: 200px max-content;
+    gap: 1rem;
+    align-items: center;
+}
+
+.itemName {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--black);
+}
+
+.itemQty {
+    min-width: 2rem;
+    text-align: center;
+    padding: .25rem .5rem;
+    border-left: 1px solid var(--grey);
+    border-right: 1px solid var(--grey);
+}
+
+.itemPrice {
+    font-weight: 600;
+    color: var(--black);
+}
+
+.quantityControls {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    border: 1px solid var(--grey);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.quantityControls button {
+    border: none;
+    background: transparent;
+    padding: .35rem .6rem;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.orderSummary {
+    border: 2px solid var(--grey);
+    border-radius: 8px;
+    padding: 20px;
+    background: var(--white);
+    margin-bottom: 25px;
+}
+
+.summaryRow {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    color: var(--grey);
+}
+
+.summaryRow.total {
+    font-weight: 700;
+    font-size: 1.2rem;
+    border-top: 2px solid var(--black);
+    padding-top: 12px;
+    margin-top: 8px;
+    color: var(--black);
+}
+
+.checkoutOptions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.checkoutOptions .defaultButton {
+    width: auto;
+    padding: 10px 30px;
+    margin-top: 0;
+}
+
+.checkoutOptions .secondaryButton {
+    padding: 10px 20px;
+}
+
+.removeItemButton {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1.3rem;
+}
+
+@media (max-width: 600px) {
+    .itemSummary {
+        grid-template-columns: 1fr;
+        gap: .5rem;
+    }
+}
+
+/* -------------------
+   Confirmation Page
+   ------------------- */
+
+.confirmationBox {
+    max-width: 500px;
+    margin: 40px auto;
+    text-align: center;
+    border: 2px solid var(--grey);
+    border-radius: 8px;
+    padding: 40px 30px;
+    background: var(--white);
+}
+
+.confirmationIcon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.confirmationBox h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 10px;
+}
+
+.confirmationMessage {
+    color: var(--grey);
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+}
+
+.orderDetailsBox {
+    text-align: left;
+    border: 1px solid var(--grey);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    background: var(--white);
+}
+
+.orderDetailRow {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--grey);
+}
+
+.orderDetailRow:last-child {
+    border-bottom: none;
+}
+
+.orderDetailLabel {
+    font-weight: 500;
+    color: var(--grey);
+}
+
+.detailsOfOrder {
+    font-weight: 600;
+    color: var(--black);
+}
+
+.orderNote {
+    color: var(--grey);
+    font-size: 0.9rem;
+    margin-bottom: 25px;
+}
+
+.confirmationButtons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.confirmationButtons .defaultButton {
+    width: auto;
+    padding: 10px 25px;
+    margin-top: 0;
+}
+
+.confirmationButtons .secondaryButton {
+    padding: 10px 20px;
+}
