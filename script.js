@@ -1,4 +1,24 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const selectedVendor = getSelectedVendor();
+
+    if (selectedVendor) {
+        const vendorNameElement =
+            document.getElementById('vendor-name');
+
+        const vendorLocationElement =
+            document.getElementById('vendorLocation');
+
+        if (vendorNameElement && selectedVendor.vendorName) {
+            vendorNameElement.textContent =
+                selectedVendor.vendorName;
+        }
+
+        if (vendorLocationElement && selectedVendor.location) {
+            vendorLocationElement.textContent =
+                selectedVendor.location;
+        }
+    }
+
     const mealPlanBalanceElement =
         document.getElementById('mealPlanBalance');
 

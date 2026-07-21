@@ -29,7 +29,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const selectedVendor = {
                 vendorId: Number(vendorLink.dataset.vendorId),
-                vendorName: vendorLink.dataset.vendorName
+                vendorName: vendorLink.dataset.vendorName,
+                location: vendorLink.dataset.vendorLocation
             };
 
             const wasSaved = saveSelectedVendor(selectedVendor);
