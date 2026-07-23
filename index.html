@@ -11,31 +11,36 @@
 <body>
     <div class="loginBox">
         <div class="loginHeader">
-            <!-- Logo goes here eventually -->
             <h1>CampusFoodLink+</h1>
             <p class="loginSubtitle">Smart Campus Dining Platform</p>
         </div>
 
         <div class="loginCredentials">
-            <h2>Login</h2>
+            <h2>Simulated Login</h2>
 
-            <!-- Prototype login routes to student ordering workflow -->
-            <form action="vendors.html">
+            <form action="vendors.html" style="margin-bottom: 20px;">
                 <div class="credentialForm">
-                    <label for="username">Username</label>
-                    <input type="text" id="username">
+                    <label for="username">Username (Student)</label>
+                    <input type="text" id="username" value="aydan.karimova">
                 </div>
-
                 <div class="credentialForm">
                     <label for="password">Password</label>
-                    <input type="password" id="password">
+                    <input type="password" id="password" value="••••••••">
                 </div>
-
-                <button type="submit" class="defaultButton">Sign In</button>
+                <button type="submit" class="defaultButton">Sign In as Student</button>
             </form>
+
+            <hr style="border: none; border-top: 1px solid var(--lightGrey); margin: 20px 0;">
+
+            <div style="text-align: center;">
+                <p style="font-size: 0.85rem; color: var(--grey); margin-bottom: 10px;">Administrative Portal Access:</p>
+                <a href="admin.html" class="secondaryButton" style="display: block; width: 100%; text-align: center;">Sign In as Dining Services administrator</a>
+            </div>
         </div>
     </div>
+
     <script>
+        // Clears active cart state on returning to login screen
         localStorage.removeItem('campusFoodLinkCart');
     </script>
 </body>
