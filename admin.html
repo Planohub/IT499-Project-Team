@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CampusFoodLink+ — Operational Reports</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navigationBar">
+        <div class="navigationContainer">
+            <div class="navigationBrand"><a href="index.html">CampusFoodLink+</a></div>
+            <div class="navigationLinks">
+                <a href="admin.html" class="active">Operational Reports</a>
+                <a href="index.html">Logout</a>
+            </div>
+            <div class="navigationUser">
+                <span class="userBadge">Dining Services administrator</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="vendorSelectionContainer">
+        <div class="pageHeader">
+            <h2>Operational Reports</h2>
+            <p>System usage, vendor order volumes, and peak demand statistics</p>
+        </div>
+
+        <div class="vendorGrid" style="margin-bottom: 30px;">
+            <div class="vendorBox">
+                <h4>Total Orders</h4>
+                <p id="totalOrdersCount" style="font-size: 2rem; font-weight: 700;">0</p>
+            </div>
+            <div class="vendorBox">
+                <h4>Total Revenue</h4>
+                <p id="totalRevenueAmount" style="font-size: 2rem; font-weight: 700;">$0.00</p>
+            </div>
+            <div class="vendorBox">
+                <h4>Avg Order Value</h4>
+                <p id="avgOrderValueAmount" style="font-size: 2rem; font-weight: 700;">$0.00</p>
+            </div>
+        </div>
+
+        <div class="orderDetailsBox">
+            <h3>Vendor Order Volume Breakdown</h3>
+            <div id="vendorReportTable" style="margin-top: 15px;">
+                </div>
+        </div>
+    </div>
+
+    <script src="storage.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
