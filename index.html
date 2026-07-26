@@ -1,43 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CampusFoodLink+ — Login</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
     <div class="loginBox">
         <div class="loginHeader">
-            <!-- Logo goes here eventually -->
             <h1>CampusFoodLink+</h1>
-            <p class="loginSubtitle">Smart Campus Dining Platform</p>
+            <p class="login-subtitle">Smart Campus Dining Platform</p>
         </div>
 
         <div class="loginCredentials">
             <h2>Login</h2>
 
-            <!-- Prototype login routes to student ordering workflow -->
-            <form action="vendors.html">
+            <form id="loginForm">
                 <div class="credentialForm">
                     <label for="username">Username</label>
-                    <input type="text" id="username">
+                    <input type="text" id="username" placeholder="Enter username">
                 </div>
 
                 <div class="credentialForm">
                     <label for="password">Password</label>
-                    <input type="password" id="password">
+                    <input type="password" id="password" placeholder="Enter password">
                 </div>
 
                 <button type="submit" class="defaultButton">Sign In</button>
             </form>
+
+            <!-- Demo Credentials -->
+            <div style="margin-top: 20px; padding: 12px; border: 1px solid #cccccc; border-radius: 4px; background: #f9f9f9; font-size: 0.85rem; color: #555;">
+                <p style="font-weight: 600; margin-bottom: 4px;">Demo Credentials:</p>
+                <p><strong>student</strong> — Student Dashboard</p>
+                <p><strong>vendor</strong> — Vendor Dashboard</p>
+                <p><strong>admin</strong> — Administrator Dashboard</p>
+                <p style="font-size: 0.8rem; color: #888; margin-top: 4px;">(Password: any)</p>
+            </div>
         </div>
     </div>
+
     <script>
-        localStorage.removeItem('campusFoodLinkCart');
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const username = document.getElementById('username').value.trim().toLowerCase();
+                const password = document.getElementById('password').value.trim();
+
+                // Role-based redirect
+                if (username === 'student') {
+                    window.location.href = 'student-dashboard.html';
+                } else if (username === 'vendor') {
+                    window.location.href = 'vendor-dashboard.html';
+                } else if (username === 'admin') {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    alert('❌ Invalid username. Please use: student, vendor, or admin');
+                    document.getElementById('password').value = '';
+                }
+            });
+        });
     </script>
 </body>
-
 </html>

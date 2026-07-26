@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
         orderAnotherBtn.addEventListener('click', function (e) {
             e.preventDefault();
             clearCart();
-            window.location.href = 'vendors.html';
+            window.location.href = 'student-dashboard.html';
         });
     }
 
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (continueShoppingBtn) {
         continueShoppingBtn.addEventListener('click', function (e) {
             e.preventDefault();
-            window.location.href = 'vendors.html';
+            window.location.href = 'student-dashboard.html';
         });
     }
 

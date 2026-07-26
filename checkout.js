@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Student must select vendor to order
             if (!selectedVendor) {
                 alert('Please select a vendor before placing an order.');
-                window.location.href = 'vendors.html';
+                window.location.href = 'student-dashboard.html';
                 return;
             }
 
