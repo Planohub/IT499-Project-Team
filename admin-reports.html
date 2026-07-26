@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFoodLink+ — Operational Reports</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navigationBar">
+        <div class="navigationContainer">
+            <div class="navigationBrand"><a href="index.html">CampusFoodLink+</a></div>
+            <div class="navigationLinks">
+                <a href="admin-dashboard.html">Dashboard</a>
+                <a href="admin-reports.html" class="active">Reports</a>
+                <a href="#">Vendors</a>
+                <a href="#">Students</a>
+                <a href="index.html">Logout</a>
+            </div>
+            <div class="navigationUser">
+                <span class="userBadge">Dining Services administrator</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="vendorSelectionContainer">
+        <div class="pageHeader">
+            <h2>Operational Reports</h2>
+            <p>System usage, vendor order volumes, buying trends, and peak-demand analysis</p>
+        </div>
+
+        <div class="vendorGrid" style="margin-bottom: 25px;">
+            <div class="vendorBox" style="min-height: 120px; padding: 20px;">
+                <h4>Total Revenue</h4>
+                <p id="totalRevenue" style="font-size: 1.8rem; font-weight: 700; color: var(--black); margin-top: 5px;">$0.00</p>
+            </div>
+            <div class="vendorBox" style="min-height: 120px; padding: 20px;">
+                <h4>Total Orders</h4>
+                <p id="totalOrders" style="font-size: 1.8rem; font-weight: 700; color: var(--black); margin-top: 5px;">0</p>
+            </div>
+            <div class="vendorBox" style="min-height: 120px; padding: 20px;">
+                <h4>Avg Order Value</h4>
+                <p id="avgOrderValue" style="font-size: 1.8rem; font-weight: 700; color: var(--black); margin-top: 5px;">$0.00</p>
+            </div>
+        </div>
+
+        <div class="orderDetailsBox" style="margin-bottom: 25px;">
+            <h3>Vendor Order Volume & Performance</h3>
+            <div id="vendorPerformanceContainer" style="margin-top: 15px; overflow-x: auto;">
+                </div>
+        </div>
+
+        <div class="orderDetailsBox" style="margin-bottom: 25px;">
+            <h3>Buying Trends: Top Selling Menu Items</h3>
+            <div id="buyingTrendsContainer" style="margin-top: 15px; overflow-x: auto;">
+                </div>
+        </div>
+
+        <div class="orderDetailsBox" style="margin-bottom: 25px;">
+            <h3>Peak-Demand Periods (Hourly Order Distribution)</h3>
+            <div id="peakHoursContainer" style="margin-top: 15px; overflow-x: auto;">
+                </div>
+        </div>
+    </div>
+
+    <script src="storage.js"></script>
+    <script src="admin-reports.js"></script>
+</body>
+
+</html>
