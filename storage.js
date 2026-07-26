@@ -138,3 +138,74 @@ function saveMealPlanBalance(balance) {
         return false;
     }
 }
+
+// Add to the bottom of storage.js
+
+/**
+ * Retrieves the full order history array from localStorage.
+ * Returns an empty array if no orders exist.
+ */
+function getOrdersHistory() {
+    const savedOrders = localStorage.getItem('orders');
+    if (!savedOrders) {
+        return [];
+    }
+    try {
+        const orders = JSON.parse(savedOrders);
+        return Array.isArray(orders) ? orders : [];
+    } catch (e) {
+        console.error('Unable to read order history from localStorage', e);
+        return [];
+    }
+}
+
+/**
+ * Clears or seeds initial mock order data for testing reports.
+ */
+function seedMockOrdersIfEmpty() {
+    const existing = getOrdersHistory();
+    if (existing.length > 0) return;
+
+    // Seed mock data if no live orders exist yet
+    const now = Date.now();
+    const mockOrders = [
+        {
+            orderId: 9001,
+            studentId: 101,
+            vendorId: 1,
+            vendorName: 'Campus Grill',
+            orderDate: new Date(now - 3600000 * 4).toLocaleString(), // 4 hrs ago
+            timestamp: now - 3600000 * 4,
+            items: [{ name: 'Classic Burger', price: 10.25, quantity: 2, total: 20.50 }],
+            subtotal: 20.50, tax: 1.54, total: 22.04,
+            currentStatus: 'Complete'
+        },
+        {
+            orderId: 9002,
+            studentId: 102,
+            vendorId: 2,
+            vendorName: 'Brick Oven Pizza',
+            orderDate: new Date(now - 3600000 * 2).toLocaleString(), // 2 hrs ago
+            timestamp: now - 3600000 * 2,
+            items: [
+                { name: 'Pepperoni Slice', price: 3.75, quantity: 3, total: 11.25 },
+                { name: 'Garlic Knots', price: 4.50, quantity: 1, total: 4.50 }
+            ],
+            subtotal: 15.75, tax: 1.18, total: 16.93,
+            currentStatus: 'Complete'
+        },
+        {
+            orderId: 9003,
+            studentId: 101,
+            vendorId: 1,
+            vendorName: 'Campus Grill',
+            orderDate: new Date(now - 1800000).toLocaleString(), // 30 mins ago
+            timestamp: now - 1800000,
+            items: [{ name: 'Milkshake', price: 4.75, quantity: 2, total: 9.50 }],
+            subtotal: 9.50, tax: 0.71, total: 10.21,
+            currentStatus: 'Ready'
+        }
+    ];
+
+    localStorage.setItem('orders', JSON.stringify(mockOrders));
+}
