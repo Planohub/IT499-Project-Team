@@ -305,3 +305,75 @@ function updateOrderStatus(orderId, newStatus) {
     }
     return false;
 }
+
+// =========================================================================
+// ADMIN VENDOR MANAGEMENT HELPERS (Add to bottom of storage.js)
+// =========================================================================
+
+const ALL_VENDORS_STORAGE_KEY = 'campusFoodLinkVendorsList';
+
+/**
+ * Retrieves all vendor profiles from localStorage.
+ * Initializes default campus vendors if storage is empty.
+ */
+function getAllVendors() {
+    const stored = localStorage.getItem(ALL_VENDORS_STORAGE_KEY);
+    let vendors = [];
+
+    if (stored) {
+        try {
+            vendors = JSON.parse(stored);
+        } catch (e) {
+            console.error('Unable to parse vendors from localStorage', e);
+        }
+    }
+
+    // Default seed vendors if none exist yet
+    if (vendors.length === 0) {
+        vendors = [
+            { id: 1, name: 'Quad Side Café', location: 'Student Union, Room 102', operatingHours: '07:00 - 20:00', isActive: true },
+            { id: 2, name: 'Brick Oven Pizza', location: 'Dining Hall North', operatingHours: '11:00 - 23:00', isActive: true },
+            { id: 3, name: 'East Hall Market', location: 'Dining Hall East', operatingHours: '08:00 - 21:00', isActive: true },
+            { id: 4, name: 'South Campus Kitchen', location: 'Dining Hall South', operatingHours: '10:00 - 20:00', isActive: true },
+            { id: 5, name: 'West Hall Deli', location: 'Dining Hall West', operatingHours: '09:00 - 19:00', isActive: true }
+        ];
+        localStorage.setItem(ALL_VENDORS_STORAGE_KEY, JSON.stringify(vendors));
+    }
+
+    return vendors;
+}
+
+/**
+ * Adds a new vendor profile to localStorage.
+ */
+function addVendor(vendorData) {
+    let vendors = getAllVendors();
+
+    const newVendor = {
+        id: Date.now(), // Unique Timestamp ID
+        name: vendorData.name,
+        location: vendorData.location,
+        operatingHours: vendorData.operatingHours || '08:00 - 20:00',
+        isActive: true
+    };
+
+    vendors.push(newVendor);
+    localStorage.setItem(ALL_VENDORS_STORAGE_KEY, JSON.stringify(vendors));
+    return true;
+}
+
+/**
+ * Deactivates (soft removes) or toggles the active state of a vendor.
+ * Soft delete preserves historical order and transaction integrity.
+ */
+function setVendorActiveState(vendorId, isActiveState) {
+    let vendors = getAllVendors();
+    const index = vendors.findIndex(v => Number(v.id) === Number(vendorId));
+
+    if (index > -1) {
+        vendors[index].isActive = isActiveState;
+        localStorage.setItem(ALL_VENDORS_STORAGE_KEY, JSON.stringify(vendors));
+        return true;
+    }
+    return false;
+}
