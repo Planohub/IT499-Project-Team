@@ -377,3 +377,39 @@ function setVendorActiveState(vendorId, isActiveState) {
     }
     return false;
 }
+
+// =========================================================================
+// ACTIVE VENDOR SESSION HELPERS
+// =========================================================================
+const ACTIVE_VENDOR_SESSION_KEY = 'campusFoodLinkActiveVendorSession';
+
+/**
+ * Saves the logged-in vendor profile to localStorage.
+ */
+function setActiveVendorSession(vendor) {
+    if (!vendor || typeof vendor !== 'object') return false;
+    try {
+        localStorage.setItem(ACTIVE_VENDOR_SESSION_KEY, JSON.stringify(vendor));
+        return true;
+    } catch (e) {
+        console.error('Failed to set active vendor session', e);
+        return false;
+    }
+}
+
+/**
+ * Retrieves the logged-in vendor profile.
+ * Defaults to Vendor ID 1 (Quad Side Café / Campus Grill) if none is set.
+ */
+function getActiveVendorSession() {
+    const saved = localStorage.getItem(ACTIVE_VENDOR_SESSION_KEY);
+    if (saved) {
+        try {
+            return JSON.parse(saved);
+        } catch (e) {
+            console.error('Error parsing active vendor session', e);
+        }
+    }
+    // Default fallback vendor if nothing is selected yet
+    return { id: 1, name: 'Quad Side Café', location: 'Student Union, Room 102' };
+}
