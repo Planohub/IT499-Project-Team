@@ -1,10 +1,17 @@
-/**
- * CampusFoodLink+ — Vendor Dashboard Logic (vendor-dashboard.js)
- * Enables vendors to process student orders and manage menu item catalogs.
- */
+// BEFORE (Hardcoded):
+// const ACTIVE_VENDOR_ID = 1;
 
+// AFTER (Dynamic Session Retrieval):
 document.addEventListener('DOMContentLoaded', function () {
-    const ACTIVE_VENDOR_ID = 1; // Campus Grill
+    const activeVendor = getActiveVendorSession();
+    const ACTIVE_VENDOR_ID = activeVendor.id;
+
+    // Update Header Badge in UI
+    const vendorBadge = document.getElementById('vendorHeaderBadge');
+    if (vendorBadge) {
+        vendorBadge.textContent = `🏬 Vendor: ${activeVendor.name}`;
+    }
+
 
     // Tab Navigation Elements
     const tabOrdersBtn = document.getElementById('tabOrdersBtn');
