@@ -209,3 +209,99 @@ function seedMockOrdersIfEmpty() {
 
     localStorage.setItem('orders', JSON.stringify(mockOrders));
 }
+
+// =========================================================================
+// VENDOR & MENU MANAGEMENT HELPERS (Add to bottom of storage.js)
+// =========================================================================
+
+const MENU_STORAGE_KEY = 'campusFoodLinkMenuItems';
+
+/**
+ * Retrieves the vendor menu items from localStorage.
+ * Initializes default menu items for Vendor ID 1 (Campus Grill) if empty.
+ */
+function getVendorMenuItems(vendorId = 1) {
+    const storedMenu = localStorage.getItem(MENU_STORAGE_KEY);
+    let allItems = [];
+
+    if (storedMenu) {
+        try {
+            allItems = JSON.parse(storedMenu);
+        } catch (e) {
+            console.error('Unable to parse menu items from storage', e);
+        }
+    }
+
+    // Default seed items if no stored items exist
+    if (allItems.length === 0) {
+        allItems = [
+            { id: 501, vendorId: 1, name: 'Classic Burger', price: 10.25, description: 'Angus beef patty with lettuce & tomato', isAvailable: true, isActive: true },
+            { id: 502, vendorId: 1, name: 'Chicken Wrap', price: 7.50, description: 'Grilled chicken with ranch & greens', isAvailable: true, isActive: true },
+            { id: 503, vendorId: 1, name: 'Onion Rings', price: 5.50, description: 'Crispy batter-dipped onion rings', isAvailable: true, isActive: true },
+            { id: 504, vendorId: 1, name: 'Milkshake', price: 4.75, description: 'Hand-spun vanilla milk shake', isAvailable: true, isActive: true }
+        ];
+        localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allItems));
+    }
+
+    // Filter items belonging to the active vendor and active soft-delete state
+    return allItems.filter(item => Number(item.vendorId) === Number(vendorId) && item.isActive !== false);
+}
+
+/**
+ * Saves or updates a menu item in localStorage.
+ */
+function saveMenuItem(menuItem) {
+    const storedMenu = localStorage.getItem(MENU_STORAGE_KEY);
+    let allItems = storedMenu ? JSON.parse(storedMenu) : [];
+
+    if (menuItem.id) {
+        // Update existing item
+        const index = allItems.findIndex(i => i.id === menuItem.id);
+        if (index > -1) {
+            allItems[index] = { ...allItems[index], ...menuItem };
+        }
+    } else {
+        // Create new menu item
+        const newItem = {
+            id: Date.now(),
+            vendorId: menuItem.vendorId || 1,
+            name: menuItem.name,
+            price: Number(menuItem.price),
+            description: menuItem.description || '',
+            isAvailable: true,
+            isActive: true
+        };
+        allItems.push(newItem);
+    }
+
+    localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allItems));
+    return true;
+}
+
+/**
+ * Updates the status of an order and logs the status change in order history.
+ */
+function updateOrderStatus(orderId, newStatus) {
+    const ordersData = localStorage.getItem('orders');
+    if (!ordersData) return false;
+
+    try {
+        let orders = JSON.parse(ordersData);
+        const orderIndex = orders.findIndex(o => String(o.orderId) === String(orderId));
+
+        if (orderIndex > -1) {
+            orders[orderIndex].currentStatus = newStatus;
+            
+            // Log timestamp if order is complete
+            if (newStatus === 'Complete') {
+                orders[orderIndex].completedTime = new Date().toLocaleString();
+            }
+
+            localStorage.setItem('orders', JSON.stringify(orders));
+            return true;
+        }
+    } catch (e) {
+        console.error('Failed to update order status', e);
+    }
+    return false;
+}

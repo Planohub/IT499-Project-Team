@@ -10,7 +10,7 @@
     <div class="loginBox">
         <div class="loginHeader">
             <h1>CampusFoodLink+</h1>
-            <p class="login-subtitle">Smart Campus Dining Platform</p>
+            <p class="loginSubtitle">Smart Campus Dining Platform</p>
         </div>
 
         <div class="loginCredentials">
@@ -19,7 +19,7 @@
             <form id="loginForm">
                 <div class="credentialForm">
                     <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Enter username">
+                    <input type="text" id="username" placeholder="Enter username (e.g., student, vendor, admin)">
                 </div>
 
                 <div class="credentialForm">
@@ -30,10 +30,18 @@
                 <button type="submit" class="defaultButton">Sign In</button>
             </form>
 
-            <!-- Demo Credentials -->
+            <hr style="border: none; border-top: 1px solid #cccccc; margin: 20px 0;">
+
+            <div style="text-align: center; display: flex; flex-direction: column; gap: 10px;">
+                <p style="font-size: 0.85rem; color: #555; font-weight: 600;">Or Quick Access by Role:</p>
+                <a href="vendors.html" class="secondaryButton" style="text-align: center;">Sign In as Student</a>
+                <a href="vendor-dashboard.html" class="secondaryButton" style="text-align: center;">Sign In as Vendor (Campus Grill)</a>
+                <a href="admin-dashboard.html" class="secondaryButton" style="text-align: center;">Sign In as Administrator</a>
+            </div>
+
             <div style="margin-top: 20px; padding: 12px; border: 1px solid #cccccc; border-radius: 4px; background: #f9f9f9; font-size: 0.85rem; color: #555;">
                 <p style="font-weight: 600; margin-bottom: 4px;">Demo Credentials:</p>
-                <p><strong>student</strong> — Student Dashboard</p>
+                <p><strong>student</strong> — Student Portal</p>
                 <p><strong>vendor</strong> — Vendor Dashboard</p>
                 <p><strong>admin</strong> — Administrator Dashboard</p>
                 <p style="font-size: 0.8rem; color: #888; margin-top: 4px;">(Password: any)</p>
@@ -43,6 +51,11 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Reset active cart state on returning to login page
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem('campusFoodLinkCart');
+            }
+
             const loginForm = document.getElementById('loginForm');
 
             loginForm.addEventListener('submit', function(e) {
@@ -53,7 +66,7 @@
 
                 // Role-based redirect
                 if (username === 'student') {
-                    window.location.href = 'student-dashboard.html';
+                    window.location.href = 'vendors.html';
                 } else if (username === 'vendor') {
                     window.location.href = 'vendor-dashboard.html';
                 } else if (username === 'admin') {
