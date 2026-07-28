@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFoodLink+ — Manage Vendors</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navigationBar">
+        <div class="navigationContainer">
+            <div class="navigationBrand"><a href="index.html">CampusFoodLink+</a></div>
+            <div class="navigationLinks">
+                <a href="admin-dashboard.html">Dashboard</a>
+                <a href="admin-reports.html">Reports</a>
+                <a href="admin-vendors.html" class="active">Vendors</a>
+                <a href="#">Students</a>
+                <a href="index.html">Logout</a>
+            </div>
+            <div class="navigationUser">
+                <span class="userBadge">📊 Dining Services administrator</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="vendorSelectionContainer">
+        <div class="pageHeader">
+            <h2>Vendor Account Management</h2>
+            <p>Add new campus food vendors or deactivate existing accounts</p>
+        </div>
+
+        <div class="orderDetailsBox" style="margin-bottom: 25px;">
+            <h3>Add New Campus Vendor</h3>
+            <form id="addVendorForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div class="credentialForm">
+                    <label for="vendorNameInput">Vendor Name</label>
+                    <input type="text" id="vendorNameInput" placeholder="e.g., Union Coffee Shop" required>
+                </div>
+                <div class="credentialForm">
+                    <label for="vendorLocationInput">Campus Location</label>
+                    <input type="text" id="vendorLocationInput" placeholder="e.g., Student Union, 2nd Floor" required>
+                </div>
+                <div class="credentialForm">
+                    <label for="vendorHoursInput">Operating Hours</label>
+                    <input type="text" id="vendorHoursInput" placeholder="e.g., 07:00 - 18:00" required>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <button type="submit" class="defaultButton" style="width: auto; padding: 10px 30px;">➕ Add Vendor Account</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="orderDetailsBox">
+            <h3>Registered Vendor Accounts</h3>
+            <div id="vendorDirectoryContainer" style="margin-top: 15px; overflow-x: auto;">
+                </div>
+        </div>
+    </div>
+
+    <script src="storage.js"></script>
+    <script src="admin-vendors.js"></script>
+</body>
+
+</html>

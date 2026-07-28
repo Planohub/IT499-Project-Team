@@ -209,3 +209,207 @@ function seedMockOrdersIfEmpty() {
 
     localStorage.setItem('orders', JSON.stringify(mockOrders));
 }
+
+// =========================================================================
+// VENDOR & MENU MANAGEMENT HELPERS (Add to bottom of storage.js)
+// =========================================================================
+
+const MENU_STORAGE_KEY = 'campusFoodLinkMenuItems';
+
+/**
+ * Retrieves the vendor menu items from localStorage.
+ * Initializes default menu items for Vendor ID 1 (Campus Grill) if empty.
+ */
+function getVendorMenuItems(vendorId = 1) {
+    const storedMenu = localStorage.getItem(MENU_STORAGE_KEY);
+    let allItems = [];
+
+    if (storedMenu) {
+        try {
+            allItems = JSON.parse(storedMenu);
+        } catch (e) {
+            console.error('Unable to parse menu items from storage', e);
+        }
+    }
+
+    // Default seed items if no stored items exist
+    if (allItems.length === 0) {
+        allItems = [
+            { id: 501, vendorId: 1, name: 'Classic Burger', price: 10.25, description: 'Angus beef patty with lettuce & tomato', isAvailable: true, isActive: true },
+            { id: 502, vendorId: 1, name: 'Chicken Wrap', price: 7.50, description: 'Grilled chicken with ranch & greens', isAvailable: true, isActive: true },
+            { id: 503, vendorId: 1, name: 'Onion Rings', price: 5.50, description: 'Crispy batter-dipped onion rings', isAvailable: true, isActive: true },
+            { id: 504, vendorId: 1, name: 'Milkshake', price: 4.75, description: 'Hand-spun vanilla milk shake', isAvailable: true, isActive: true }
+        ];
+        localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allItems));
+    }
+
+    // Filter items belonging to the active vendor and active soft-delete state
+    return allItems.filter(item => Number(item.vendorId) === Number(vendorId) && item.isActive !== false);
+}
+
+/**
+ * Saves or updates a menu item in localStorage.
+ */
+function saveMenuItem(menuItem) {
+    const storedMenu = localStorage.getItem(MENU_STORAGE_KEY);
+    let allItems = storedMenu ? JSON.parse(storedMenu) : [];
+
+    if (menuItem.id) {
+        // Update existing item
+        const index = allItems.findIndex(i => i.id === menuItem.id);
+        if (index > -1) {
+            allItems[index] = { ...allItems[index], ...menuItem };
+        }
+    } else {
+        // Create new menu item
+        const newItem = {
+            id: Date.now(),
+            vendorId: menuItem.vendorId || 1,
+            name: menuItem.name,
+            price: Number(menuItem.price),
+            description: menuItem.description || '',
+            isAvailable: true,
+            isActive: true
+        };
+        allItems.push(newItem);
+    }
+
+    localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allItems));
+    return true;
+}
+
+/**
+ * Updates the status of an order and logs the status change in order history.
+ */
+function updateOrderStatus(orderId, newStatus) {
+    const ordersData = localStorage.getItem('orders');
+    if (!ordersData) return false;
+
+    try {
+        let orders = JSON.parse(ordersData);
+        const orderIndex = orders.findIndex(o => String(o.orderId) === String(orderId));
+
+        if (orderIndex > -1) {
+            orders[orderIndex].currentStatus = newStatus;
+            
+            // Log timestamp if order is complete
+            if (newStatus === 'Complete') {
+                orders[orderIndex].completedTime = new Date().toLocaleString();
+            }
+
+            localStorage.setItem('orders', JSON.stringify(orders));
+            return true;
+        }
+    } catch (e) {
+        console.error('Failed to update order status', e);
+    }
+    return false;
+}
+
+// =========================================================================
+// ADMIN VENDOR MANAGEMENT HELPERS (Add to bottom of storage.js)
+// =========================================================================
+
+const ALL_VENDORS_STORAGE_KEY = 'campusFoodLinkVendorsList';
+
+/**
+ * Retrieves all vendor profiles from localStorage.
+ * Initializes default campus vendors if storage is empty.
+ */
+function getAllVendors() {
+    const stored = localStorage.getItem(ALL_VENDORS_STORAGE_KEY);
+    let vendors = [];
+
+    if (stored) {
+        try {
+            vendors = JSON.parse(stored);
+        } catch (e) {
+            console.error('Unable to parse vendors from localStorage', e);
+        }
+    }
+
+    // Default seed vendors if none exist yet
+    if (vendors.length === 0) {
+        vendors = [
+            { id: 1, name: 'Quad Side Café', location: 'Student Union, Room 102', operatingHours: '07:00 - 20:00', isActive: true },
+            { id: 2, name: 'Brick Oven Pizza', location: 'Dining Hall North', operatingHours: '11:00 - 23:00', isActive: true },
+            { id: 3, name: 'East Hall Market', location: 'Dining Hall East', operatingHours: '08:00 - 21:00', isActive: true },
+            { id: 4, name: 'South Campus Kitchen', location: 'Dining Hall South', operatingHours: '10:00 - 20:00', isActive: true },
+            { id: 5, name: 'West Hall Deli', location: 'Dining Hall West', operatingHours: '09:00 - 19:00', isActive: true }
+        ];
+        localStorage.setItem(ALL_VENDORS_STORAGE_KEY, JSON.stringify(vendors));
+    }
+
+    return vendors;
+}
+
+/**
+ * Adds a new vendor profile to localStorage.
+ */
+function addVendor(vendorData) {
+    let vendors = getAllVendors();
+
+    const newVendor = {
+        id: Date.now(), // Unique Timestamp ID
+        name: vendorData.name,
+        location: vendorData.location,
+        operatingHours: vendorData.operatingHours || '08:00 - 20:00',
+        isActive: true
+    };
+
+    vendors.push(newVendor);
+    localStorage.setItem(ALL_VENDORS_STORAGE_KEY, JSON.stringify(vendors));
+    return true;
+}
+
+/**
+ * Deactivates (soft removes) or toggles the active state of a vendor.
+ * Soft delete preserves historical order and transaction integrity.
+ */
+function setVendorActiveState(vendorId, isActiveState) {
+    let vendors = getAllVendors();
+    const index = vendors.findIndex(v => Number(v.id) === Number(vendorId));
+
+    if (index > -1) {
+        vendors[index].isActive = isActiveState;
+        localStorage.setItem(ALL_VENDORS_STORAGE_KEY, JSON.stringify(vendors));
+        return true;
+    }
+    return false;
+}
+
+// =========================================================================
+// ACTIVE VENDOR SESSION HELPERS
+// =========================================================================
+const ACTIVE_VENDOR_SESSION_KEY = 'campusFoodLinkActiveVendorSession';
+
+/**
+ * Saves the logged-in vendor profile to localStorage.
+ */
+function setActiveVendorSession(vendor) {
+    if (!vendor || typeof vendor !== 'object') return false;
+    try {
+        localStorage.setItem(ACTIVE_VENDOR_SESSION_KEY, JSON.stringify(vendor));
+        return true;
+    } catch (e) {
+        console.error('Failed to set active vendor session', e);
+        return false;
+    }
+}
+
+/**
+ * Retrieves the logged-in vendor profile.
+ * Defaults to Vendor ID 1 (Quad Side Café / Campus Grill) if none is set.
+ */
+function getActiveVendorSession() {
+    const saved = localStorage.getItem(ACTIVE_VENDOR_SESSION_KEY);
+    if (saved) {
+        try {
+            return JSON.parse(saved);
+        } catch (e) {
+            console.error('Error parsing active vendor session', e);
+        }
+    }
+    // Default fallback vendor if nothing is selected yet
+    return { id: 1, name: 'Quad Side Café', location: 'Student Union, Room 102' };
+}
