@@ -4,12 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CampusFoodLink+ — Menu</title>
+    <title>CampusFoodLink+ — My Orders</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <!-- Navigation Bar -->
     <nav class="navigationBar">
         <div class="navigationContainer">
             <div class="navigationBrand">
@@ -21,36 +20,25 @@
             <div class="navigationLinks">
                 <a href="student-dashboard.html">Vendors</a>
                 <a href="checkout.html" id="cartLink">Cart (0)</a>
-                <a href="orders.html">Orders</a>
+                <a href="orders.html" class="active">My Orders</a>
                 <a href="index.html">Logout</a>
             </div>
             <div class="navigationUser">
-                <span class="userBadge">🎓 Student</span>
+                <span class="userBadge" id="studentHeaderBadge">🎓 Student</span>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="vendorSelectionContainer">
-        <!-- Back Button & Vendor Name -->
-        <div class="menuPageHeader">
-            <a href="student-dashboard.html" class="goBackLink">← Back to Vendors</a>
-            <h2 id="vendor-name">Loading...</h2>
-            <p id="vendorLocation" class="vendorLocation">Loading vendor location...</p>
+        <div class="pageHeader">
+            <h2>My Order History</h2>
+            <p>View all your past orders and their current status</p>
         </div>
 
-        <!-- Menu Items Grid -->
-        <div class="menuItemGrid" id="menuItemGrid">
-            <!-- Items will be dynamically rendered by JavaScript -->
-            <div style="text-align:center; padding:40px; grid-column: 1 / -1; color: var(--grey);">
-                Loading menu items...
-            </div>
+        <div id="ordersContainer" style="margin-top: 20px;">
+            <!-- Orders will be rendered by JavaScript -->
+            <p style="text-align:center; padding:40px; color:var(--grey);">Loading orders...</p>
         </div>
-    </div>
-
-    <!-- View Cart Button -->
-    <div class="menuActions">
-        <a href="checkout.html" class="defaultButton">View Cart</a>
     </div>
 
     <footer>
@@ -60,7 +48,7 @@
     </footer>
 
     <script src="storage.js"></script>
-    <script src="menu.js"></script>
+    <script src="orders.js"></script>
 </body>
 
 </html>

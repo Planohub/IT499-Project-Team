@@ -1,5 +1,5 @@
 /**
- * CampusFoodLink+ — Admin Vendor Management Logic (admin-vendors.js)
+ * CampusFoodLink+ — Admin Vendor Management Logic (admin-student-dashboard.js)
  * Enables Dining Services administrators to add and remove/deactivate vendors.
  */
 

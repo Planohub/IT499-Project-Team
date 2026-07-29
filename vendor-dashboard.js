@@ -1,25 +1,80 @@
-// BEFORE (Hardcoded):
-// const ACTIVE_VENDOR_ID = 1;
+// ========================================
+// VENDOR-DASHBOARD.JS — Vendor Dashboard Logic
+// ========================================
 
-// AFTER (Dynamic Session Retrieval):
 document.addEventListener('DOMContentLoaded', function () {
+    // ========================================
+    // 1. GET ACTIVE VENDOR SESSION
+    // ========================================
     const activeVendor = getActiveVendorSession();
     const ACTIVE_VENDOR_ID = activeVendor.id;
 
-    // Update Header Badge in UI
+    // ========================================
+    // 2. CHECK IF VENDOR IS ACTIVE
+    // ========================================
+    const allVendors = getAllVendors();
+    const vendorProfile = allVendors.find(v => Number(v.id) === Number(ACTIVE_VENDOR_ID));
+
+    // Status Banner for Inactive Account
+    const statusBanner = document.getElementById('vendorStatusBanner');
+    if (vendorProfile && statusBanner) {
+        if (vendorProfile.isActive === false) {
+            statusBanner.style.display = 'block';
+            statusBanner.style.backgroundColor = '#fff3cd';
+            statusBanner.style.border = '1px solid #ffc107';
+            statusBanner.style.color = '#856404';
+            statusBanner.style.padding = '12px 16px';
+            statusBanner.style.borderRadius = '8px';
+            statusBanner.innerHTML = '⚠️ <strong>Your vendor account is currently inactive.</strong> Students cannot see your menu or place orders. Add a new menu item to reactivate your account.';
+        } else {
+            statusBanner.style.display = 'none';
+        }
+    }
+
+    // ========================================
+    // 3. UPDATE HEADER BADGE
+    // ========================================
     const vendorBadge = document.getElementById('vendorHeaderBadge');
     if (vendorBadge) {
         vendorBadge.textContent = `🏬 Vendor: ${activeVendor.name}`;
     }
 
+    // ========================================
+    // 4. CHECK IF VENDOR HAS ACTIVE MENU ITEMS
+    // ========================================
+    const menuItems = getVendorMenuItems(ACTIVE_VENDOR_ID);
+    const hasActiveItems = menuItems.some(item => 
+        item.isActive === true && item.isAvailable === true
+    );
 
-    // Tab Navigation Elements
+    // If no active items, show a warning on the dashboard
+    if (!hasActiveItems && vendorProfile && vendorProfile.isActive !== false) {
+        const noItemsBanner = document.createElement('div');
+        noItemsBanner.style.cssText = `
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        `;
+        noItemsBanner.innerHTML = '⚠️ <strong>Your vendor account has no active menu items.</strong> Students cannot see your menu. Add items or mark them available.';
+        
+        // Insert it after the page header
+        const pageHeader = document.querySelector('.pageHeader');
+        if (pageHeader) {
+            pageHeader.after(noItemsBanner);
+        }
+    }
+
+    // ========================================
+    // 5. TAB NAVIGATION
+    // ========================================
     const tabOrdersBtn = document.getElementById('tabOrdersBtn');
     const tabMenuBtn = document.getElementById('tabMenuBtn');
     const ordersSection = document.getElementById('ordersSection');
     const menuSection = document.getElementById('menuSection');
 
-    // Tab Switcher Handler
     if (tabOrdersBtn && tabMenuBtn) {
         tabOrdersBtn.addEventListener('click', () => {
             ordersSection.style.display = 'block';
@@ -37,16 +92,48 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // =========================================================================
-    // 1. WORKFLOW: VENDOR PROCESSES AN ORDER (Order Lifecycle Management)
-    // =========================================================================
+    // ========================================
+    // 6. REACTIVATE VENDOR HELPER
+    // ========================================
+    function reactivateVendorAccount() {
+        let vendors = getAllVendors();
+        const index = vendors.findIndex(v => Number(v.id) === Number(ACTIVE_VENDOR_ID));
+
+        if (index === -1) {
+            console.error(`Vendor ${ACTIVE_VENDOR_ID} not found`);
+            return false;
+        }
+
+        if (vendors[index].isActive === true) {
+            console.log(`Vendor ${vendors[index].name} is already active`);
+            return true;
+        }
+
+        vendors[index].isActive = true;
+        localStorage.setItem(ALL_VENDORS_STORAGE_KEY, JSON.stringify(vendors));
+
+        // Update the vendorProfile for this session
+        vendorProfile.isActive = true;
+
+        // Hide the status banner
+        const statusBanner = document.getElementById('vendorStatusBanner');
+        if (statusBanner) {
+            statusBanner.style.display = 'none';
+        }
+
+        console.log(`✅ Vendor ${vendors[index].name} reactivated!`);
+        return true;
+    }
+
+    // ========================================
+    // 7. ORDER MANAGEMENT
+    // ========================================
     function renderVendorOrders() {
         const container = document.getElementById('vendorOrdersContainer');
         if (!container) return;
 
         const allOrders = getOrdersHistory();
-        // Filter orders belonging to this vendor
-        const vendorOrders = allOrders.filter(o => Number(o.vendorId) === ACTIVE_VENDOR_ID || !o.vendorId);
+        const vendorOrders = allOrders.filter(o => Number(o.vendorId) === ACTIVE_VENDOR_ID);
 
         if (vendorOrders.length === 0) {
             container.innerHTML = '<p style="color: var(--grey); padding: 15px 0;">No active orders found for this vendor.</p>';
@@ -61,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <th style="padding: 10px;">Items</th>
                         <th style="padding: 10px;">Total</th>
                         <th style="padding: 10px;">Current Status</th>
-                        <th style="padding: 10px;">Order-Status Actions</th>
+                        <th style="padding: 10px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -92,22 +179,22 @@ document.addEventListener('DOMContentLoaded', function () {
         attachOrderStatusListeners();
     }
 
-    /**
-     * Renders standard order-status action buttons according to lifecycle state machine.
-     */
     function renderStatusActionButtons(orderId, currentStatus) {
+        const isInactive = vendorProfile && vendorProfile.isActive === false;
+        const disabledAttr = isInactive ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
+
         switch (currentStatus) {
             case 'Pending':
                 return `
-                    <button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Accepted" style="padding: 4px 12px; background: #e6fffa;">Accept</button>
-                    <button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Rejected" style="padding: 4px 12px; color: #cc0000; border-color: #cc0000;">Reject</button>
+                    <button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Accepted" style="padding: 4px 12px; background: #e6fffa;" ${disabledAttr}>Accept</button>
+                    <button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Rejected" style="padding: 4px 12px; color: #cc0000; border-color: #cc0000;" ${disabledAttr}>Reject</button>
                 `;
             case 'Accepted':
-                return `<button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Preparing" style="padding: 4px 12px;">Start Preparing</button>`;
+                return `<button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Preparing" style="padding: 4px 12px;" ${disabledAttr}>Start Preparing</button>`;
             case 'Preparing':
-                return `<button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Ready" style="padding: 4px 12px; background: #eef2ff;">Mark Ready</button>`;
+                return `<button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Ready" style="padding: 4px 12px; background: #eef2ff;" ${disabledAttr}>Mark Ready</button>`;
             case 'Ready':
-                return `<button class="defaultButton actionBtn" data-id="${orderId}" data-status="Complete" style="padding: 4px 12px; width: auto;">Complete Order</button>`;
+                return `<button class="defaultButton actionBtn" data-id="${orderId}" data-status="Complete" style="padding: 4px 12px; width: auto;" ${disabledAttr}>Complete Order</button>`;
             case 'Complete':
                 return `<span style="color: green; font-weight: 600;">✓ Completed</span>`;
             case 'Rejected':
@@ -118,22 +205,23 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function attachOrderStatusListeners() {
-        const actionButtons = document.querySelectorAll('.actionBtn');
-        actionButtons.forEach(btn => {
+        document.querySelectorAll('.actionBtn').forEach(btn => {
             btn.addEventListener('click', function () {
+                if (this.disabled) return;
+
                 const orderId = this.getAttribute('data-id');
                 const newStatus = this.getAttribute('data-status');
 
                 if (updateOrderStatus(orderId, newStatus)) {
-                    renderVendorOrders(); // Re-render table with updated status
+                    renderVendorOrders();
                 }
             });
         });
     }
 
-    // =========================================================================
-    // 2. VENDOR MENU MANAGEMENT (CRUD Operations)
-    // =========================================================================
+    // ========================================
+    // 8. MENU MANAGEMENT
+    // ========================================
     function renderVendorMenu() {
         const container = document.getElementById('vendorMenuContainer');
         if (!container) return;
@@ -184,7 +272,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function attachMenuActionListeners() {
-        // Toggle Availability
         document.querySelectorAll('.toggleAvailBtn').forEach(btn => {
             btn.addEventListener('click', function () {
                 const itemId = Number(this.getAttribute('data-id'));
@@ -195,7 +282,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Soft Delete / Deactivate Item
         document.querySelectorAll('.softDeleteBtn').forEach(btn => {
             btn.addEventListener('click', function () {
                 const itemId = Number(this.getAttribute('data-id'));
@@ -207,7 +293,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Add New Menu Item Form Submit Handler
+    // ========================================
+    // 9. ADD NEW MENU ITEM — REACTIVATES VENDOR
+    // ========================================
     const addForm = document.getElementById('addMenuItemForm');
     if (addForm) {
         addForm.addEventListener('submit', function (e) {
@@ -222,6 +310,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            // Save the new menu item
             saveMenuItem({
                 vendorId: ACTIVE_VENDOR_ID,
                 name: name,
@@ -229,12 +318,43 @@ document.addEventListener('DOMContentLoaded', function () {
                 description: description
             });
 
+            // ========================================
+            // REACTIVATE VENDOR IF INACTIVE
+            // ========================================
+            const wasReactivated = reactivateVendorAccount();
+
+            if (wasReactivated && vendorProfile && vendorProfile.isActive === false) {
+                // Update vendorProfile for this session
+                vendorProfile.isActive = true;
+
+                // Hide the status banner
+                const statusBanner = document.getElementById('vendorStatusBanner');
+                if (statusBanner) {
+                    statusBanner.style.display = 'none';
+                }
+
+                alert(`✅ "${name}" added successfully! Your vendor account has been reactivated. Students can now see your menu.`);
+            } else {
+                alert(`✅ "${name}" added successfully to your menu!`);
+            }
+
             addForm.reset();
-            alert(`"${name}" added successfully to your menu!`);
             renderVendorMenu();
+
+            // Remove the "no items" banner if it exists
+            const noItemsBanner = document.querySelector('.no-items-banner');
+            if (noItemsBanner) {
+                noItemsBanner.remove();
+            }
         });
     }
 
-    // Initial Load
+    // ========================================
+    // 10. INITIAL LOAD
+    // ========================================
     renderVendorOrders();
+
+    console.log('✅ Vendor dashboard loaded');
+    console.log(`🏬 Vendor: ${activeVendor.name} (ID: ${ACTIVE_VENDOR_ID})`);
+    console.log(`📊 Status: ${vendorProfile?.isActive ? 'Active' : 'Inactive'}`);
 });

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CampusFoodLink+ — Vendors</title>
+    <title>CampusFoodLink+ — Student Dashboard</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -12,19 +12,19 @@
     <nav class="navigationBar">
         <div class="navigationContainer">
             <div class="navigationBrand">
-            <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
-            <img src="CFL+Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
-            <span>CampusFoodLink+</span>
-            </a>
-        </div>
+                <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="CFL+Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
+                    <span>CampusFoodLink+</span>
+                </a>
+            </div>
             <div class="navigationLinks">
                 <a href="student-dashboard.html" class="active">Vendors</a>
                 <a id="cartLink" href="checkout.html">Cart (0)</a>
-                <a href="#">Orders</a>
+                <a href="orders.html">Orders</a>
                 <a href="index.html">Logout</a>
             </div>
             <div class="navigationUser">
-                <span class="userBadge">Student</span>
+                <span class="userBadge">🎓 Student</span>
             </div>
         </div>
     </nav>
@@ -35,43 +35,18 @@
             <p>Choose a vendor to browse their menu</p>
         </div>
 
-        <div class="vendorGrid">
-            <a href="menu.html" class="vendorBox" data-vendor-id="1" data-vendor-name="Quad Side Cafe" data-vendor-location="Student Union, Room 102">
-                <h4>Quad Side Café</h4>
-                <p>Student Union, Room 102</p>
-                <span class="secondaryButton">View Menu →</span>
-            </a>
-
-            <a href="menu.html" class="vendorBox" data-vendor-id="2" data-vendor-name="Brick Oven Pizza" data-vendor-location="Dining Hall North">
-                <h4>Brick Oven Pizza</h4>
-                <p>Dining Hall North</p>
-                <span class="secondaryButton">View Menu →</span>
-            </a>
-
-            <a href="menu.html" class="vendorBox" data-vendor-id="3" data-vendor-name="East Hall Market" data-vendor-location="Dining Hall East">
-                <h4>East Hall Market</h4>
-                <p>Dining Hall East</p>
-                <span class="secondaryButton">View Menu →</span>
-            </a>
-
-            <a href="menu.html" class="vendorBox" data-vendor-id="4" data-vendor-name="South Campus Kitchen" data-vendor-location="Dining Hall South">
-                <h4>South Campus Kitchen</h4>
-                <p>Dining Hall South</p>
-                <span class="secondaryButton">View Menu →</span>
-            </a>
-
-            <a href="menu.html" class="vendorBox" data-vendor-id="5" data-vendor-name="West Hall Deli" data-vendor-location="Dining Hall West">
-                <h4>West Hall Deli</h4>
-                <p>Dining Hall West</p>
-                <span class="secondaryButton">View Menu →</span>
-            </a>
+        <!-- Vendor Grid - Dynamically populated by JavaScript -->
+        <div class="vendorGrid" id="vendorGrid">
+            <!-- Vendors will be rendered here -->
         </div>
     </div>
+
     <footer>
         <span class="balanceBadge">
             Meal-Plan Balance:&nbsp;<span id="mealPlanBalance">$250.00</span>
         </span>
     </footer>
+
     <script src="storage.js"></script>
     <script src="student-dashboard.js"></script>
 </body>
