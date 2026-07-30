@@ -517,6 +517,80 @@ function saveMenuItem(menuItem) {
 }
 
 // =========================================================================
+// VENDOR OPERATING HOURS OPERATIONS
+// =========================================================================
+
+/**
+ * Checks if a vendor is currently open based on their operating hours.
+ * @param {number} vendorId - The vendor ID
+ * @returns {boolean} True if open, false if closed
+ */
+function isVendorOpen(vendorId) {
+    const vendor = getVendorById(vendorId);
+    if (!vendor || !vendor.operatingHours) {
+        // Default: assume open if no hours set
+        return true;
+    }
+
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // Minutes since midnight
+
+    // Parse operating hours (e.g., "07:00 - 20:00")
+    const hoursParts = vendor.operatingHours.split('-').map(s => s.trim());
+    if (hoursParts.length !== 2) {
+        return true; // Invalid format, assume open
+    }
+
+    try {
+        const openParts = hoursParts[0].split(':');
+        const closeParts = hoursParts[1].split(':');
+        
+        const openMinutes = parseInt(openParts[0]) * 60 + parseInt(openParts[1]);
+        const closeMinutes = parseInt(closeParts[0]) * 60 + parseInt(closeParts[1]);
+
+        // Handle overnight hours (e.g., 22:00 - 02:00)
+        if (closeMinutes < openMinutes) {
+            // Overnight: open if current time >= open OR current time < close
+            return currentTime >= openMinutes || currentTime < closeMinutes;
+        } else {
+            return currentTime >= openMinutes && currentTime < closeMinutes;
+        }
+    } catch (e) {
+        return true; // Error parsing, assume open
+    }
+}
+
+/**
+ * Gets the operating hours for a vendor.
+ * @param {number} vendorId - The vendor ID
+ * @returns {string} Operating hours string (e.g., "07:00 - 20:00")
+ */
+function getVendorHours(vendorId) {
+    const vendor = getVendorById(vendorId);
+    return vendor ? vendor.operatingHours || '08:00 - 20:00' : '08:00 - 20:00';
+}
+
+/**
+ * Updates the operating hours for a vendor.
+ * @param {number} vendorId - The vendor ID
+ * @param {string} operatingHours - New operating hours (e.g., "07:00 - 20:00")
+ * @returns {boolean} Success status
+ */
+function updateVendorHours(vendorId, operatingHours) {
+    let vendors = getAllVendors();
+    const index = vendors.findIndex(v => Number(v.id) === Number(vendorId));
+    
+    if (index === -1) {
+        console.error(`Vendor ${vendorId} not found`);
+        return false;
+    }
+
+    vendors[index].operatingHours = operatingHours;
+    localStorage.setItem(ALL_VENDORS_STORAGE_KEY, JSON.stringify(vendors));
+    return true;
+}
+
+// =========================================================================
 // ORDER ID OPERATIONS
 // =========================================================================
 
@@ -823,6 +897,11 @@ window.saveSelectedVendor = saveSelectedVendor;
 // Menu functions
 window.getVendorMenuItems = getVendorMenuItems;
 window.saveMenuItem = saveMenuItem;
+
+// Vendor hours functions
+window.isVendorOpen = isVendorOpen;
+window.getVendorHours = getVendorHours;
+window.updateVendorHours = updateVendorHours;
 
 // Order ID functions
 window.getNextOrderId = getNextOrderId;

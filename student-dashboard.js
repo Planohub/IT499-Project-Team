@@ -3,6 +3,19 @@
 // ========================================
 
 document.addEventListener('DOMContentLoaded', function () {
+
+    // ========================================
+    // 1. GET ACTIVE STUDENT
+    // ========================================
+    const activeStudent = getActiveStudentSession();
+    const studentId = activeStudent.userID;
+
+    // Update header badge
+    const studentBadge = document.getElementById('studentHeaderBadge');
+    if (studentBadge) {
+        studentBadge.textContent = `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
+    }
+
     // ========================================
     // 1. UPDATE MEAL-PLAN BALANCE
     // ========================================
@@ -29,22 +42,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     const vendorGrid = document.getElementById('vendorGrid');
 
-    // Get all vendors
     const allVendors = getAllVendors();
 
-    // 🔥 FILTER: Only show vendors that are ACTIVE AND have active menu items
     const activeVendors = allVendors.filter(vendor => {
-        // Must be active (isActive !== false)
         if (vendor.isActive === false) return false;
-
-        // Get menu items for this vendor
         const menuItems = getVendorMenuItems(vendor.id);
-
-        // Check if there is at least one active menu item
         const hasActiveItem = menuItems.some(item => 
             item.isActive === true && item.isAvailable === true
         );
-
         return hasActiveItem;
     });
 
@@ -58,13 +63,17 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    // Build vendor cards dynamically
     let vendorHTML = '';
     activeVendors.forEach(vendor => {
         const menuItems = getVendorMenuItems(vendor.id);
         const activeItemCount = menuItems.filter(item => 
             item.isActive === true && item.isAvailable === true
         ).length;
+
+        const isOpen = isVendorOpen(vendor.id);
+        const statusText = isOpen ? '🟢 Open' : '🔴 Closed';
+        const statusColor = isOpen ? '#2e7d32' : '#c62828';
+        const hours = getVendorHours(vendor.id);
 
         vendorHTML += `
             <a href="menu.html" class="vendorBox" 
@@ -73,7 +82,9 @@ document.addEventListener('DOMContentLoaded', function () {
                data-vendor-location="${vendor.location || 'Campus Location'}">
                 <h4>${vendor.name}</h4>
                 <p>${vendor.location || 'Location not specified'}</p>
-                <p style="font-size:0.8rem; color:var(--grey); margin-top:4px;">${activeItemCount} items available</p>
+                <p style="font-size:0.8rem; color:${statusColor}; font-weight:600; margin-top:4px;">${statusText}</p>
+                <p style="font-size:0.75rem; color:var(--grey); margin-top:2px;">Hours: ${hours}</p>
+                <p style="font-size:0.8rem; color:var(--grey); margin-top:2px;">${activeItemCount} items available</p>
                 <span class="secondaryButton">View Menu →</span>
             </a>
         `;
@@ -82,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
     vendorGrid.innerHTML = vendorHTML;
 
     // ========================================
-    // 4. VENDOR CLICK HANDLER — SAVE SELECTED VENDOR
+    // 4. VENDOR CLICK HANDLER
     // ========================================
     const vendorLinks = document.querySelectorAll('.vendorBox[data-vendor-id]');
 
@@ -96,7 +107,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 location: this.dataset.vendorLocation
             };
 
-            // Save to localStorage using the correct key
             try {
                 localStorage.setItem('campusFoodLinkSelectedVendor', JSON.stringify(selectedVendor));
                 console.log('✅ Vendor saved:', selectedVendor);
@@ -109,18 +119,6 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = this.getAttribute('href');
         });
     });
-
-    // ========================================
-    // 1. GET ACTIVE STUDENT
-    // ========================================
-    const activeStudent = getActiveStudentSession();
-    const studentId = activeStudent.userID;
-
-    // Update header badge
-    const studentBadge = document.getElementById('studentHeaderBadge');
-    if (studentBadge) {
-        studentBadge.textContent = `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
-    }
 
     console.log('✅ Student dashboard loaded');
     console.log(`📦 ${activeVendors.length} active vendors with menu items`);

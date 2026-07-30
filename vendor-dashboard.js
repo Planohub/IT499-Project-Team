@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // 🔥 IF VENDOR IS INACTIVE — SHOW CONTACT ADMIN MESSAGE
     // ========================================
     if (!vendorProfile || vendorProfile.isActive === false) {
-        // Hide all dashboard content
         const container = document.querySelector('.vendorSelectionContainer');
         if (container) {
             container.innerHTML = `
@@ -36,15 +35,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             `;
         }
-        
-        // Also update the header badge
         const vendorBadge = document.getElementById('vendorHeaderBadge');
         if (vendorBadge) {
             vendorBadge.textContent = '🔒 Account Deactivated';
             vendorBadge.style.color = '#cc0000';
         }
-        
-        // Stop the rest of the dashboard from loading
         return;
     }
 
@@ -54,18 +49,55 @@ document.addEventListener('DOMContentLoaded', function () {
     const vendorBadge = document.getElementById('vendorHeaderBadge');
     if (vendorBadge) {
         vendorBadge.textContent = `🏬 Vendor: ${activeVendor.name}`;
-        vendorBadge.style.color = ''; // Reset color
+        vendorBadge.style.color = '';
     }
 
     // ========================================
-    // 4. CHECK IF VENDOR HAS ACTIVE MENU ITEMS
+    // 4. RENDER STATUS BANNER (Open/Closed)
+    // ========================================
+    function renderStatusBanner() {
+        const isOpen = isVendorOpen(ACTIVE_VENDOR_ID);
+        const hours = getVendorHours(ACTIVE_VENDOR_ID);
+        const statusText = isOpen ? 'Open' : 'Closed';
+        const statusColor = isOpen ? '#2e7d32' : '#c62828';
+
+        const header = document.querySelector('.pageHeader');
+        if (header) {
+            const existingBanner = header.querySelector('.vendor-status-banner');
+            if (existingBanner) existingBanner.remove();
+
+            const banner = document.createElement('div');
+            banner.className = 'vendor-status-banner';
+            banner.style.cssText = `
+                background-color: ${isOpen ? '#e8f5e9' : '#ffebee'};
+                border: 2px solid ${isOpen ? '#2e7d32' : '#c62828'};
+                color: ${isOpen ? '#2e7d32' : '#c62828'};
+                padding: 10px 16px;
+                border-radius: 8px;
+                margin-top: 10px;
+                font-weight: 600;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
+            `;
+            banner.innerHTML = `
+                <span>🟢 Your vendor is currently <strong>${statusText}</strong>
+                </span>
+            `;
+            header.appendChild(banner);
+        }
+    }
+
+    // ========================================
+    // 5. CHECK IF VENDOR HAS ACTIVE MENU ITEMS
     // ========================================
     const menuItems = getVendorMenuItems(ACTIVE_VENDOR_ID);
     const hasActiveItems = menuItems.some(item => 
         item.isActive === true && item.isAvailable === true
     );
 
-    // If no active items, show a warning on the dashboard
     if (!hasActiveItems && vendorProfile && vendorProfile.isActive !== false) {
         const noItemsBanner = document.createElement('div');
         noItemsBanner.style.cssText = `
@@ -77,7 +109,6 @@ document.addEventListener('DOMContentLoaded', function () {
             margin-bottom: 15px;
         `;
         noItemsBanner.innerHTML = '⚠️ <strong>Your vendor account has no active menu items.</strong> Students cannot see your menu. Use the "Mark Available" button to reactivate items.';
-        
         const pageHeader = document.querySelector('.pageHeader');
         if (pageHeader) {
             pageHeader.after(noItemsBanner);
@@ -85,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 5. TAB NAVIGATION
+    // 6. TAB NAVIGATION
     // ========================================
     const tabOrdersBtn = document.getElementById('tabOrdersBtn');
     const tabMenuBtn = document.getElementById('tabMenuBtn');
@@ -110,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 6. ORDER MANAGEMENT
+    // 7. ORDER MANAGEMENT
     // ========================================
     function renderVendorOrders() {
         const container = document.getElementById('vendorOrdersContainer');
@@ -192,10 +223,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.actionBtn').forEach(btn => {
             btn.addEventListener('click', function () {
                 if (this.disabled) return;
-
                 const orderId = this.getAttribute('data-id');
                 const newStatus = this.getAttribute('data-status');
-
                 if (updateOrderStatus(orderId, newStatus)) {
                     renderVendorOrders();
                 }
@@ -204,13 +233,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 7. MENU MANAGEMENT — SHOWS ALL ITEMS (Active + Inactive)
+    // 8. MENU MANAGEMENT — SHOWS ALL ITEMS (Active + Inactive)
     // ========================================
     function renderVendorMenu() {
         const container = document.getElementById('vendorMenuContainer');
         if (!container) return;
 
-        // 🔥 Get ALL items for this vendor (including inactive ones)
         const menuItems = getVendorMenuItems(ACTIVE_VENDOR_ID);
 
         if (menuItems.length === 0) {
@@ -218,10 +246,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Check if vendor is active
         const isVendorInactive = vendorProfile && vendorProfile.isActive === false;
 
-        // Show warning if vendor is inactive
         let warningHTML = '';
         if (isVendorInactive) {
             warningHTML = `
@@ -247,7 +273,6 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
 
         menuItems.forEach(item => {
-            // 🔥 Show actual status from the item itself
             const isItemActive = item.isActive !== false && item.isAvailable === true;
             const statusText = isItemActive ? '🟢 Available' : '🔴 Inactive';
             const toggleText = isItemActive ? 'Mark Inactive' : 'Mark Available';
@@ -273,13 +298,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function attachMenuActionListeners() {
-        // Toggle Availability
         document.querySelectorAll('.toggleAvailBtn').forEach(btn => {
             btn.addEventListener('click', function () {
                 const itemId = Number(this.getAttribute('data-id'));
                 const newAvail = this.getAttribute('data-avail') === 'true';
-
-                // 🔥 Save with both isActive and isAvailable set to the same value
                 saveMenuItem({ 
                     id: itemId, 
                     isAvailable: newAvail,
@@ -289,7 +311,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Soft Delete / Deactivate Item
         document.querySelectorAll('.softDeleteBtn').forEach(btn => {
             btn.addEventListener('click', function () {
                 const itemId = Number(this.getAttribute('data-id'));
@@ -302,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 8. ADD NEW MENU ITEM
+    // 9. ADD NEW MENU ITEM
     // ========================================
     const addForm = document.getElementById('addMenuItemForm');
     if (addForm) {
@@ -318,7 +339,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Save the new menu item
             saveMenuItem({
                 vendorId: ACTIVE_VENDOR_ID,
                 name: name,
@@ -331,7 +351,6 @@ document.addEventListener('DOMContentLoaded', function () {
             addForm.reset();
             renderVendorMenu();
 
-            // Remove the "no items" banner if it exists
             const noItemsBanner = document.querySelector('.no-items-banner');
             if (noItemsBanner) {
                 noItemsBanner.remove();
@@ -340,9 +359,95 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 9. INITIAL LOAD
+    // 10. OPERATING HOURS MANAGEMENT
+    // ========================================
+
+    function updateStatusBanner() {
+        const isOpen = isVendorOpen(ACTIVE_VENDOR_ID);
+        const hours = getVendorHours(ACTIVE_VENDOR_ID);
+        const statusText = isOpen ? 'Open' : 'Closed';
+
+        const statusBanner = document.querySelector('.vendor-status-banner');
+        if (statusBanner) {
+            statusBanner.innerHTML = `
+                <span>🟢 Your vendor is currently <strong>${statusText}</strong></span>
+                    </a>
+                </span>
+            `;
+            statusBanner.style.borderColor = isOpen ? '#2e7d32' : '#c62828';
+            statusBanner.style.color = isOpen ? '#2e7d32' : '#c62828';
+            statusBanner.style.backgroundColor = isOpen ? '#e8f5e9' : '#ffebee';
+        }
+    }
+
+    function renderOperatingHours() {
+        const hoursContainer = document.getElementById('operatingHoursContainer');
+        if (!hoursContainer) return;
+
+        const currentHours = getVendorHours(ACTIVE_VENDOR_ID);
+        const isOpen = isVendorOpen(ACTIVE_VENDOR_ID);
+        const statusText = isOpen ? '🟢 Open' : '🔴 Closed';
+        const statusColor = isOpen ? '#2e7d32' : '#c62828';
+
+        hoursContainer.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; padding: 15px 0;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <label for="vendorHoursInput" style="font-weight: 600;">Operating Hours:</label>
+                    <input type="text" id="vendorHoursInput" value="${currentHours}" 
+                           placeholder="e.g., 07:00 - 20:00" 
+                           style="padding: 8px 12px; border: 1px solid var(--lightGrey); border-radius: 4px; width: 180px;">
+                    <button id="updateHoursBtn" class="secondaryButton" style="padding: 8px 20px;">Update Hours</button>
+                </div>
+                <div style="font-size: 1.1rem; font-weight: 600;">
+                    Current Status: <span style="color: ${statusColor};">${statusText}</span>
+                </div>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--grey); margin-top: 5px;">
+                💡 Hours format: <strong>HH:MM - HH:MM</strong> (e.g., 07:00 - 20:00 for 7 AM to 8 PM)
+            </div>
+        `;
+
+        const updateBtn = document.getElementById('updateHoursBtn');
+        if (updateBtn) {
+            updateBtn.addEventListener('click', function () {
+                const input = document.getElementById('vendorHoursInput');
+                const newHours = input.value.trim();
+
+                if (!newHours || !newHours.includes('-')) {
+                    alert('⚠️ Please enter hours in format: HH:MM - HH:MM (e.g., 07:00 - 20:00)');
+                    return;
+                }
+
+                const parts = newHours.split('-').map(s => s.trim());
+                if (parts.length !== 2) {
+                    alert('⚠️ Please enter hours in format: HH:MM - HH:MM');
+                    return;
+                }
+
+                const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+                if (!timeRegex.test(parts[0]) || !timeRegex.test(parts[1])) {
+                    alert('⚠️ Please use valid time format (HH:MM). Example: 07:00 - 20:00');
+                    return;
+                }
+
+                const success = updateVendorHours(ACTIVE_VENDOR_ID, newHours);
+                if (success) {
+                    alert('✅ Operating hours updated successfully!');
+                    renderOperatingHours();
+                    updateStatusBanner();
+                } else {
+                    alert('❌ Failed to update hours. Please try again.');
+                }
+            });
+        }
+    }
+
+    // ========================================
+    // 11. INITIAL LOAD
     // ========================================
     renderVendorOrders();
+    renderStatusBanner();
+    renderOperatingHours();
 
     console.log('✅ Vendor dashboard loaded');
     console.log(`🏬 Vendor: ${activeVendor.name} (ID: ${ACTIVE_VENDOR_ID})`);

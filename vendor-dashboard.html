@@ -12,11 +12,11 @@
     <nav class="navigationBar">
         <div class="navigationContainer">
             <div class="navigationBrand">
-            <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
-            <img src="CFL+Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
-            <span>CampusFoodLink+</span>
-            </a>
-        </div>
+                <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="CFL+Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
+                    <span>CampusFoodLink+</span>
+                </a>
+            </div>
             <div class="navigationLinks">
                 <a href="vendor-dashboard.html" class="active">Vendor Dashboard</a>
                 <a href="index.html">Logout</a>
@@ -27,26 +27,34 @@
         </div>
     </nav>
 
-    <div class="pageHeader">
-        <h2>Vendor Dashboard</h2>
-        <p>Workflow: Process an Order &amp; Vendor Menu Management</p>
-        <div id="vendorStatusBanner" style="margin-top: 10px; padding: 10px; border-radius: 4px; display: none;"></div>
-    </div>
+    <div class="vendorSelectionContainer">
+        <div class="pageHeader">
+            <h2>Vendor Dashboard</h2>
+            <p>Workflow: Process an Order &amp; Vendor Menu Management</p>
+            <!-- Status banner will be rendered here by JavaScript -->
+        </div>
 
         <div style="display: flex; gap: 15px; margin-bottom: 25px;">
             <button id="tabOrdersBtn" class="defaultButton" style="width: auto; padding: 10px 25px;">Incoming Orders</button>
             <button id="tabMenuBtn" class="secondaryButton" style="width: auto; padding: 10px 25px;">Menu Management</button>
         </div>
 
+        <!-- ======================================== -->
+        <!-- ORDERS SECTION -->
+        <!-- ======================================== -->
         <div id="ordersSection">
             <div class="orderDetailsBox">
                 <h3>Active Orders Queue</h3>
                 <p style="color: var(--grey); font-size: 0.9rem; margin-top: 4px;">Advance order statuses sequentially: Pending → Accepted → Preparing → Ready → Complete</p>
                 <div id="vendorOrdersContainer" style="margin-top: 15px;">
-                    </div>
+                    <!-- Orders rendered by JavaScript -->
+                </div>
             </div>
         </div>
 
+        <!-- ======================================== -->
+        <!-- MENU MANAGEMENT SECTION -->
+        <!-- ======================================== -->
         <div id="menuSection" style="display: none;">
             <div class="orderDetailsBox" style="margin-bottom: 25px;">
                 <h3>Add New Menu Item</h3>
@@ -72,7 +80,21 @@
             <div class="orderDetailsBox">
                 <h3>Current Vendor Menu Catalog</h3>
                 <div id="vendorMenuContainer" style="margin-top: 15px; overflow-x: auto;">
-                    </div>
+                    <!-- Menu rendered by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================================== -->
+        <!-- OPERATING HOURS MANAGEMENT -->
+        <!-- ======================================== -->
+        <div class="orderDetailsBox" style="margin-top: 25px;">
+            <h3>Operating Hours Management</h3>
+            <p style="color: var(--grey); font-size: 0.9rem; margin-top: 4px; margin-bottom: 10px;">
+                Set your operating hours. Students will see "Open" or "Closed" based on the current time.
+            </p>
+            <div id="operatingHoursContainer">
+                <!-- Rendered by JavaScript -->
             </div>
         </div>
     </div>
