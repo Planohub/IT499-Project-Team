@@ -1,5 +1,5 @@
 /**
- * CampusFoodLink+ — Admin Vendor Management Logic (admin-student-dashboard.js)
+ * CampusFoodLink+ — Admin Vendor Management Logic (admin-vendors.js)
  * Enables Dining Services administrators to add and remove/deactivate vendors.
  */
 
@@ -21,15 +21,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Save new vendor to storage
+            // Save new vendor to storage (default: Active)
             addVendor({
                 name: name,
                 location: location,
-                operatingHours: hours
+                operatingHours: hours || '08:00 - 20:00'
             });
 
             addVendorForm.reset();
-            alert(`Vendor "${name}" created successfully!`);
+            alert(`✅ Vendor "${name}" created successfully!`);
             renderVendorDirectory();
         });
     }
@@ -71,8 +71,8 @@ function renderVendorDirectory() {
             : '<span class="userBadge" style="background: #ffe6e6; color: #cc0000; border-color: #cc0000;">🔴 Inactive</span>';
 
         const actionButton = isActive
-            ? `<button class="secondaryButton removeVendorBtn" data-id="${v.id}" data-name="${v.name}" style="padding: 4px 12px; color: #cc0000; border-color: #cc0000; font-size: 0.85rem;">Remove / Deactivate</button>`
-            : `<button class="secondaryButton activateVendorBtn" data-id="${v.id}" style="padding: 4px 12px; font-size: 0.85rem;">Reactivate</button>`;
+            ? `<button class="secondaryButton deactivateVendorBtn" data-id="${v.id}" data-name="${v.name}" style="padding: 4px 12px; color: #cc0000; border-color: #cc0000; font-size: 0.85rem;">Deactivate</button>`
+            : `<button class="secondaryButton reactivateVendorBtn" data-id="${v.id}" data-name="${v.name}" style="padding: 4px 12px; font-size: 0.85rem;">Reactivate</button>`;
 
         html += `
             <tr style="border-bottom: 1px solid var(--lightGrey);">
@@ -93,28 +93,35 @@ function renderVendorDirectory() {
 }
 
 /**
- * Attaches event listeners for removing/deactivating and reactivating vendors.
+ * Attaches event listeners for deactivating and reactivating vendors.
+ * 🔥 ONLY toggles the vendor status — does NOT touch menu items.
  */
 function attachVendorActionListeners() {
-    // Remove / Deactivate Vendor Handler
-    document.querySelectorAll('.removeVendorBtn').forEach(btn => {
+    // Deactivate Vendor Handler
+    document.querySelectorAll('.deactivateVendorBtn').forEach(btn => {
         btn.addEventListener('click', function () {
             const vendorId = this.getAttribute('data-id');
             const vendorName = this.getAttribute('data-name');
 
-            if (confirm(`Are you sure you want to remove "${vendorName}"?\n\nNote: In accordance with system audit rules, this vendor will be deactivated (soft-deleted) to protect historical order records.`)) {
+            if (confirm(`⚠️ Are you sure you want to deactivate "${vendorName}"?\n\nThis will:\n• Hide the vendor from students\n• Lock the vendor out with a "Contact Admin" message\n\nMenu items will remain unchanged.`)) {
                 setVendorActiveState(vendorId, false);
                 renderVendorDirectory();
+                alert(`✅ "${vendorName}" has been deactivated. Menu items were not changed.`);
             }
         });
     });
 
     // Reactivate Vendor Handler
-    document.querySelectorAll('.activateVendorBtn').forEach(btn => {
+    document.querySelectorAll('.reactivateVendorBtn').forEach(btn => {
         btn.addEventListener('click', function () {
             const vendorId = this.getAttribute('data-id');
-            setVendorActiveState(vendorId, true);
-            renderVendorDirectory();
+            const vendorName = this.getAttribute('data-name');
+
+            if (confirm(`✅ Are you sure you want to reactivate "${vendorName}"?\n\nThis will:\n• Show the vendor to students again\n• Allow the vendor to access their dashboard\n\nMenu items will remain unchanged — the vendor must manually reactivate them.`)) {
+                setVendorActiveState(vendorId, true);
+                renderVendorDirectory();
+                alert(`✅ "${vendorName}" has been reactivated. Menu items were not changed — the vendor should review and reactivate items as needed.`);
+            }
         });
     });
 }

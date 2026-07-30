@@ -15,28 +15,46 @@ document.addEventListener('DOMContentLoaded', function () {
     const allVendors = getAllVendors();
     const vendorProfile = allVendors.find(v => Number(v.id) === Number(ACTIVE_VENDOR_ID));
 
-    // Status Banner for Inactive Account
-    const statusBanner = document.getElementById('vendorStatusBanner');
-    if (vendorProfile && statusBanner) {
-        if (vendorProfile.isActive === false) {
-            statusBanner.style.display = 'block';
-            statusBanner.style.backgroundColor = '#fff3cd';
-            statusBanner.style.border = '1px solid #ffc107';
-            statusBanner.style.color = '#856404';
-            statusBanner.style.padding = '12px 16px';
-            statusBanner.style.borderRadius = '8px';
-            statusBanner.innerHTML = '⚠️ <strong>Your vendor account is currently inactive.</strong> Students cannot see your menu or place orders. Add a new menu item to reactivate your account.';
-        } else {
-            statusBanner.style.display = 'none';
+    // ========================================
+    // 🔥 IF VENDOR IS INACTIVE — SHOW CONTACT ADMIN MESSAGE
+    // ========================================
+    if (!vendorProfile || vendorProfile.isActive === false) {
+        // Hide all dashboard content
+        const container = document.querySelector('.vendorSelectionContainer');
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:60px 20px; max-width:500px; margin:0 auto;">
+                    <div style="font-size:4rem; margin-bottom:20px;">🔒</div>
+                    <h2 style="color:#cc0000; margin-bottom:10px;">Account Deactivated</h2>
+                    <p style="color:var(--grey); font-size:1.1rem; margin-bottom:20px;">
+                        Your vendor account has been deactivated by the Dining Services Administration.
+                    </p>
+                    <p style="color:var(--grey); margin-bottom:30px;">
+                        Please contact the Dining Services Administration for more information about your account status.
+                    </p>
+                    <a href="index.html" class="defaultButton" style="width:auto; padding:12px 30px;">Return to Login</a>
+                </div>
+            `;
         }
+        
+        // Also update the header badge
+        const vendorBadge = document.getElementById('vendorHeaderBadge');
+        if (vendorBadge) {
+            vendorBadge.textContent = '🔒 Account Deactivated';
+            vendorBadge.style.color = '#cc0000';
+        }
+        
+        // Stop the rest of the dashboard from loading
+        return;
     }
 
     // ========================================
-    // 3. UPDATE HEADER BADGE
+    // 3. UPDATE HEADER BADGE (Active Vendor)
     // ========================================
     const vendorBadge = document.getElementById('vendorHeaderBadge');
     if (vendorBadge) {
         vendorBadge.textContent = `🏬 Vendor: ${activeVendor.name}`;
+        vendorBadge.style.color = ''; // Reset color
     }
 
     // ========================================
@@ -58,9 +76,8 @@ document.addEventListener('DOMContentLoaded', function () {
             border-radius: 8px;
             margin-bottom: 15px;
         `;
-        noItemsBanner.innerHTML = '⚠️ <strong>Your vendor account has no active menu items.</strong> Students cannot see your menu. Add items or mark them available.';
+        noItemsBanner.innerHTML = '⚠️ <strong>Your vendor account has no active menu items.</strong> Students cannot see your menu. Use the "Mark Available" button to reactivate items.';
         
-        // Insert it after the page header
         const pageHeader = document.querySelector('.pageHeader');
         if (pageHeader) {
             pageHeader.after(noItemsBanner);
@@ -93,40 +110,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 6. REACTIVATE VENDOR HELPER
-    // ========================================
-    function reactivateVendorAccount() {
-        let vendors = getAllVendors();
-        const index = vendors.findIndex(v => Number(v.id) === Number(ACTIVE_VENDOR_ID));
-
-        if (index === -1) {
-            console.error(`Vendor ${ACTIVE_VENDOR_ID} not found`);
-            return false;
-        }
-
-        if (vendors[index].isActive === true) {
-            console.log(`Vendor ${vendors[index].name} is already active`);
-            return true;
-        }
-
-        vendors[index].isActive = true;
-        localStorage.setItem(ALL_VENDORS_STORAGE_KEY, JSON.stringify(vendors));
-
-        // Update the vendorProfile for this session
-        vendorProfile.isActive = true;
-
-        // Hide the status banner
-        const statusBanner = document.getElementById('vendorStatusBanner');
-        if (statusBanner) {
-            statusBanner.style.display = 'none';
-        }
-
-        console.log(`✅ Vendor ${vendors[index].name} reactivated!`);
-        return true;
-    }
-
-    // ========================================
-    // 7. ORDER MANAGEMENT
+    // 6. ORDER MANAGEMENT
     // ========================================
     function renderVendorOrders() {
         const container = document.getElementById('vendorOrdersContainer');
@@ -220,12 +204,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 8. MENU MANAGEMENT
+    // 7. MENU MANAGEMENT — SHOWS ALL ITEMS (Active + Inactive)
     // ========================================
     function renderVendorMenu() {
         const container = document.getElementById('vendorMenuContainer');
         if (!container) return;
 
+        // 🔥 Get ALL items for this vendor (including inactive ones)
         const menuItems = getVendorMenuItems(ACTIVE_VENDOR_ID);
 
         if (menuItems.length === 0) {
@@ -233,14 +218,28 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        let html = `
+        // Check if vendor is active
+        const isVendorInactive = vendorProfile && vendorProfile.isActive === false;
+
+        // Show warning if vendor is inactive
+        let warningHTML = '';
+        if (isVendorInactive) {
+            warningHTML = `
+                <div style="background: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 12px 16px; border-radius: 8px; margin-bottom: 15px;">
+                    ⚠️ <strong>Your account is currently inactive.</strong> Students cannot see your menu. 
+                    You can prepare your items here, then contact Dining Services Administration to reactivate your account.
+                </div>
+            `;
+        }
+
+        let html = warningHTML + `
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
                 <thead>
                     <tr style="border-bottom: 2px solid var(--black);">
                         <th style="padding: 10px;">Item Name</th>
                         <th style="padding: 10px;">Price</th>
                         <th style="padding: 10px;">Description</th>
-                        <th style="padding: 10px;">Availability</th>
+                        <th style="padding: 10px;">Status</th>
                         <th style="padding: 10px;">Actions</th>
                     </tr>
                 </thead>
@@ -248,18 +247,20 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
 
         menuItems.forEach(item => {
-            const availText = item.isAvailable ? '🟢 Available' : '🔴 Out of Stock';
-            const toggleText = item.isAvailable ? 'Mark Out of Stock' : 'Mark Available';
+            // 🔥 Show actual status from the item itself
+            const isItemActive = item.isActive !== false && item.isAvailable === true;
+            const statusText = isItemActive ? '🟢 Available' : '🔴 Inactive';
+            const toggleText = isItemActive ? 'Mark Inactive' : 'Mark Available';
 
             html += `
                 <tr style="border-bottom: 1px solid var(--lightGrey);">
                     <td style="padding: 12px 10px; font-weight: 600;">${item.name}</td>
                     <td style="padding: 12px 10px;">$${Number(item.price).toFixed(2)}</td>
                     <td style="padding: 12px 10px; color: var(--grey); font-size: 0.9rem;">${item.description || 'N/A'}</td>
-                    <td style="padding: 12px 10px;">${availText}</td>
+                    <td style="padding: 12px 10px;">${statusText}</td>
                     <td style="padding: 12px 10px;">
-                        <button class="secondaryButton toggleAvailBtn" data-id="${item.id}" data-avail="${!item.isAvailable}" style="padding: 4px 10px; font-size: 0.8rem;">${toggleText}</button>
-                        <button class="secondaryButton softDeleteBtn" data-id="${item.id}" style="padding: 4px 10px; font-size: 0.8rem; color: #cc0000; border-color: #cc0000;">Deactivate</button>
+                        <button class="secondaryButton toggleAvailBtn" data-id="${item.id}" data-avail="${!isItemActive}" style="padding: 4px 10px; font-size: 0.8rem;">${toggleText}</button>
+                        <button class="secondaryButton softDeleteBtn" data-id="${item.id}" style="padding: 4px 10px; font-size: 0.8rem; color: #cc0000; border-color: #cc0000;">Delete</button>
                     </td>
                 </tr>
             `;
@@ -272,21 +273,28 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function attachMenuActionListeners() {
+        // Toggle Availability
         document.querySelectorAll('.toggleAvailBtn').forEach(btn => {
             btn.addEventListener('click', function () {
                 const itemId = Number(this.getAttribute('data-id'));
                 const newAvail = this.getAttribute('data-avail') === 'true';
 
-                saveMenuItem({ id: itemId, isAvailable: newAvail });
+                // 🔥 Save with both isActive and isAvailable set to the same value
+                saveMenuItem({ 
+                    id: itemId, 
+                    isAvailable: newAvail,
+                    isActive: newAvail
+                });
                 renderVendorMenu();
             });
         });
 
+        // Soft Delete / Deactivate Item
         document.querySelectorAll('.softDeleteBtn').forEach(btn => {
             btn.addEventListener('click', function () {
                 const itemId = Number(this.getAttribute('data-id'));
                 if (confirm('Deactivating this item hides it from students while preserving historical order logs. Proceed?')) {
-                    saveMenuItem({ id: itemId, isActive: false });
+                    saveMenuItem({ id: itemId, isActive: false, isAvailable: false });
                     renderVendorMenu();
                 }
             });
@@ -294,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 9. ADD NEW MENU ITEM — REACTIVATES VENDOR
+    // 8. ADD NEW MENU ITEM
     // ========================================
     const addForm = document.getElementById('addMenuItemForm');
     if (addForm) {
@@ -318,25 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 description: description
             });
 
-            // ========================================
-            // REACTIVATE VENDOR IF INACTIVE
-            // ========================================
-            const wasReactivated = reactivateVendorAccount();
-
-            if (wasReactivated && vendorProfile && vendorProfile.isActive === false) {
-                // Update vendorProfile for this session
-                vendorProfile.isActive = true;
-
-                // Hide the status banner
-                const statusBanner = document.getElementById('vendorStatusBanner');
-                if (statusBanner) {
-                    statusBanner.style.display = 'none';
-                }
-
-                alert(`✅ "${name}" added successfully! Your vendor account has been reactivated. Students can now see your menu.`);
-            } else {
-                alert(`✅ "${name}" added successfully to your menu!`);
-            }
+            alert(`✅ "${name}" added successfully to your menu!`);
 
             addForm.reset();
             renderVendorMenu();
@@ -350,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 10. INITIAL LOAD
+    // 9. INITIAL LOAD
     // ========================================
     renderVendorOrders();
 

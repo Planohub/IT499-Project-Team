@@ -22,6 +22,7 @@ const NEXT_ORDER_ID_KEY = 'campusFoodLinkNextOrderId';
 const ACTIVE_VENDOR_SESSION_KEY = 'campusFoodLinkActiveVendorSession';
 const STUDENTS_STORAGE_KEY = 'campusFoodLinkStudents';
 const ACTIVE_STUDENT_SESSION_KEY = 'campusFoodLinkActiveStudentSession';
+const ACTIVE_ADMIN_SESSION_KEY = 'campusFoodLinkActiveAdminSession';
 const SEED_DATA_KEY = 'campusFoodLinkSeedDataLoaded';
 
 // =========================================================================
@@ -158,7 +159,6 @@ function getStudentBalance(studentId) {
     const savedBalance = localStorage.getItem(key);
     
     if (savedBalance === null) {
-        // Try to get from the students array
         const students = getStudents();
         const student = students.find(s => Number(s.userID) === Number(studentId));
         if (student) {
@@ -193,7 +193,6 @@ function getMealPlanBalance() {
     if (activeStudent && activeStudent.userID) {
         return getStudentBalance(activeStudent.userID);
     }
-    // Fallback: use the old single balance key
     const savedBalance = localStorage.getItem(BALANCE_STORAGE_KEY);
     if (savedBalance === null) {
         return 250.00;
@@ -207,7 +206,6 @@ function saveMealPlanBalance(balance) {
     if (activeStudent && activeStudent.userID) {
         return saveStudentBalance(activeStudent.userID, balance);
     }
-    // Fallback: use the old single balance key
     localStorage.setItem(BALANCE_STORAGE_KEY, String(balance.toFixed(2)));
     return true;
 }
@@ -228,7 +226,6 @@ function getStudents() {
         }
     }
 
-    // If no users exist, seed them
     if (allUsers.length === 0) {
         seedSampleData();
         const refreshed = localStorage.getItem(STUDENTS_STORAGE_KEY);
@@ -241,7 +238,6 @@ function getStudents() {
         }
     }
 
-    // 🔥 FILTER: Only return users with role === 'Student'
     const students = allUsers.filter(user => user.role === 'Student');
     console.log(`🎓 Found ${students.length} students`);
     return students;
@@ -272,8 +268,75 @@ function getActiveStudentSession() {
             console.error('Error parsing active student session', e);
         }
     }
-    // Default fallback student
     return { userID: 101, firstName: 'Aydan', lastName: 'Karimova', mealPlanBalance: 75.50 };
+}
+
+// =========================================================================
+// ADMIN OPERATIONS
+// =========================================================================
+
+function getAdmins() {
+    const stored = localStorage.getItem(STUDENTS_STORAGE_KEY);
+    let allUsers = [];
+
+    if (stored) {
+        try {
+            allUsers = JSON.parse(stored);
+        } catch (e) {
+            console.error('Unable to parse users from localStorage', e);
+        }
+    }
+
+    if (allUsers.length === 0) {
+        seedSampleData();
+        const refreshed = localStorage.getItem(STUDENTS_STORAGE_KEY);
+        if (refreshed) {
+            try {
+                allUsers = JSON.parse(refreshed);
+            } catch (e) {
+                console.error('Unable to parse users after seeding', e);
+            }
+        }
+    }
+
+    const admins = allUsers.filter(user => user.role === 'Dining Services Administrator');
+    console.log(`👔 Found ${admins.length} administrators`);
+    return admins;
+}
+
+function getAdminById(adminId) {
+    const stored = localStorage.getItem(STUDENTS_STORAGE_KEY);
+    if (!stored) return null;
+    try {
+        const allUsers = JSON.parse(stored);
+        return allUsers.find(u => Number(u.userID) === Number(adminId) && u.role === 'Dining Services Administrator');
+    } catch (e) {
+        console.error('Error getting admin:', e);
+        return null;
+    }
+}
+
+function setActiveAdminSession(admin) {
+    if (!admin || typeof admin !== 'object') return false;
+    try {
+        localStorage.setItem(ACTIVE_ADMIN_SESSION_KEY, JSON.stringify(admin));
+        return true;
+    } catch (e) {
+        console.error('Failed to set active admin session', e);
+        return false;
+    }
+}
+
+function getActiveAdminSession() {
+    const saved = localStorage.getItem(ACTIVE_ADMIN_SESSION_KEY);
+    if (saved) {
+        try {
+            return JSON.parse(saved);
+        } catch (e) {
+            console.error('Error parsing active admin session', e);
+        }
+    }
+    return { userID: 301, firstName: 'Kolab', lastName: 'Heng', role: 'Dining Services Administrator' };
 }
 
 // =========================================================================
@@ -292,7 +355,6 @@ function getAllVendors() {
         }
     }
 
-    // If no vendors exist, seed them
     if (vendors.length === 0) {
         seedSampleData();
         const refreshed = localStorage.getItem(ALL_VENDORS_STORAGE_KEY);
@@ -367,7 +429,6 @@ function getActiveVendorSession() {
             console.error('Error parsing active vendor session', e);
         }
     }
-    // Default fallback vendor
     return { id: 1, name: 'Quad Side Café', location: 'Student Union, Room 102' };
 }
 
@@ -414,7 +475,6 @@ function getVendorMenuItems(vendorId = 1) {
         }
     }
 
-    // If no items exist at all, seed them
     if (allItems.length === 0) {
         seedSampleData();
         const refreshed = localStorage.getItem(MENU_STORAGE_KEY);
@@ -427,8 +487,7 @@ function getVendorMenuItems(vendorId = 1) {
         }
     }
 
-    // Return items belonging to the vendor that are not soft-deleted
-    return allItems.filter(item => Number(item.vendorId) === Number(vendorId) && item.isActive !== false);
+    return allItems.filter(item => Number(item.vendorId) === Number(vendorId));
 }
 
 function saveMenuItem(menuItem) {
@@ -436,13 +495,11 @@ function saveMenuItem(menuItem) {
     let allItems = storedMenu ? JSON.parse(storedMenu) : [];
 
     if (menuItem.id) {
-        // Update existing item
         const index = allItems.findIndex(i => i.id === menuItem.id);
         if (index > -1) {
             allItems[index] = { ...allItems[index], ...menuItem };
         }
     } else {
-        // Create new menu item
         const newItem = {
             id: Date.now(),
             vendorId: menuItem.vendorId || 1,
@@ -478,31 +535,16 @@ function seedSampleData() {
     console.log('🌱 Checking if seed data is needed...');
 
     try {
-        // Check if students already exist — only seed if empty
         const existingStudents = localStorage.getItem(STUDENTS_STORAGE_KEY);
         if (existingStudents) {
             try {
                 const parsed = JSON.parse(existingStudents);
                 if (parsed.length > 0) {
                     console.log('✅ Student data already exists. Skipping seed.');
-                    // Don't return here — still need to check vendors
-                }
-            } catch (e) {
-                console.warn('⚠️ Existing student data found but corrupt. Re-seeding...');
-            }
-        }
-
-        // Check if vendors already exist — only seed if empty
-        const existingVendors = localStorage.getItem(ALL_VENDORS_STORAGE_KEY);
-        if (existingVendors) {
-            try {
-                const parsed = JSON.parse(existingVendors);
-                if (parsed.length > 0) {
-                    console.log('✅ Vendor data already exists. Skipping seed.');
                     return;
                 }
             } catch (e) {
-                console.warn('⚠️ Existing vendor data found but corrupt. Re-seeding...');
+                console.warn('⚠️ Existing student data found but corrupt. Re-seeding...');
             }
         }
 
@@ -616,12 +658,67 @@ function seedSampleData() {
             localStorage.setItem(NEXT_ORDER_ID_KEY, '9004');
         }
 
+        // ========================================
+        // 7. SEED TRANSACTION LOGS
+        // ========================================
+        const transactionLog = [
+            {
+                transactionID: 80001,
+                userID: 101,
+                orderID: null,
+                transactionType: 'Adjustment',
+                amount: 90.50,
+                previousBalance: 0.00,
+                postBalance: 90.50,
+                createdAt: '2026-07-01T08:00:00Z',
+                createdBy: 301,
+                notes: 'Account created by Kolab Heng'
+            },
+            {
+                transactionID: 80002,
+                userID: 101,
+                orderID: 9001,
+                transactionType: 'Deduction',
+                amount: 15.00,
+                previousBalance: 90.50,
+                postBalance: 75.50,
+                createdAt: '2026-07-05T12:15:00Z',
+                createdBy: null,
+                notes: 'Order #9001 from Quad Side Café'
+            },
+            {
+                transactionID: 80003,
+                userID: 102,
+                orderID: null,
+                transactionType: 'Adjustment',
+                amount: 3.20,
+                previousBalance: 0.00,
+                postBalance: 3.20,
+                createdAt: '2026-07-01T08:00:00Z',
+                createdBy: 301,
+                notes: 'Account created by Kolab Heng'
+            },
+            {
+                transactionID: 80004,
+                userID: 101,
+                orderID: null,
+                transactionType: 'Adjustment',
+                amount: 10.00,
+                previousBalance: 75.50,
+                postBalance: 85.50,
+                createdAt: '2026-07-05T14:00:00Z',
+                createdBy: 301,
+                notes: 'Funds added by Kolab Heng'
+            }
+        ];
+        localStorage.setItem('campusFoodLinkTransactionLog', JSON.stringify(transactionLog));
+
         console.log('✅ Sample data seeded successfully!');
         console.log(`🎓 ${allUsers.length} users loaded`);
         console.log(`🏪 ${vendors.length} vendors loaded`);
         console.log(`🍔 ${menuItems.length} menu items loaded`);
         console.log(`📦 ${orders.length} orders loaded`);
-        console.log(`💰 Student balances seeded: Aydan: $75.50, John: $3.20`);
+        console.log(`📋 ${transactionLog.length} transaction logs loaded`);
 
     } catch (error) {
         console.error('❌ Error seeding sample data:', error);
@@ -645,12 +742,14 @@ function resetAndReseedData() {
         MENU_STORAGE_KEY,
         ACTIVE_VENDOR_SESSION_KEY,
         ACTIVE_STUDENT_SESSION_KEY,
+        ACTIVE_ADMIN_SESSION_KEY,
         STUDENTS_STORAGE_KEY,
         NEXT_ORDER_ID_KEY,
-        SEED_DATA_KEY
+        SEED_DATA_KEY,
+        'campusFoodLinkTransactionLog',
+        'campusFoodLinkLatestOrder'
     ];
 
-    // Clear student-specific balances
     const allKeys = Object.keys(localStorage);
     allKeys.forEach(key => {
         if (key.startsWith('campusFoodLinkBalance_')) {
@@ -701,6 +800,12 @@ window.getStudents = getStudents;
 window.getStudentById = getStudentById;
 window.setActiveStudentSession = setActiveStudentSession;
 window.getActiveStudentSession = getActiveStudentSession;
+
+// Admin functions
+window.getAdmins = getAdmins;
+window.getAdminById = getAdminById;
+window.setActiveAdminSession = setActiveAdminSession;
+window.getActiveAdminSession = getActiveAdminSession;
 
 // Vendor functions
 window.getAllVendors = getAllVendors;

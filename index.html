@@ -51,11 +51,19 @@
             <hr style="border: none; border-top: 1px solid var(--lightGrey); margin: 15px 0;">
 
             <!-- ======================================== -->
-            <!-- 3. ADMIN LOGIN BUTTON -->
+            <!-- 3. ADMIN LOGIN DROPDOWN -->
             <!-- ======================================== -->
-            <div style="text-align: center; display: flex; flex-direction: column; gap: 10px;">
-                <a href="admin-dashboard.html" class="secondaryButton" style="text-align: center;">Sign In as Administrator</a>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <p style="font-size: 0.85rem; color: var(--grey); font-weight: 600; margin-bottom: 6px;">Sign In as Administrator:</p>
+                <div style="display: flex; gap: 8px;">
+                    <select id="adminSelectDropdown" style="flex: 1; padding: 8px; border: 1px solid var(--lightGrey); border-radius: 4px;">
+                        <option value="">Loading administrators...</option>
+                    </select>
+                    <button id="adminLoginBtn" class="secondaryButton" style="width: auto; padding: 8px 15px;">Login</button>
+                </div>
             </div>
+
+            <hr style="border: none; border-top: 1px solid var(--lightGrey); margin: 15px 0;">
 
             <!-- ======================================== -->
             <!-- 4. DEMO CREDENTIALS INFO -->
@@ -64,7 +72,7 @@
                 <p style="font-weight: 600; margin-bottom: 4px;">Quick Login Options:</p>
                 <p>• Select a <strong>Student</strong> from dropdown → Student Dashboard</p>
                 <p>• Select a <strong>Vendor</strong> from dropdown → Vendor Dashboard</p>
-                <p>• Click <strong>Administrator</strong> → Admin Dashboard</p>
+                <p>• Select an <strong>Administrator</strong> from dropdown → Admin Dashboard</p>
             </div>
         </div>
     </div>
@@ -90,7 +98,6 @@
 
             if (studentSelect && students.length > 0) {
                 studentSelect.innerHTML = students.map(s => {
-                    // 🔥 Get each student's individual balance
                     const balance = getStudentBalance(s.userID);
                     const balanceText = `$${balance.toFixed(2)}`;
                     return `<option value="${s.userID}">${s.firstName} ${s.lastName} — ${balanceText}</option>`;
@@ -110,9 +117,6 @@
                     const selectedStudent = students.find(s => Number(s.userID) === selectedId);
                     if (selectedStudent) {
                         setActiveStudentSession(selectedStudent);
-                        // 🔥 Load the student's saved balance
-                        const balance = getStudentBalance(selectedStudent.userID);
-                        console.log(`💰 Student balance loaded: $${balance.toFixed(2)}`);
                         window.location.href = 'student-dashboard.html';
                     } else {
                         alert('Please select a valid student.');
@@ -152,17 +156,56 @@
             }
 
             // ========================================
-            // 5. KEYBOARD ENTER SUPPORT
+            // 5. POPULATE ADMIN DROPDOWN
             // ========================================
-            [studentSelect, vendorSelect].forEach(select => {
+            const adminSelect = document.getElementById('adminSelectDropdown');
+            const admins = getAdmins();
+
+            console.log('📋 Admins loaded:', admins);
+
+            if (adminSelect && admins.length > 0) {
+                adminSelect.innerHTML = admins.map(a => {
+                    return `<option value="${a.userID}">${a.firstName} ${a.lastName}</option>`;
+                }).join('');
+            } else {
+                adminSelect.innerHTML = '<option value="">No administrators available</option>';
+                console.warn('⚠️ No admins found!');
+            }
+
+            // ========================================
+            // 6. ADMIN LOGIN BUTTON
+            // ========================================
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            if (adminLoginBtn) {
+                adminLoginBtn.addEventListener('click', function() {
+                    const selectedId = Number(adminSelect.value);
+                    const selectedAdmin = admins.find(a => Number(a.userID) === selectedId);
+                    if (selectedAdmin) {
+                        setActiveAdminSession(selectedAdmin);
+                        window.location.href = 'admin-dashboard.html';
+                    } else {
+                        alert('Please select a valid administrator.');
+                    }
+                });
+            }
+
+            // ========================================
+            // 7. KEYBOARD ENTER SUPPORT
+            // ========================================
+            [studentSelect, vendorSelect, adminSelect].forEach(select => {
                 if (select) {
                     select.addEventListener('keydown', function(e) {
                         if (e.key === 'Enter') {
                             const isStudent = this.id === 'studentSelectDropdown';
+                            const isVendor = this.id === 'vendorSelectDropdown';
+                            const isAdmin = this.id === 'adminSelectDropdown';
+                            
                             if (isStudent) {
                                 studentLoginBtn.click();
-                            } else {
+                            } else if (isVendor) {
                                 vendorLoginBtn.click();
+                            } else if (isAdmin) {
+                                adminLoginBtn.click();
                             }
                         }
                     });
@@ -172,6 +215,7 @@
             console.log('✅ Login page loaded');
             console.log(`🎓 ${students.length} students loaded`);
             console.log(`🏪 ${vendors.length} vendors loaded`);
+            console.log(`👔 ${admins.length} administrators loaded`);
         });
     </script>
 </body>

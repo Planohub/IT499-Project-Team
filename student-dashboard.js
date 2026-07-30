@@ -32,11 +32,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // Get all vendors
     const allVendors = getAllVendors();
 
-    // Filter vendors that are active AND have at least one active menu item
+    // 🔥 FILTER: Only show vendors that are ACTIVE AND have active menu items
     const activeVendors = allVendors.filter(vendor => {
+        // Must be active (isActive !== false)
         if (vendor.isActive === false) return false;
 
+        // Get menu items for this vendor
         const menuItems = getVendorMenuItems(vendor.id);
+
+        // Check if there is at least one active menu item
         const hasActiveItem = menuItems.some(item => 
             item.isActive === true && item.isAvailable === true
         );
@@ -105,6 +109,18 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = this.getAttribute('href');
         });
     });
+
+    // ========================================
+    // 1. GET ACTIVE STUDENT
+    // ========================================
+    const activeStudent = getActiveStudentSession();
+    const studentId = activeStudent.userID;
+
+    // Update header badge
+    const studentBadge = document.getElementById('studentHeaderBadge');
+    if (studentBadge) {
+        studentBadge.textContent = `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
+    }
 
     console.log('✅ Student dashboard loaded');
     console.log(`📦 ${activeVendors.length} active vendors with menu items`);
