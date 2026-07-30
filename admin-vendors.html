@@ -12,11 +12,11 @@
     <nav class="navigationBar">
         <div class="navigationContainer">
             <div class="navigationBrand">
-            <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
-            <img src="CFL+Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
-            <span>CampusFoodLink+</span>
-            </a>
-        </div>
+                <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="CFL+Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
+                    <span>CampusFoodLink+</span>
+                </a>
+            </div>
             <div class="navigationLinks">
                 <a href="admin-dashboard.html">Dashboard</a>
                 <a href="admin-reports.html">Reports</a>
@@ -25,7 +25,7 @@
                 <a href="index.html">Logout</a>
             </div>
             <div class="navigationUser">
-                <span class="userBadge">📊 Dining Services administrator</span>
+                <span class="userBadge">📊 Admin</span>
             </div>
         </div>
     </nav>
@@ -36,8 +36,14 @@
             <p>Add new campus food vendors or deactivate existing accounts</p>
         </div>
 
+        <!-- ======================================== -->
+        <!-- ADD NEW VENDOR FORM -->
+        <!-- ======================================== -->
         <div class="orderDetailsBox" style="margin-bottom: 25px;">
             <h3>Add New Campus Vendor</h3>
+            <p style="color: var(--grey); font-size: 0.9rem; margin-top: 4px; margin-bottom: 10px;">
+                New vendors are automatically set to <strong>Active</strong> and will appear on the student dashboard immediately.
+            </p>
             <form id="addVendorForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px;">
                 <div class="credentialForm">
                     <label for="vendorNameInput">Vendor Name</label>
@@ -57,15 +63,20 @@
             </form>
         </div>
 
+        <!-- ======================================== -->
+        <!-- VENDOR DIRECTORY -->
+        <!-- ======================================== -->
         <div class="orderDetailsBox">
             <h3>Registered Vendor Accounts</h3>
             <div id="vendorDirectoryContainer" style="margin-top: 15px; overflow-x: auto;">
-                </div>
+                <!-- Vendors will be rendered here by JavaScript -->
+            </div>
         </div>
     </div>
 
     <script src="storage.js"></script>
     <script src="admin-vendors.js"></script>
+<<<<<<< HEAD
 
     <footer style="background-color:#f1f1f1; 
                    text-align:center; 
@@ -75,6 +86,8 @@
                    border-top:1px solid #ccc;">
         &copy; 2026 CampusFoodLink+. All rights reserved. | Version 0.7.3
     </footer>
+=======
+>>>>>>> cfcc51218eb51508a02a6ab39f8327d7006d5a16
 </body>
 
 </html>

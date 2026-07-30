@@ -27,6 +27,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Get the active student
     const activeStudent = getActiveStudentSession();
+    const studentId = activeStudent.userID;
+
+    // Update header badge
+    const studentBadge = document.getElementById('studentHeaderBadge');
+    if (studentBadge) {
+        studentBadge.textContent = `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
+    }
 
     // Display meal plan balance if available
     const mealPlanBalance = getMealPlanBalance();
@@ -239,6 +246,8 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = `confirmation.html?orderId=${order.orderId}`;
         });
     }
+
+    
 
     console.log('✅ Checkout page loaded');
 });
