@@ -12,6 +12,7 @@ CREATE TABLE Vendor (
     VendorID INTEGER PRIMARY KEY,
     VendorName TEXT NOT NULL,
     Location TEXT NOT NULL,
+    OperatingHours TEXT NOT NULL DEFAULT '08:00 - 20:00',
     OperatingStatus TEXT NOT NULL
         CHECK (OperatingStatus IN ('Active', 'Inactive'))
 );
@@ -26,9 +27,8 @@ CREATE TABLE User (
         CHECK (Role IN (
             'Student',
             'Vendor',
-            'Dining Services administrator'
-            )
-        ),
+            'Dining Services Administrator'
+        )),
     VendorID INTEGER NULL,
     MealPlanBalance NUMERIC NOT NULL DEFAULT 0
         CHECK (MealPlanBalance >= 0),
@@ -45,8 +45,10 @@ CREATE TABLE MenuItem (
     Description TEXT,
     Price NUMERIC NOT NULL
         CHECK (Price >= 0),
-    Availability INTEGER NOT NULL DEFAULT 1
-        CHECK (Availability IN (0, 1)),
+    IsAvailable INTEGER NOT NULL DEFAULT 1
+        CHECK (IsAvailable IN (0, 1)),
+    IsActive INTEGER NOT NULL DEFAULT 1
+        CHECK (IsActive IN (0, 1)),
 
     FOREIGN KEY (VendorID) REFERENCES Vendor(VendorID)
 );
