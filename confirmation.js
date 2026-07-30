@@ -3,6 +3,19 @@
 // ========================================
 
 document.addEventListener('DOMContentLoaded', function () {
+    
+    // ========================================
+    // 1. GET ACTIVE STUDENT
+    // ========================================
+    const activeStudent = getActiveStudentSession();
+    const studentId = activeStudent.userID;
+
+    // Update header badge
+    const studentBadge = document.getElementById('studentHeaderBadge');
+    if (studentBadge) {
+        studentBadge.textContent = `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
+    }
+    
     // Get order ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('orderId');

@@ -25,6 +25,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const clearCartButton = document.getElementById('clearCartButton');
     const mealPlanBalanceElement = document.getElementById('mealPlanBalance');
 
+    // Get the active student
+    const activeStudent = getActiveStudentSession();
+    const studentId = activeStudent.userID;
+
+    // Update header badge
+    const studentBadge = document.getElementById('studentHeaderBadge');
+    if (studentBadge) {
+        studentBadge.textContent = `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
+    }
+
     // Display meal plan balance if available
     const mealPlanBalance = getMealPlanBalance();
     if (mealPlanBalanceElement) {
@@ -60,7 +70,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const checkoutItem = document.createElement('div');
         checkoutItem.classList.add('checkoutItem');
 
-
         checkoutItem.innerHTML = `
             <div class="itemSummary">
                 <span class="itemName">${item.item}</span>
@@ -71,17 +80,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </div>
             <span class="itemPrice">$${itemTotal.toFixed(2)}</span>
-
             <button class="removeItemButton">❌</button>
         `;
 
         // Decrease/Increase itemQty
         const decreaseQuantityButton = checkoutItem.querySelector('.decreaseQuantityButton');
         const increaseQuantityButton = checkoutItem.querySelector('.increaseQuantityButton');
-
-        // Find and remove an item from the cart and save
         const removeItemButton = checkoutItem.querySelector('.removeItemButton');
-
 
         decreaseQuantityButton.addEventListener('click', function () {
             const updatedCart = cart.map(cartItem => {
@@ -91,10 +96,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         quantity: cartItem.quantity - 1
                     };
                 }
-
                 return cartItem;
-            })
-                .filter(cartItem => cartItem.quantity > 0);
+            }).filter(cartItem => cartItem.quantity > 0);
 
             saveCart(updatedCart);
             window.location.reload();
@@ -118,12 +121,11 @@ document.addEventListener('DOMContentLoaded', function () {
         removeItemButton.addEventListener('click', function () {
             const updatedCart = cart.filter(cartItem => {
                 return cartItem.item !== item.item;
-
             });
 
             saveCart(updatedCart);
             window.location.reload();
-        })
+        });
 
         checkoutItems.appendChild(checkoutItem);
     });
@@ -205,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Create order object with order details
             const order = {
                 orderId: getNextOrderId(),
-                studentId: 101,
+                studentId: activeStudent ? activeStudent.userID : 101,
                 vendorId: selectedVendor.vendorId,
                 vendorName: selectedVendor.vendorName,
                 orderDate: new Date().toLocaleString(),
@@ -224,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             // Save order for confirmation page to retrieve
-            const wasSaved = saveLatestOrder(order);
+            const wasSaved = saveOrder(order);
 
             if (!wasSaved) {
                 alert('Unable to place the order. Please try again.');
@@ -234,33 +236,18 @@ document.addEventListener('DOMContentLoaded', function () {
             // Deduct order total from meal-plan balance
             const balanceWasSaved = saveMealPlanBalance(updatedBalance);
 
-            if (!balanceWasSaved) { // check for error
+            if (!balanceWasSaved) {
                 alert('Unable to update the meal-plan balance.');
                 return;
             }
-
-            // Retrieve existing order history from localStorage
-            let orders = [];
-
-            try {
-                const savedOrders = JSON.parse(localStorage.getItem('orders'));
-
-                if (Array.isArray(savedOrders)) {
-                    orders = savedOrders;
-                }
-            } catch (e) {
-                console.error('Unable to read order history', e);
-            }
-
-            // Add the new order and save the updated history
-            orders.push(order);
-            localStorage.setItem('orders', JSON.stringify(orders));
 
             // Clear cart after saving the order to localStorage
             clearCart();
             window.location.href = `confirmation.html?orderId=${order.orderId}`;
         });
     }
+
+    
 
     console.log('✅ Checkout page loaded');
 });

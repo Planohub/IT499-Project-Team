@@ -4,10 +4,10 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Ensure mock orders exist if testing with an empty cart history
-    seedMockOrdersIfEmpty();
-
+    // 🔥 Get REAL orders from localStorage
     const orders = getOrdersHistory();
+
+    console.log('📊 Admin Reports — Orders loaded:', orders);
 
     // Render all operational report modules
     renderPurchasesSummary(orders);
@@ -48,7 +48,7 @@ function renderVendorPerformance(orders) {
     const vendorStats = {};
 
     orders.forEach(order => {
-        const vendor = order.vendorName || 'Quad Side Café';
+        const vendor = order.vendorName || 'Unknown Vendor';
         if (!vendorStats[vendor]) {
             vendorStats[vendor] = { orderCount: 0, totalSales: 0 };
         }
@@ -61,8 +61,8 @@ function renderVendorPerformance(orders) {
             <thead>
                 <tr style="border-bottom: 2px solid var(--black);">
                     <th style="padding: 10px;">Vendor Name</th>
-                    <th style="padding: 10px;">Vendor Order Volume</th>
-                    <th style="padding: 10px;">Total Revenue Generated</th>
+                    <th style="padding: 10px;">Order Volume</th>
+                    <th style="padding: 10px;">Total Revenue</th>
                     <th style="padding: 10px;">Avg Sale / Order</th>
                 </tr>
             </thead>
@@ -118,13 +118,18 @@ function renderBuyingTrends(orders) {
     // Sort items by units sold descending
     const sortedItems = Object.entries(itemStats).sort((a, b) => b[1].quantitySold - a[1].quantitySold);
 
+    if (sortedItems.length === 0) {
+        container.innerHTML = '<p style="color: var(--grey);">No item sales data available.</p>';
+        return;
+    }
+
     let tableHTML = `
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="border-bottom: 2px solid var(--black);">
                     <th style="padding: 10px;">Menu Item</th>
                     <th style="padding: 10px;">Units Sold</th>
-                    <th style="padding: 10px;">Total Item Revenue</th>
+                    <th style="padding: 10px;">Total Revenue</th>
                 </tr>
             </thead>
             <tbody>
@@ -160,7 +165,17 @@ function renderPeakHours(orders) {
     const hourCounts = {};
 
     orders.forEach(order => {
-        const orderTime = order.timestamp ? new Date(order.timestamp) : new Date(order.orderDate);
+        let orderTime;
+
+        // Try to parse the order date in different formats
+        if (order.timestamp) {
+            orderTime = new Date(order.timestamp);
+        } else if (order.orderDate) {
+            orderTime = new Date(order.orderDate);
+        } else {
+            orderTime = new Date();
+        }
+
         const hour = isNaN(orderTime.getTime()) ? new Date().getHours() : orderTime.getHours();
 
         // Format 12-hour display string (e.g., "12:00 PM - 1:00 PM")
@@ -170,6 +185,18 @@ function renderPeakHours(orders) {
 
         hourCounts[timeSlot] = (hourCounts[timeSlot] || 0) + 1;
     });
+
+    // Sort by hour (chronological)
+    const sortedHours = Object.entries(hourCounts).sort((a, b) => {
+        const hourA = parseInt(a[0].split(':')[0]);
+        const hourB = parseInt(b[0].split(':')[0]);
+        return hourA - hourB;
+    });
+
+    if (sortedHours.length === 0) {
+        container.innerHTML = '<p style="color: var(--grey);">No time-series data available.</p>';
+        return;
+    }
 
     let tableHTML = `
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -183,7 +210,7 @@ function renderPeakHours(orders) {
             <tbody>
     `;
 
-    for (const [timeSlot, count] of Object.entries(hourCounts)) {
+    for (const [timeSlot, count] of sortedHours) {
         let indicator = '🟢 Normal';
         if (count >= 5) {
             indicator = '🔴 Peak Demand';

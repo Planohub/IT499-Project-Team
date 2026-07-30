@@ -10,7 +10,9 @@
 
 <body>
     <div class="loginBox">
-        <div class="loginHeader">
+        <div class="loginHeader" style="text-align: center;">
+            <img src="CFL+Logo.png" alt="CampusFoodLink+ Logo" style="max-height: 90px; width: auto; display: block; margin: 0 auto 15px auto;">
+            
             <h1>CampusFoodLink+</h1>
             <p class="loginSubtitle">Smart Campus Dining Platform</p>
         </div>
@@ -18,64 +20,127 @@
         <div class="loginCredentials">
             <h2>Simulated Login</h2>
 
-            <form id="loginForm">
-                <div class="credentialForm">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="e.g., student, vendor, or admin" value="student">
-                </div>
-
-                <div class="credentialForm">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Enter password" value="••••••••">
-                </div>
-
-                <button type="submit" class="defaultButton">Sign In</button>
-            </form>
-
-            <hr style="border: none; border-top: 1px solid var(--lightGrey); margin: 20px 0;">
-
+            <!-- ======================================== -->
+            <!-- 1. STUDENT LOGIN DROPDOWN -->
+            <!-- ======================================== -->
             <div style="text-align: center; margin-bottom: 15px;">
-                <p style="font-size: 0.85rem; color: var(--grey); font-weight: 600; margin-bottom: 6px;">Sign In as Vendor Portal:</p>
+                <p style="font-size: 0.85rem; color: var(--grey); font-weight: 600; margin-bottom: 6px;">Sign In as Student:</p>
+                <div style="display: flex; gap: 8px;">
+                    <select id="studentSelectDropdown" style="flex: 1; padding: 8px; border: 1px solid var(--lightGrey); border-radius: 4px;">
+                        <option value="">Loading students...</option>
+                    </select>
+                    <button id="studentLoginBtn" class="secondaryButton" style="width: auto; padding: 8px 15px;">Login</button>
+                </div>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--lightGrey); margin: 15px 0;">
+
+            <!-- ======================================== -->
+            <!-- 2. VENDOR LOGIN DROPDOWN -->
+            <!-- ======================================== -->
+            <div style="text-align: center; margin-bottom: 15px;">
+                <p style="font-size: 0.85rem; color: var(--grey); font-weight: 600; margin-bottom: 6px;">Sign In as Vendor:</p>
                 <div style="display: flex; gap: 8px;">
                     <select id="vendorSelectDropdown" style="flex: 1; padding: 8px; border: 1px solid var(--lightGrey); border-radius: 4px;">
-                        </select>
+                        <option value="">Loading vendors...</option>
+                    </select>
                     <button id="vendorLoginBtn" class="secondaryButton" style="width: auto; padding: 8px 15px;">Login</button>
                 </div>
             </div>
 
-            <div style="text-align: center; display: flex; flex-direction: column; gap: 10px;">
-                <a href="vendors.html" class="secondaryButton" style="text-align: center;">Sign In as Student</a>
-                <a href="admin-dashboard.html" class="secondaryButton" style="text-align: center;">Sign In as Administrator</a>
+            <hr style="border: none; border-top: 1px solid var(--lightGrey); margin: 15px 0;">
+
+            <!-- ======================================== -->
+            <!-- 3. ADMIN LOGIN DROPDOWN -->
+            <!-- ======================================== -->
+            <div style="text-align: center; margin-bottom: 15px;">
+                <p style="font-size: 0.85rem; color: var(--grey); font-weight: 600; margin-bottom: 6px;">Sign In as Administrator:</p>
+                <div style="display: flex; gap: 8px;">
+                    <select id="adminSelectDropdown" style="flex: 1; padding: 8px; border: 1px solid var(--lightGrey); border-radius: 4px;">
+                        <option value="">Loading administrators...</option>
+                    </select>
+                    <button id="adminLoginBtn" class="secondaryButton" style="width: auto; padding: 8px 15px;">Login</button>
+                </div>
             </div>
 
+            <hr style="border: none; border-top: 1px solid var(--lightGrey); margin: 15px 0;">
+
+            <!-- ======================================== -->
+            <!-- 4. DEMO CREDENTIALS INFO -->
+            <!-- ======================================== -->
             <div style="margin-top: 20px; padding: 12px; border: 1px solid var(--lightGrey); border-radius: 4px; background: #f9f9f9; font-size: 0.85rem; color: var(--grey);">
-                <p style="font-weight: 600; margin-bottom: 4px;">Demo Logins:</p>
-                <p>• Type <strong>student</strong> &rarr; Student Vendor Portal</p>
-                <p>• Type <strong>vendor</strong> &rarr; Vendor Dashboard</p>
-                <p>• Type <strong>admin</strong> &rarr; Administrator Dashboard</p>
+                <p style="font-weight: 600; margin-bottom: 4px;">Quick Login Options:</p>
+                <p>• Select a <strong>Student</strong> from dropdown → Student Dashboard</p>
+                <p>• Select a <strong>Vendor</strong> from dropdown → Vendor Dashboard</p>
+                <p>• Select an <strong>Administrator</strong> from dropdown → Admin Dashboard</p>
             </div>
         </div>
     </div>
+    <footer style="background-color:#f1f1f1; 
+                   text-align:center; 
+                   padding:10px; 
+                   font-size:14px; 
+                   color:#555; 
+                   border-top:1px solid #ccc;">
+        &copy; 2026 CampusFoodLink+. All rights reserved. | Version 0.7.3
+    </footer>
 
     <script src="storage.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Reset active cart when returning to login page
-            if (typeof localStorage !== 'undefined') {
-                localStorage.removeItem('campusFoodLinkCart');
+            // ========================================
+            // 1. POPULATE STUDENT DROPDOWN
+            // ========================================
+            const studentSelect = document.getElementById('studentSelectDropdown');
+            const students = getStudents();
+
+            console.log('📋 Students loaded:', students);
+
+            if (studentSelect && students.length > 0) {
+                studentSelect.innerHTML = students.map(s => {
+                    const balance = getStudentBalance(s.userID);
+                    const balanceText = `$${balance.toFixed(2)}`;
+                    return `<option value="${s.userID}">${s.firstName} ${s.lastName} — ${balanceText}</option>`;
+                }).join('');
+            } else {
+                studentSelect.innerHTML = '<option value="">No students available</option>';
+                console.warn('⚠️ No students found!');
             }
 
-            // Populate Vendor Select Dropdown dynamically from storage.js
+            // ========================================
+            // 2. STUDENT LOGIN BUTTON
+            // ========================================
+            const studentLoginBtn = document.getElementById('studentLoginBtn');
+            if (studentLoginBtn) {
+                studentLoginBtn.addEventListener('click', function() {
+                    const selectedId = Number(studentSelect.value);
+                    const selectedStudent = students.find(s => Number(s.userID) === selectedId);
+                    if (selectedStudent) {
+                        setActiveStudentSession(selectedStudent);
+                        window.location.href = 'student-dashboard.html';
+                    } else {
+                        alert('Please select a valid student.');
+                    }
+                });
+            }
+
+            // ========================================
+            // 3. POPULATE VENDOR DROPDOWN
+            // ========================================
             const vendorSelect = document.getElementById('vendorSelectDropdown');
-            const vendors = getAllVendors().filter(v => v.isActive !== false);
+            const vendors = getAllVendors();
 
             if (vendorSelect && vendors.length > 0) {
-                vendorSelect.innerHTML = vendors.map(v => 
-                    `<option value="${v.id}">${v.name} (${v.location})</option>`
-                ).join('');
+                vendorSelect.innerHTML = vendors.map(v => {
+                    return `<option value="${v.id}">${v.name}</option>`;
+                }).join('');
+            } else {
+                vendorSelect.innerHTML = '<option value="">No vendors available</option>';
             }
 
-            // Vendor Login Button Handler
+            // ========================================
+            // 4. VENDOR LOGIN BUTTON
+            // ========================================
             const vendorLoginBtn = document.getElementById('vendorLoginBtn');
             if (vendorLoginBtn) {
                 vendorLoginBtn.addEventListener('click', function() {
@@ -84,30 +149,73 @@
                     if (selectedVendor) {
                         setActiveVendorSession(selectedVendor);
                         window.location.href = 'vendor-dashboard.html';
-                    }
-                });
-            }
-
-            // Form Submit Logic
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                loginForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const username = document.getElementById('username').value.trim().toLowerCase();
-
-                    if (username === 'admin') {
-                        window.location.href = 'admin-dashboard.html';
-                    } else if (username === 'vendor') {
-                        // Log in using selected dropdown vendor
-                        const selectedId = Number(vendorSelect.value);
-                        const selectedVendor = vendors.find(v => Number(v.id) === selectedId) || vendors[0];
-                        setActiveVendorSession(selectedVendor);
-                        window.location.href = 'vendor-dashboard.html';
                     } else {
-                        window.location.href = 'vendors.html';
+                        alert('Please select a valid vendor.');
                     }
                 });
             }
+
+            // ========================================
+            // 5. POPULATE ADMIN DROPDOWN
+            // ========================================
+            const adminSelect = document.getElementById('adminSelectDropdown');
+            const admins = getAdmins();
+
+            console.log('📋 Admins loaded:', admins);
+
+            if (adminSelect && admins.length > 0) {
+                adminSelect.innerHTML = admins.map(a => {
+                    return `<option value="${a.userID}">${a.firstName} ${a.lastName}</option>`;
+                }).join('');
+            } else {
+                adminSelect.innerHTML = '<option value="">No administrators available</option>';
+                console.warn('⚠️ No admins found!');
+            }
+
+            // ========================================
+            // 6. ADMIN LOGIN BUTTON
+            // ========================================
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            if (adminLoginBtn) {
+                adminLoginBtn.addEventListener('click', function() {
+                    const selectedId = Number(adminSelect.value);
+                    const selectedAdmin = admins.find(a => Number(a.userID) === selectedId);
+                    if (selectedAdmin) {
+                        setActiveAdminSession(selectedAdmin);
+                        window.location.href = 'admin-dashboard.html';
+                    } else {
+                        alert('Please select a valid administrator.');
+                    }
+                });
+            }
+
+            // ========================================
+            // 7. KEYBOARD ENTER SUPPORT
+            // ========================================
+            [studentSelect, vendorSelect, adminSelect].forEach(select => {
+                if (select) {
+                    select.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            const isStudent = this.id === 'studentSelectDropdown';
+                            const isVendor = this.id === 'vendorSelectDropdown';
+                            const isAdmin = this.id === 'adminSelectDropdown';
+                            
+                            if (isStudent) {
+                                studentLoginBtn.click();
+                            } else if (isVendor) {
+                                vendorLoginBtn.click();
+                            } else if (isAdmin) {
+                                adminLoginBtn.click();
+                            }
+                        }
+                    });
+                }
+            });
+
+            console.log('✅ Login page loaded');
+            console.log(`🎓 ${students.length} students loaded`);
+            console.log(`🏪 ${vendors.length} vendors loaded`);
+            console.log(`👔 ${admins.length} administrators loaded`);
         });
     </script>
 </body>

@@ -12,15 +12,20 @@
     <!-- Navigation Bar -->
     <nav class="navigationBar">
         <div class="navigationContainer">
-            <div class="navigationBrand"><a href="index.html">CampusFoodLink+</a></div>
+            <div class="navigationBrand">
+            <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
+            <img src="CFL+Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
+            <span>CampusFoodLink+</span>
+            </a>
+        </div>
             <div class="navigationLinks">
                 <a href="student-dashboard.html">Vendors</a>
                 <a href="checkout.html" class="active" id="cartLink">Cart (0)</a>
-                <a href="#">Orders</a>
+                <a href="orders.html">Orders</a>
                 <a href="index.html">Logout</a>
             </div>
             <div class="navigationUser">
-                <span class="userBadge">Student</span>
+                <span class="userBadge" id="studentHeaderBadge">🎓 Student</span>
             </div>
         </div>
     </nav>
@@ -65,6 +70,15 @@
     </footer>
     <script src="storage.js"></script>
     <script src="checkout.js"></script>
+
+    <footer style="background-color:#f1f1f1; 
+                   text-align:center; 
+                   padding:10px; 
+                   font-size:14px; 
+                   color:#555; 
+                   border-top:1px solid #ccc;">
+        &copy; 2026 CampusFoodLink+. All rights reserved. | Version 0.7.3
+    </footer>
 </body>
 
 </html>

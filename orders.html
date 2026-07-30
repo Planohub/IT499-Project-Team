@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CampusFoodLink+ — Student Dashboard</title>
+    <title>CampusFoodLink+ — My Orders</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -18,9 +18,9 @@
                 </a>
             </div>
             <div class="navigationLinks">
-                <a href="student-dashboard.html" class="active">Vendors</a>
-                <a id="cartLink" href="checkout.html">Cart (0)</a>
-                <a href="orders.html">Orders</a>
+                <a href="student-dashboard.html">Vendors</a>
+                <a href="checkout.html" id="cartLink">Cart (0)</a>
+                <a href="orders.html" class="active">My Orders</a>
                 <a href="index.html">Logout</a>
             </div>
             <div class="navigationUser">
@@ -31,13 +31,13 @@
 
     <div class="vendorSelectionContainer">
         <div class="pageHeader">
-            <h2>Select a Vendor</h2>
-            <p>Choose a vendor to browse their menu</p>
+            <h2>My Order History</h2>
+            <p>View all your past orders and their current status</p>
         </div>
 
-        <!-- Vendor Grid - Dynamically populated by JavaScript -->
-        <div class="vendorGrid" id="vendorGrid">
-            <!-- Vendors will be rendered here -->
+        <div id="ordersContainer" style="margin-top: 20px;">
+            <!-- Orders will be rendered by JavaScript -->
+            <p style="text-align:center; padding:40px; color:var(--grey);">Loading orders...</p>
         </div>
     </div>
 
@@ -48,7 +48,7 @@
     </footer>
 
     <script src="storage.js"></script>
-    <script src="student-dashboard.js"></script>
+    <script src="orders.js"></script>
 
     <footer style="background-color:#f1f1f1; 
                    text-align:center; 

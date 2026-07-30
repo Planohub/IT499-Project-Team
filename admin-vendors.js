@@ -21,23 +21,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Save new vendor to storage
             addVendor({
                 name: name,
                 location: location,
-                operatingHours: hours
+                operatingHours: hours || '08:00 - 20:00'
             });
 
             addVendorForm.reset();
-            alert(`Vendor "${name}" created successfully!`);
+            alert(`✅ Vendor "${name}" created successfully!`);
             renderVendorDirectory();
         });
     }
 });
 
-/**
- * Renders the full directory of vendor accounts with activation controls.
- */
 function renderVendorDirectory() {
     const container = document.getElementById('vendorDirectoryContainer');
     if (!container) return;
@@ -71,15 +67,19 @@ function renderVendorDirectory() {
             : '<span class="userBadge" style="background: #ffe6e6; color: #cc0000; border-color: #cc0000;">🔴 Inactive</span>';
 
         const actionButton = isActive
-            ? `<button class="secondaryButton removeVendorBtn" data-id="${v.id}" data-name="${v.name}" style="padding: 4px 12px; color: #cc0000; border-color: #cc0000; font-size: 0.85rem;">Remove / Deactivate</button>`
-            : `<button class="secondaryButton activateVendorBtn" data-id="${v.id}" style="padding: 4px 12px; font-size: 0.85rem;">Reactivate</button>`;
+            ? `<button class="secondaryButton deactivateVendorBtn" data-id="${v.id}" data-name="${v.name}" style="padding: 4px 12px; color: #cc0000; border-color: #cc0000; font-size: 0.85rem;">Deactivate</button>`
+            : `<button class="secondaryButton reactivateVendorBtn" data-id="${v.id}" data-name="${v.name}" style="padding: 4px 12px; font-size: 0.85rem;">Reactivate</button>`;
 
         html += `
             <tr style="border-bottom: 1px solid var(--lightGrey);">
                 <td style="padding: 12px 10px; font-weight: 600;">#${v.id}</td>
                 <td style="padding: 12px 10px; font-weight: 600;">${v.name}</td>
                 <td style="padding: 12px 10px; color: var(--grey);">${v.location}</td>
-                <td style="padding: 12px 10px; color: var(--grey); font-size: 0.9rem;">${v.operatingHours || 'N/A'}</td>
+                <td style="padding: 12px 10px;">
+                    <input type="text" class="hoursInput" data-id="${v.id}" value="${v.operatingHours || '08:00 - 20:00'}" 
+                           style="width: 130px; padding: 4px 8px; border: 1px solid var(--lightGrey); border-radius: 4px; font-size: 0.85rem;">
+                    <button class="secondaryButton updateHoursBtn" data-id="${v.id}" style="padding: 2px 10px; font-size: 0.75rem;">Update</button>
+                </td>
                 <td style="padding: 12px 10px;">${statusBadge}</td>
                 <td style="padding: 12px 10px;">${actionButton}</td>
             </tr>
@@ -90,31 +90,57 @@ function renderVendorDirectory() {
     container.innerHTML = html;
 
     attachVendorActionListeners();
+    attachHoursUpdateListeners();
 }
 
-/**
- * Attaches event listeners for removing/deactivating and reactivating vendors.
- */
+function attachHoursUpdateListeners() {
+    document.querySelectorAll('.updateHoursBtn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const vendorId = Number(this.dataset.id);
+            const input = document.querySelector(`.hoursInput[data-id="${vendorId}"]`);
+            if (!input) return;
+
+            const newHours = input.value.trim();
+            if (!newHours || !newHours.includes('-')) {
+                alert('Please enter hours in format: HH:MM - HH:MM (e.g., 07:00 - 20:00)');
+                return;
+            }
+
+            const success = updateVendorHours(vendorId, newHours);
+            if (success) {
+                alert('✅ Operating hours updated successfully!');
+                renderVendorDirectory();
+            } else {
+                alert('❌ Failed to update hours. Please try again.');
+            }
+        });
+    });
+}
+
 function attachVendorActionListeners() {
-    // Remove / Deactivate Vendor Handler
-    document.querySelectorAll('.removeVendorBtn').forEach(btn => {
+    document.querySelectorAll('.deactivateVendorBtn').forEach(btn => {
         btn.addEventListener('click', function () {
             const vendorId = this.getAttribute('data-id');
             const vendorName = this.getAttribute('data-name');
 
-            if (confirm(`Are you sure you want to remove "${vendorName}"?\n\nNote: In accordance with system audit rules, this vendor will be deactivated (soft-deleted) to protect historical order records.`)) {
+            if (confirm(`⚠️ Are you sure you want to deactivate "${vendorName}"?\n\nStudents will no longer see this vendor, and the vendor will be locked out with a "Contact Admin" message.`)) {
                 setVendorActiveState(vendorId, false);
                 renderVendorDirectory();
+                alert(`✅ "${vendorName}" has been deactivated.`);
             }
         });
     });
 
-    // Reactivate Vendor Handler
-    document.querySelectorAll('.activateVendorBtn').forEach(btn => {
+    document.querySelectorAll('.reactivateVendorBtn').forEach(btn => {
         btn.addEventListener('click', function () {
             const vendorId = this.getAttribute('data-id');
-            setVendorActiveState(vendorId, true);
-            renderVendorDirectory();
+            const vendorName = this.getAttribute('data-name');
+
+            if (confirm(`✅ Are you sure you want to reactivate "${vendorName}"?\n\nStudents will be able to see this vendor again.`)) {
+                setVendorActiveState(vendorId, true);
+                renderVendorDirectory();
+                alert(`✅ "${vendorName}" has been reactivated.`);
+            }
         });
     });
 }
