@@ -27,11 +27,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Get the active student
     const activeStudent = getActiveStudentSession();
-    const studentId = activeStudent.userID;
+    const studentId = activeStudent ? activeStudent.userID : 101;
 
     // Update header badge
     const studentBadge = document.getElementById('studentHeaderBadge');
-    if (studentBadge) {
+    if (studentBadge && activeStudent) {
         studentBadge.textContent = `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
     }
 
@@ -53,16 +53,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Display message if cart is empty
     if (cart.length === 0) {
-        checkoutItems.innerHTML = '<p style="text-align:center; padding:20px; color:var(--grey);">🛒 Your cart is empty</p>';
-        subtotalElement.textContent = '$0.00';
-        taxElement.textContent = '$0.00';
-        totalElement.textContent = '$0.00';
+        if (checkoutItems) {
+            checkoutItems.innerHTML = '<p style="text-align:center; padding:20px; color:var(--grey);">🛒 Your cart is empty</p>';
+        }
+        if (subtotalElement) subtotalElement.textContent = '$0.00';
+        if (taxElement) taxElement.textContent = '$0.00';
+        if (totalElement) totalElement.textContent = '$0.00';
         return;
     }
 
     let subtotal = 0;
 
-    // Populate and display on row for each cart item
+    // Populate and display row for each cart item
     cart.forEach(item => {
         const itemTotal = item.price * item.quantity;
         subtotal += itemTotal;
@@ -88,46 +90,54 @@ document.addEventListener('DOMContentLoaded', function () {
         const increaseQuantityButton = checkoutItem.querySelector('.increaseQuantityButton');
         const removeItemButton = checkoutItem.querySelector('.removeItemButton');
 
-        decreaseQuantityButton.addEventListener('click', function () {
-            const updatedCart = cart.map(cartItem => {
-                if (cartItem.item === item.item) {
-                    return {
-                        ...cartItem,
-                        quantity: cartItem.quantity - 1
-                    };
-                }
-                return cartItem;
-            }).filter(cartItem => cartItem.quantity > 0);
+        if (decreaseQuantityButton) {
+            decreaseQuantityButton.addEventListener('click', function () {
+                const updatedCart = cart.map(cartItem => {
+                    if (cartItem.item === item.item) {
+                        return {
+                            ...cartItem,
+                            quantity: cartItem.quantity - 1
+                        };
+                    }
+                    return cartItem;
+                }).filter(cartItem => cartItem.quantity > 0);
 
-            saveCart(updatedCart);
-            window.location.reload();
-        });
-
-        increaseQuantityButton.addEventListener('click', function () {
-            const updatedCart = cart.map(cartItem => {
-                if (cartItem.item === item.item) {
-                    return {
-                        ...cartItem,
-                        quantity: cartItem.quantity + 1
-                    };
-                }
-                return cartItem;
+                saveCart(updatedCart);
+                window.location.reload();
             });
+        }
 
-            saveCart(updatedCart);
-            window.location.reload();
-        });
+        if (increaseQuantityButton) {
+            increaseQuantityButton.addEventListener('click', function () {
+                const updatedCart = cart.map(cartItem => {
+                    if (cartItem.item === item.item) {
+                        return {
+                            ...cartItem,
+                            quantity: cartItem.quantity + 1
+                        };
+                    }
+                    return cartItem;
+                });
 
-        removeItemButton.addEventListener('click', function () {
-            const updatedCart = cart.filter(cartItem => {
-                return cartItem.item !== item.item;
+                saveCart(updatedCart);
+                window.location.reload();
             });
+        }
 
-            saveCart(updatedCart);
-            window.location.reload();
-        });
+        if (removeItemButton) {
+            removeItemButton.addEventListener('click', function () {
+                const updatedCart = cart.filter(cartItem => {
+                    return cartItem.item !== item.item;
+                });
 
-        checkoutItems.appendChild(checkoutItem);
+                saveCart(updatedCart);
+                window.location.reload();
+            });
+        }
+
+        if (checkoutItems) {
+            checkoutItems.appendChild(checkoutItem);
+        }
     });
 
     // Clear all cart items
@@ -144,27 +154,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const total = Number((subtotal + tax).toFixed(2));
 
     // Display order total with subtotal, tax, and total
-    subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
-    taxElement.textContent = `$${tax.toFixed(2)}`;
-    totalElement.textContent = `$${total.toFixed(2)}`;
-
-    // for localStorage - keep order IDs sequential
-    const NEXT_ORDER_ID_KEY = 'campusFoodLinkNextOrderId';
-
-    // Return next available order ID and save the next ID in localStorage
-    function getNextOrderId() {
-        const savedId = localStorage.getItem(NEXT_ORDER_ID_KEY);
-
-        // Use ID of 9004 to start if no order ID exists
-        let nextOrderId = savedId ? Number(savedId) : 9004;
-
-        localStorage.setItem(
-            NEXT_ORDER_ID_KEY,
-            String(nextOrderId + 1)
-        );
-
-        return nextOrderId;
-    }
+    if (subtotalElement) subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
+    if (taxElement) taxElement.textContent = `$${tax.toFixed(2)}`;
+    if (totalElement) totalElement.textContent = `$${total.toFixed(2)}`;
 
     // Process order on click (Place Order)
     if (placeOrderButton) {
@@ -204,12 +196,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const updatedBalance = currentBalance - orderTotal;
 
+            // Defensive property checks for vendorId and vendorName
+            const targetVendorId = Number(selectedVendor.vendorId || selectedVendor.id || 1);
+            const targetVendorName = selectedVendor.vendorName || selectedVendor.name || 'Campus Vendor';
+
             // Create order object with order details
             const order = {
                 orderId: getNextOrderId(),
-                studentId: activeStudent ? activeStudent.userID : 101,
-                vendorId: selectedVendor.vendorId,
-                vendorName: selectedVendor.vendorName,
+                studentId: studentId,
+                vendorId: targetVendorId,
+                vendorName: targetVendorName,
                 orderDate: new Date().toLocaleString(),
                 timestamp: Date.now(),
                 items: currentCart.map(item => ({
@@ -246,8 +242,6 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = `confirmation.html?orderId=${order.orderId}`;
         });
     }
-
-    
 
     console.log('✅ Checkout page loaded');
 });

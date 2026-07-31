@@ -1,6 +1,6 @@
-/* ----------------------
-   Root and global styles
-   ---------------------- */
+/* -------------------------------------------------------------------------
+   CampusFoodLink+ — Cozy Sage Green & Warm Gold Theme (styles.css)
+   ------------------------------------------------------------------------- */
 
 * {
     margin: 0;
@@ -9,18 +9,65 @@
 }
 
 :root {
-    --white: #fafafa;
-    --black: #000000;
-    --grey: #555555;
-    --lightGrey: #cccccc;
-
+    /* Cozy Green & Gold Palette */
+    --white: #e4ede2;       /* Relaxing Soft Cozy Sage Green Page Background */
+    --black: #1b3a28;       /* Prominent Deep Forest Green (Text, Headers, Main Buttons) */
+    --grey: #3d5c47;        /* Cozy Leaf Green (Subtitles & Secondary Borders) */
+    --lightGrey: #c5922e;   /* Cozy Gold / Amber Accent (Prices, Badges, Highlights) */
+    --cardWhite: #f4f8f3;   /* Pale Mint Warm White (Login Box, Cards, Navigation Bar) */
 }
 
 body {
     font-family: Verdana, sans-serif;
-    background: var(--white);
+    /* Soft Sage base + Warm Gold glow top-right + Forest Green glow bottom-left */
+    background: 
+        radial-gradient(circle at 90% 10%, rgba(197, 146, 46, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 10% 85%, rgba(27, 58, 40, 0.08) 0%, transparent 40%),
+        var(--white);
+    background-attachment: fixed;
     color: var(--black);
     min-height: 100vh;
+    padding-bottom: 90px;
+
+    }
+
+    body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    /* Ultra-faint inline SVG pattern */
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 10v10M13 10v6M17 10v6M15 20v10M40 10c2 0 4 2 4 6v4h-8v-4c0-4 2-6 4-6zm0 10v10' stroke='%231b3a28' stroke-width='1.2' fill='none' stroke-linecap='round' opacity='0.10'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    pointer-events: none; /* Allows clicks to pass through */
+    z-index: -1;
+    }
+
+    body::after {
+    content: "";
+    position: fixed;
+    bottom: -50px;
+    right: -50px;
+    width: 350px;
+    height: 350px;
+    background-image: url('CFL-Logo.png'); /* or CFL+Logo.png */
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.08; /* Very faint so text stays clear */
+    pointer-events: none;
+    z-index: -1;
+}
+
+@media (max-width: 600px) {
+    body::after {
+        width: 200px;
+        height: 200px;
+        bottom: 40px;
+        right: 10px;
+        opacity: 0.03;
+    }
 }
 
 .pageHeader {
@@ -29,7 +76,8 @@ body {
 
 .pageHeader h2 {
     font-size: 1.8rem;
-    font-weight: 600;
+    font-weight: 700;
+    color: var(--black);
 }
 
 .pageHeader p {
@@ -43,9 +91,10 @@ body {
    --------------------- */
 
 .navigationBar {
-    border-bottom: 2px solid var(--grey);
+    border-bottom: 3px solid var(--black);
     padding: 15px 30px;
-    background: var(--white);
+    background: var(--cardWhite);
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.08);
 }
 
 .navigationContainer {
@@ -67,7 +116,6 @@ body {
     text-decoration: underline;
 }
 
-
 .navigationLinks {
     display: flex;
     gap: 25px;
@@ -75,7 +123,7 @@ body {
 
 .navigationLinks a {
     color: var(--black);
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
     padding: 5px 0;
     border-bottom: 2px solid transparent;
@@ -83,7 +131,8 @@ body {
 
 .navigationLinks a:hover,
 .navigationLinks a.active {
-    border-bottom-color: var(--black);
+    border-bottom-color: var(--lightGrey);
+    color: var(--lightGrey);
 }
 
 .navigationUser {
@@ -94,10 +143,12 @@ body {
 }
 
 .userBadge {
-    border: 1px solid var(--grey);
+    border: 2px solid var(--lightGrey);
+    background: #fbf7ee;
+    color: var(--black);
     padding: 4px 14px;
-    border-radius: 4px;
-    font-weight: 500;
+    border-radius: 20px;
+    font-weight: 600;
 }
 
 .balanceBadge {
@@ -105,14 +156,16 @@ body {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--white);
-    border: 2px solid var(--black);
-    border-radius: 8px;
+    background: var(--cardWhite);
+    border: 2px solid var(--lightGrey);
+    color: var(--black);
+    border-radius: 25px;
     padding: 10px 24px;
     font-size: 1.1rem;
-    font-weight: 600;
-    z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+    z-index: 9999;
+    box-shadow: 0 4px 14px rgba(27, 58, 40, 0.18);
+    white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -141,7 +194,7 @@ body {
 
     .userBadge,
     .balanceBadge {
-        padding: 2px 10px;
+        padding: 4px 12px;
     }
 }
 
@@ -152,39 +205,43 @@ body {
 
 .defaultButton {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     background: var(--black);
-    color: var(--white);
+    color: #ffffff;
     border: 2px solid var(--black);
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     margin-top: 5px;
+    transition: background 0.2s, border-color 0.2s;
 }
 
 .defaultButton:hover {
-    background: var(--white);
-    color: var(--black);
+    background: #112817;
+    border-color: #112817;
+    color: #ffffff;
 }
 
 .secondaryButton {
     display: inline-block;
     padding: 8px 24px;
-    border: 2px solid var(--black);
-    border-radius: 4px;
+    border: 2px solid var(--lightGrey);
+    border-radius: 6px;
     font-weight: 600;
     font-size: 0.9rem;
     color: var(--black);
-    background: var(--white);
+    background: var(--cardWhite);
     cursor: pointer;
     text-decoration: none;
+    transition: background 0.2s, color 0.2s;
 }
 
 .secondaryButton:hover {
-    background: var(--black);
-    color: var(--white);
+    background: var(--lightGrey);
+    color: #ffffff;
 }
+
 
 /* ========================================
    CHECKOUT REMOVE BUTTON
@@ -195,7 +252,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--grey);
 }
 
 .checkout-item:last-child {
@@ -211,7 +268,7 @@ body {
 .remove-item-btn {
     background: none;
     border: none;
-    color: #cc0000;
+    color: #c62828;
     font-size: 1.2rem;
     cursor: pointer;
     padding: 4px 8px;
@@ -223,9 +280,6 @@ body {
     background: #ffebeb;
 }
 
-.dark-mode .remove-item-btn:hover {
-    background: #3a1a1a;
-}
 
 /* ========================================
    CONFIRMATION ORDER ITEMS
@@ -235,7 +289,7 @@ body {
     display: flex;
     justify-content: space-between;
     padding: 6px 0;
-    border-bottom: 1px solid #eeeeee;
+    border-bottom: 1px solid var(--grey);
 }
 
 .order-item-row:last-child {
@@ -243,27 +297,27 @@ body {
 }
 
 .order-item-name {
-    font-weight: 500;
-    color: var(--text-primary);
+    font-weight: 600;
+    color: var(--black);
 }
 
 .order-item-price {
-    font-weight: 600;
-    color: var(--text-primary);
+    font-weight: 700;
+    color: var(--lightGrey);
 }
 
 /* Empty cart message */
 #empty-cart-message {
     text-align: center;
     padding: 40px;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
     margin-bottom: 20px;
-    background: var(--bg-card);
+    background: var(--cardWhite);
 }
 
 #empty-cart-message p {
-    color: var(--text-secondary);
+    color: var(--grey);
 }
 
 #empty-cart-message .secondaryButton {
@@ -276,8 +330,9 @@ body {
 }
 
 .confirmationBox.order-not-found h2 {
-    color: #cc0000;
+    color: #c62828;
 }
+
 
 /* ----------
    Login Page
@@ -308,23 +363,24 @@ body {
     color: var(--grey);
     font-size: 1rem;
     margin-top: 5px;
-    font-weight: 300;
+    font-weight: 500;
 }
 
 .loginCredentials {
-    border: 2px solid var(--grey);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 12px;
     padding: 35px 35px 30px;
-    max-width: 350px;
+    max-width: 380px;
     width: 100%;
-    background: var(--white);
+    background: var(--cardWhite);
+    box-shadow: 0 4px 18px rgba(27, 58, 40, 0.12);
 }
 
 .loginCredentials h2 {
     font-size: 1.3rem;
     color: var(--black);
     text-align: center;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 20px;
 }
 
@@ -345,19 +401,21 @@ body {
     margin-bottom: 4px;
 }
 
-.credentialForm input {
+.credentialForm input,
+.credentialForm select {
     width: 100%;
-    padding: 8px 12px;
-    border: 2px solid var(--lightGrey);
-    border-radius: 4px;
+    padding: 10px 12px;
+    border: 2px solid var(--grey);
+    border-radius: 6px;
     font-size: 1rem;
-    background: var(--white);
+    background: #ffffff;
     color: var(--black);
 }
 
-.credentialForm input:focus {
+.credentialForm input:focus,
+.credentialForm select:focus {
     outline: none;
-    border-color: var(--grey);
+    border-color: var(--lightGrey);
 }
 
 @media (max-width: 480px) {
@@ -388,11 +446,11 @@ body {
 }
 
 .vendorBox {
-    border: 2px solid var(--lightGrey);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
     padding: 30px 20px;
-    background: var(--white);
-    transition: border-color 0.2s;
+    background: var(--cardWhite);
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
     text-decoration: none;
     color: var(--black);
     display: flex;
@@ -401,21 +459,26 @@ body {
     justify-content: center;
     gap: 1rem;
     min-height: 180px;
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.06);
 }
 
 .vendorBox:hover {
-    border-color: var(--grey);
+    border-color: var(--lightGrey);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(197, 146, 46, 0.2);
 }
 
 .vendorBox h4 {
     font-size: 1.2rem;
-    font-weight: 600;
+    font-weight: 700;
     text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
+    color: var(--black);
 }
 
 .vendorBox p {
     text-align: center;
+    color: var(--grey);
 }
 
 @media (max-width: 768px) {
@@ -437,7 +500,7 @@ body {
 
 
 /* --------------
-   Temp Menu Page
+   Menu Catalog Page
    -------------- */
 
 .menuPageHeader {
@@ -446,8 +509,9 @@ body {
 
 .menuPageHeader h2 {
     font-size: 1.8rem;
-    font-weight: 600;
+    font-weight: 700;
     margin-top: 10px;
+    color: var(--black);
 }
 
 .menuPageHeader .vendorLocation {
@@ -457,7 +521,7 @@ body {
 
 .goBackLink {
     color: var(--black);
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
     display: inline-block;
     padding: 5px 0;
@@ -465,7 +529,8 @@ body {
 }
 
 .goBackLink:hover {
-    border-bottom-color: var(--black);
+    border-bottom-color: var(--lightGrey);
+    color: var(--lightGrey);
 }
 
 .menuItemGrid {
@@ -484,36 +549,37 @@ body {
 }
 
 .itemNameAbove {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
     color: var(--black);
     margin-bottom: 8px;
 }
 
 .menuItemBox {
-    border: 2px solid var(--lightGrey);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
     overflow: hidden;
-    background: var(--white);
-    transition: border-color 0.2s, transform 0.2s;
+    background: var(--cardWhite);
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
     cursor: pointer;
     text-align: center;
     width: 100%;
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.06);
 }
 
 .menuItemBox.added {
-    border-color: var(--black);
+    border-color: var(--lightGrey);
 }
 
 .menuItemBox:hover {
-    border-color: var(--grey);
-    transform: scale(1.05);
+    border-color: var(--lightGrey);
+    transform: scale(1.04);
+    box-shadow: 0 6px 16px rgba(197, 146, 46, 0.2);
 }
 
-/* Menu Item Picture/Price Areas */
 .menuItemPicture {
     position: relative;
-    background: var(--lightGrey);
+    background: #d0e0d2; /* Soft Sage Green Picture Frame */
     padding: 40px 20px;
     display: flex;
     flex-direction: column;
@@ -524,7 +590,7 @@ body {
 }
 
 .menuItemBox:hover .menuItemPicture {
-    background: var(--grey);
+    background: #bd3a;
 }
 
 .menuItemPictureOverlay {
@@ -532,12 +598,12 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    color: var(--white);
-    background: rgba(0, 0, 0, 0.75);
-    padding: 10px 24px;
-    border-radius: 4px;
+    color: #ffffff;
+    background: var(--black);
+    padding: 8px 20px;
+    border-radius: 20px;
     opacity: 0;
     transition: opacity 0.3s;
     pointer-events: none;
@@ -550,16 +616,16 @@ body {
 
 .menuItemPriceArea {
     padding: 10px 16px 14px 16px;
-    border-top: 1px solid var(--grey);
+    border-top: 2px solid var(--black);
+    background: var(--cardWhite);
 }
 
 .menuItemPrice {
     font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--black);
+    font-size: 1.15rem;
+    color: var(--lightGrey);
 }
 
-/* Menu Page - Actions */
 .menuActions {
     display: flex;
     justify-content: center;
@@ -569,9 +635,10 @@ body {
 .menuActions .defaultButton {
     width: auto;
     margin-top: 2rem;
-    padding: .5rem 1.7rem;
+    padding: 10px 30px;
     text-decoration: none;
 }
+
 
 /* -------------------
    Mobile menu queries
@@ -593,8 +660,8 @@ body {
     }
 
     .menuItemPictureOverlay {
-        font-size: 1rem;
-        padding: 8px 18px;
+        font-size: 0.95rem;
+        padding: 6px 14px;
     }
 
     .menuItemPrice {
@@ -628,10 +695,9 @@ body {
 
     .menuItemPictureOverlay {
         font-size: 0.85rem;
-        padding: 6px 14px;
+        padding: 6px 12px;
     }
 }
-
 
 
 /* ----------------
@@ -639,14 +705,16 @@ body {
    ---------------- */
 
 .checkoutItems {
-    border: 2px solid var(--grey);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
     padding: 20px;
-    background: var(--white);
+    background: var(--cardWhite);
     margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.06);
 }
 
-.checkoutItem {
+.checkoutItem,
+.checkout-item {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 140px 40px;
     align-items: center;
@@ -655,7 +723,8 @@ body {
     border-bottom: 1px solid var(--grey);
 }
 
-.checkoutItem:last-child {
+.checkoutItem:last-child,
+.checkout-item:last-child {
     border-bottom: none;
 }
 
@@ -667,7 +736,7 @@ body {
 }
 
 .itemName {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
     color: var(--black);
 }
@@ -681,17 +750,18 @@ body {
 }
 
 .itemPrice {
-    font-weight: 600;
-    color: var(--black);
+    font-weight: 700;
+    color: var(--lightGrey);
 }
 
 .quantityControls {
     display: inline-flex;
     width: fit-content;
     align-items: center;
-    border: 1px solid var(--grey);
+    border: 2px solid var(--black);
     border-radius: 6px;
     overflow: hidden;
+    background: #ffffff;
 }
 
 .quantityControls button {
@@ -700,14 +770,17 @@ body {
     padding: .35rem .6rem;
     cursor: pointer;
     font-size: 1rem;
+    color: var(--black);
+    font-weight: 700;
 }
 
 .orderSummary {
-    border: 2px solid var(--grey);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
     padding: 20px;
-    background: var(--white);
+    background: var(--cardWhite);
     margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.06);
 }
 
 .summaryRow {
@@ -720,7 +793,7 @@ body {
 .summaryRow.total {
     font-weight: 700;
     font-size: 1.2rem;
-    border-top: 2px solid var(--black);
+    border-top: 2px solid var(--lightGrey);
     padding-top: 12px;
     margin-top: 8px;
     color: var(--black);
@@ -751,11 +824,22 @@ body {
 }
 
 @media (max-width: 600px) {
+    body {
+        padding-bottom: 120px;
+    }
+
     .itemSummary {
         grid-template-columns: 1fr;
         gap: .5rem;
     }
+
+    .menuActions,
+    .checkoutOptions,
+    .confirmationButtons {
+        margin-bottom: 45px;
+    }
 }
+
 
 /* -------------------
    Confirmation Page
@@ -765,10 +849,11 @@ body {
     max-width: 500px;
     margin: 40px auto;
     text-align: center;
-    border: 2px solid var(--grey);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 12px;
     padding: 40px 30px;
-    background: var(--white);
+    background: var(--cardWhite);
+    box-shadow: 0 4px 18px rgba(27, 58, 40, 0.12);
 }
 
 .confirmationIcon {
@@ -792,11 +877,11 @@ body {
 
 .orderDetailsBox {
     text-align: left;
-    border: 1px solid var(--grey);
-    border-radius: 6px;
+    border: 2px solid var(--black);
+    border-radius: 8px;
     padding: 16px 20px;
     margin-bottom: 20px;
-    background: var(--white);
+    background: var(--cardWhite);
 }
 
 .orderDetailRow {
@@ -811,12 +896,12 @@ body {
 }
 
 .orderDetailLabel {
-    font-weight: 500;
+    font-weight: 600;
     color: var(--grey);
 }
 
 .detailsOfOrder {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--black);
 }
 
@@ -841,4 +926,71 @@ body {
 
 .confirmationButtons .secondaryButton {
     padding: 10px 20px;
+}
+
+/* =========================================================================
+   VENDOR DASHBOARD — MOBILE ORDER STATUS FIX & KITCHEN CARDS
+   ========================================================================= */
+
+.vendorOrderCard {
+    border: 2px solid var(--black);
+    border-radius: 10px;
+    padding: 20px;
+    background: var(--cardWhite);
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.08);
+}
+
+.vendorOrderHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--grey);
+    margin-bottom: 12px;
+}
+
+.orderStatusBadge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    white-space: nowrap; /* PREVENTS TEXT WRAPPING ON MOBILE */
+    color: #ffffff;
+}
+
+/* Mobile Layout Adjustment: Stack header elements cleanly */
+@media (max-width: 600px) {
+    .vendorOrderHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .orderStatusBadge {
+        align-self: flex-start;
+    }
+
+    .vendorActionGroup {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .vendorActionGroup select,
+    .vendorActionGroup button {
+        width: 100% !important;
+    }
+}
+
+/* Mobile Vendor Order Card Guard */
+@media (max-width: 600px) {
+    .vendorOrderCard button {
+        width: 100% !important;
+        margin-top: 4px;
+    }
 }
