@@ -2,102 +2,230 @@
 // VENDOR-DASHBOARD.JS — Vendor Dashboard Logic
 // ========================================
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
+
     // ========================================
     // 1. GET ACTIVE VENDOR SESSION
     // ========================================
     const activeVendor = getActiveVendorSession();
-    const ACTIVE_VENDOR_ID = Number(activeVendor.id || activeVendor.vendorId || 1);
+
+    if (!activeVendor) {
+        alert('Please log in as a vendor first.');
+        window.location.href = 'index.html';
+        return;
+    }
+
+    const ACTIVE_VENDOR_ID = Number(
+        activeVendor.id || activeVendor.vendorId
+    );
+
+    if (!Number.isInteger(ACTIVE_VENDOR_ID)) {
+        alert('The active vendor session is invalid.');
+        window.location.href = 'index.html';
+        return;
+    }
+
+    /*
+     * The vendor profile is loaded from SQLite below.
+     * It remains available to the prototype-backed menu and
+     * operating-hours sections later in this file.
+     */
+    let vendorProfile = null;
+    let vendorOrders = [];
 
     // ========================================
-    // 2. CHECK IF VENDOR IS ACTIVE
+    // 2. LOAD VENDOR PROFILE AND ORDERS
     // ========================================
-    const allVendors = getAllVendors();
-    const vendorProfile = allVendors.find(v => Number(v.id || v.vendorId) === ACTIVE_VENDOR_ID);
+    try {
+        const response = await fetch(
+            `/api/vendors/${ACTIVE_VENDOR_ID}/orders`
+        );
 
-    // ========================================
-    // 🔥 IF VENDOR IS INACTIVE — SHOW CONTACT ADMIN MESSAGE
-    // ========================================
-    if (!vendorProfile || vendorProfile.isActive === false) {
-        const container = document.querySelector('.vendorSelectionContainer');
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error || 'Unable to load the vendor dashboard.'
+            );
+        }
+
+        vendorProfile = result.vendor;
+        vendorOrders = Array.isArray(result.orders)
+            ? result.orders
+            : [];
+
+    } catch (error) {
+        console.error('Unable to load vendor data:', error);
+
+        const container =
+            document.querySelector('.vendorSelectionContainer');
+
         if (container) {
             container.innerHTML = `
-                <div style="text-align:center; padding:60px 20px; max-width:500px; margin:0 auto;">
-                    <div style="font-size:4rem; margin-bottom:20px;">🔒</div>
-                    <h2 style="color:#cc0000; margin-bottom:10px;">Account Deactivated</h2>
-                    <p style="color:var(--grey); font-size:1.1rem; margin-bottom:20px;">
-                        Your vendor account has been deactivated by the Dining Services Administration.
-                    </p>
-                    <p style="color:var(--grey); margin-bottom:30px;">
-                        Please contact the Dining Services Administration for more information about your account status.
-                    </p>
-                    <a href="index.html" class="defaultButton" style="width:auto; padding:12px 30px;">Return to Login</a>
+                <div class="vendorGridMessage vendorGridError">
+                    <p>Unable to load the vendor dashboard.</p>
+                    <p>Please refresh the page or try again later.</p>
                 </div>
             `;
         }
-        const vendorBadge = document.getElementById('vendorHeaderBadge');
-        if (vendorBadge) {
-            vendorBadge.textContent = '🔒 Account Deactivated';
-            vendorBadge.style.color = '#cc0000';
-        }
+
         return;
     }
 
     // ========================================
-    // 3. UPDATE HEADER BADGE (Active Vendor)
+    // 3. CHECK IF VENDOR IS ACTIVE
     // ========================================
-    const vendorBadge = document.getElementById('vendorHeaderBadge');
-    if (vendorBadge) {
-        vendorBadge.textContent = `🏬 Vendor: ${activeVendor.name || vendorProfile.name}`;
-        vendorBadge.style.color = '';
+    if (!vendorProfile || vendorProfile.isActive === false) {
+        showInactiveVendorMessage();
+        return;
     }
 
-    // ========================================
-    // 4. RENDER STATUS BANNER (Open/Closed)
-    // ========================================
-    function renderStatusBanner() {
-        const isOpen = isVendorOpen(ACTIVE_VENDOR_ID);
-        const statusText = isOpen ? 'Open' : 'Closed';
+    function showInactiveVendorMessage() {
+        const container =
+            document.querySelector('.vendorSelectionContainer');
 
-        const header = document.querySelector('.pageHeader');
-        if (header) {
-            const existingBanner = header.querySelector('.vendor-status-banner');
-            if (existingBanner) existingBanner.remove();
+        if (container) {
+            container.innerHTML = `
+                <div style="
+                    text-align:center;
+                    padding:60px 20px;
+                    max-width:500px;
+                    margin:0 auto;
+                ">
+                    <div style="font-size:4rem; margin-bottom:20px;">
+                        🔒
+                    </div>
 
-            const banner = document.createElement('div');
-            banner.className = 'vendor-status-banner';
-            banner.style.cssText = `
-                background-color: ${isOpen ? '#e8f5e9' : '#ffebee'};
-                border: 2px solid ${isOpen ? '#2e7d32' : '#c62828'};
-                color: ${isOpen ? '#2e7d32' : '#c62828'};
-                padding: 10px 16px;
-                border-radius: 8px;
-                margin-top: 10px;
-                font-weight: 600;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                flex-wrap: wrap;
-                gap: 10px;
+                    <h2 style="
+                        color:#cc0000;
+                        margin-bottom:10px;
+                    ">
+                        Account Deactivated
+                    </h2>
+
+                    <p style="
+                        color:var(--grey);
+                        font-size:1.1rem;
+                        margin-bottom:20px;
+                    ">
+                        Your vendor account has been deactivated by
+                        Dining Services Administration.
+                    </p>
+
+                    <p style="
+                        color:var(--grey);
+                        margin-bottom:30px;
+                    ">
+                        Please contact Dining Services Administration
+                        for more information about your account status.
+                    </p>
+
+                    <a
+                        href="index.html"
+                        class="defaultButton"
+                        style="width:auto; padding:12px 30px;"
+                    >
+                        Return to Login
+                    </a>
+                </div>
             `;
-            banner.innerHTML = `
-                <span>🟢 Your vendor is currently <strong>${statusText}</strong></span>
-            `;
-            header.appendChild(banner);
+        }
+
+        const vendorBadge =
+            document.getElementById('vendorHeaderBadge');
+
+        if (vendorBadge) {
+            vendorBadge.textContent = '🔒 Account Deactivated';
+            vendorBadge.style.color = '#cc0000';
         }
     }
 
     // ========================================
-    // 5. CHECK IF VENDOR HAS ACTIVE MENU ITEMS
+    // 4. UPDATE HEADER BADGE
     // ========================================
+    const vendorBadge =
+        document.getElementById('vendorHeaderBadge');
+
+    if (vendorBadge) {
+        vendorBadge.textContent =
+            `🏬 Vendor: ${vendorProfile.name}`;
+
+        vendorBadge.style.color = '';
+    }
+
+    // ========================================
+    // 5. RENDER OPEN/CLOSED STATUS BANNER
+    // ========================================
+
+    /*
+     * Operating-hours management is still prototype-backed for now.
+     * This will move to Flask and SQLite in a later step.
+     */
+    function renderStatusBanner() {
+        const isOpen = isVendorOpen(ACTIVE_VENDOR_ID);
+        const statusText = isOpen ? 'Open' : 'Closed';
+        const statusIcon = isOpen ? '🟢' : '🔴';
+
+        const header = document.querySelector('.pageHeader');
+
+        if (!header) {
+            return;
+        }
+
+        const existingBanner =
+            header.querySelector('.vendor-status-banner');
+
+        if (existingBanner) {
+            existingBanner.remove();
+        }
+
+        const banner = document.createElement('div');
+        banner.className = 'vendor-status-banner';
+
+        banner.style.cssText = `
+            background-color: ${isOpen ? '#e8f5e9' : '#ffebee'};
+            border: 2px solid ${isOpen ? '#2e7d32' : '#c62828'};
+            color: ${isOpen ? '#2e7d32' : '#c62828'};
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        `;
+
+        banner.innerHTML = `
+            <span>
+                ${statusIcon} Your vendor is currently
+                <strong>${statusText}</strong>
+            </span>
+        `;
+
+        header.appendChild(banner);
+    }
+
+    // ========================================
+    // 6. CHECK FOR ACTIVE MENU ITEMS
+    // ========================================
+
+    /*
+     * Vendor menu management still uses localStorage temporarily.
+     * This warning will move to SQLite when menu management is migrated.
+     */
     const menuItems = getVendorMenuItems(ACTIVE_VENDOR_ID);
-    const hasActiveItems = menuItems.some(item => 
-        item.isActive === true && item.isAvailable === true
+
+    const hasActiveItems = menuItems.some(item =>
+        item.isActive === true &&
+        item.isAvailable === true
     );
 
-    if (!hasActiveItems && vendorProfile && vendorProfile.isActive !== false) {
+    if (!hasActiveItems) {
         const noItemsBanner = document.createElement('div');
         noItemsBanner.className = 'no-items-banner';
+
         noItemsBanner.style.cssText = `
             background-color: #fff3cd;
             border: 1px solid #ffc107;
@@ -106,249 +234,563 @@ document.addEventListener('DOMContentLoaded', function () {
             border-radius: 8px;
             margin-bottom: 15px;
         `;
-        noItemsBanner.innerHTML = '⚠️ <strong>Your vendor account has no active menu items.</strong> Students cannot see your menu. Use the "Mark Available" button to reactivate items.';
+
+        noItemsBanner.innerHTML = `
+            ⚠️ <strong>Your vendor account has no active menu items.</strong>
+            Students cannot see your menu. Use the Menu Management tab
+            to reactivate or add items.
+        `;
+
         const pageHeader = document.querySelector('.pageHeader');
+
         if (pageHeader) {
             pageHeader.after(noItemsBanner);
         }
     }
 
     // ========================================
-    // 6. TAB NAVIGATION
+    // 7. TAB NAVIGATION
     // ========================================
-    const tabOrdersBtn = document.getElementById('tabOrdersBtn');
-    const tabMenuBtn = document.getElementById('tabMenuBtn');
-    const ordersSection = document.getElementById('ordersSection');
-    const menuSection = document.getElementById('menuSection');
+    const tabOrdersBtn =
+        document.getElementById('tabOrdersBtn');
 
-    if (tabOrdersBtn && tabMenuBtn) {
-        tabOrdersBtn.addEventListener('click', () => {
+    const tabMenuBtn =
+        document.getElementById('tabMenuBtn');
+
+    const ordersSection =
+        document.getElementById('ordersSection');
+
+    const menuSection =
+        document.getElementById('menuSection');
+
+    if (
+        tabOrdersBtn &&
+        tabMenuBtn &&
+        ordersSection &&
+        menuSection
+    ) {
+        tabOrdersBtn.addEventListener('click', function () {
             ordersSection.style.display = 'block';
             menuSection.style.display = 'none';
+
             tabOrdersBtn.className = 'defaultButton';
             tabMenuBtn.className = 'secondaryButton';
         });
 
-        tabMenuBtn.addEventListener('click', () => {
+        tabMenuBtn.addEventListener('click', function () {
             ordersSection.style.display = 'none';
             menuSection.style.display = 'block';
+
             tabMenuBtn.className = 'defaultButton';
             tabOrdersBtn.className = 'secondaryButton';
+
             renderVendorMenu();
         });
     }
 
     // ========================================
-    // 7. ORDER MANAGEMENT (CARD-BASED MOBILE LAYOUT)
+    // 8. DATABASE-BACKED ORDER MANAGEMENT
     // ========================================
-    function renderVendorOrders() {
-        const container = document.getElementById('vendorOrdersContainer');
-        if (!container) return;
+    async function renderVendorOrders() {
+        const container =
+            document.getElementById('vendorOrdersContainer');
 
-        const allOrders = getOrdersHistory();
-
-        // Safe normalization for vendor ID across all order schemas
-        const vendorOrders = allOrders.filter(o => {
-            const orderVendorId = Number(o.vendorId || o.vendorID || o.id);
-            return orderVendorId === ACTIVE_VENDOR_ID;
-        });
-
-        if (vendorOrders.length === 0) {
-            container.innerHTML = '<p style="color: var(--grey); padding: 15px 0;">No active orders found for this vendor.</p>';
+        if (!container) {
             return;
         }
 
-        // Sort: Newest orders at top
-        vendorOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        container.innerHTML = `
+            <div class="vendorGridMessage">
+                <p>Loading vendor orders...</p>
+            </div>
+        `;
 
-        let html = '';
-        vendorOrders.forEach(order => {
-            const statusColor = getStatusColor(order.currentStatus || 'Pending');
-            
-            // Build items list
-            const itemsList = order.items ? order.items.map(i => `<li style="margin-bottom:4px;">${i.quantity}x ${i.name || i.item} ($${((i.price || 0) * i.quantity).toFixed(2)})</li>`).join('') : '<li>No details</li>';
+        try {
+            const response = await fetch(
+                `/api/vendors/${ACTIVE_VENDOR_ID}/orders`
+            );
 
-            // Prepare ETA & Rejection Notes Display
-            let etaDisplay = order.estimatedPrepTime ? `<span style="font-size:0.85rem; color:var(--black); font-weight:600;">⏱️ ETA: ~${order.estimatedPrepTime} mins</span>` : '';
-            let rejectionDisplay = order.rejectionReason ? `<p style="color:#c62828; font-weight:600; font-size:0.85rem; margin-top:6px;">❌ Reason: ${order.rejectionReason}</p>` : '';
+            const result = await response.json();
 
-            html += `
-                <div class="vendorOrderCard" style="border: 2px solid var(--black); border-radius: 10px; padding: 18px; background: var(--cardWhite); margin-bottom: 20px;">
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--lightGrey); padding-bottom: 8px; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
-                        <h4 style="font-size: 1.1rem; color: var(--black); font-weight: 700; margin: 0;">Order #${order.orderId}</h4>
-                        <span style="font-size: 0.8rem; color: var(--grey);">${order.orderDate || 'N/A'}</span>
-                    </div>
+            if (!response.ok) {
+                throw new Error(
+                    result.error || 'Unable to load vendor orders.'
+                );
+            }
 
-                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
-                        <span style="display: inline-block; background-color: ${statusColor}; color: #ffffff; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; white-space: nowrap;">
-                            ${order.currentStatus || 'Pending'}
-                        </span>
-                        ${etaDisplay}
-                    </div>
+            vendorProfile = result.vendor;
+            vendorOrders = Array.isArray(result.orders)
+                ? result.orders
+                : [];
 
-                    ${rejectionDisplay}
+            if (vendorOrders.length === 0) {
+                container.innerHTML = `
+                    <p style="
+                        color:var(--grey);
+                        padding:15px 0;
+                    ">
+                        No orders found for this vendor.
+                    </p>
+                `;
+                return;
+            }
 
-                    <div style="margin-bottom: 14px; background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid var(--lightGrey);">
-                        <ul style="padding-left: 20px; font-size: 0.9rem; color: var(--black); margin-bottom: 8px;">
-                            ${itemsList}
-                        </ul>
-                        <p style="font-weight: 700; font-size: 1rem; color: var(--black); margin: 0; border-top: 1px solid #eee; padding-top: 6px;">
-                            Total: $${Number(order.total || 0).toFixed(2)}
+            container.innerHTML = vendorOrders
+                .map(buildOrderCard)
+                .join('');
+
+            attachOrderActionListeners();
+
+            console.log(
+                `✅ Loaded ${vendorOrders.length} SQLite orders ` +
+                `for vendor ${ACTIVE_VENDOR_ID}`
+            );
+
+        } catch (error) {
+            console.error('Unable to load vendor orders:', error);
+
+            container.innerHTML = `
+                <div class="vendorGridMessage vendorGridError">
+                    <p>Unable to load vendor orders.</p>
+                    <p>Please refresh the page or try again later.</p>
+                </div>
+            `;
+        }
+    }
+
+    function buildOrderCard(order) {
+        const status =
+            order.currentStatus || 'Pending';
+
+        const statusColor =
+            getStatusColor(status);
+
+        const itemsList = Array.isArray(order.items)
+            ? order.items.map(item => `
+                <li style="margin-bottom:4px;">
+                    ${item.quantity}×
+                    ${escapeHtml(item.name)}
+                    ($${Number(item.total).toFixed(2)})
+                </li>
+            `).join('')
+            : '<li>No item details available.</li>';
+
+        const statusNote = order.latestStatusNote
+            ? `
+                <p style="
+                    color:${status === 'Rejected'
+                ? '#c62828'
+                : 'var(--grey)'};
+                    font-weight:600;
+                    font-size:0.85rem;
+                    margin-top:6px;
+                ">
+                    ${escapeHtml(order.latestStatusNote)}
+                </p>
+            `
+            : '';
+
+        return `
+            <article class="vendorOrderCard">
+                <div class="vendorOrderHeader">
+                    <div>
+                        <h4 style="
+                            font-size:1.1rem;
+                            color:var(--black);
+                            font-weight:700;
+                            margin:0;
+                        ">
+                            Order #${order.orderId}
+                        </h4>
+
+                        <p style="
+                            font-size:0.85rem;
+                            color:var(--grey);
+                            margin-top:3px;
+                        ">
+                            Student:
+                            ${escapeHtml(
+            order.studentName || 'Unknown Student'
+        )}
                         </p>
                     </div>
 
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        ${getActionButtons(order)}
-                    </div>
+                    <span style="
+                        font-size:0.8rem;
+                        color:var(--grey);
+                    ">
+                        ${formatOrderDate(order.orderDate)}
+                    </span>
                 </div>
-            `;
-        });
 
-        container.innerHTML = html;
-        attachOrderActionListeners();
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    gap:10px;
+                    flex-wrap:wrap;
+                    margin-bottom:12px;
+                ">
+                    <span
+                        class="orderStatusBadge"
+                        style="background-color:${statusColor};"
+                    >
+                        ${escapeHtml(status)}
+                    </span>
+                </div>
+
+                ${statusNote}
+
+                <div style="
+                    margin-bottom:14px;
+                    background:#ffffff;
+                    padding:12px;
+                    border-radius:6px;
+                    border:1px solid var(--lightGrey);
+                ">
+                    <ul style="
+                        padding-left:20px;
+                        font-size:0.9rem;
+                        color:var(--black);
+                        margin-bottom:8px;
+                    ">
+                        ${itemsList}
+                    </ul>
+
+                    <p style="
+                        font-weight:700;
+                        font-size:1rem;
+                        color:var(--black);
+                        margin:0;
+                        border-top:1px solid #eee;
+                        padding-top:6px;
+                    ">
+                        Total:
+                        $${Number(order.total || 0).toFixed(2)}
+                    </p>
+                </div>
+
+                <div class="vendorActionGroup">
+                    ${getActionButtons(order)}
+                </div>
+            </article>
+        `;
     }
 
     function getActionButtons(order) {
-        const isInactive = vendorProfile && vendorProfile.isActive === false;
-        const disabledAttr = isInactive ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
-        const currentStatus = order.currentStatus || 'Pending';
+        const currentStatus =
+            order.currentStatus || 'Pending';
 
         if (currentStatus === 'Pending') {
             return `
-                <button class="secondaryButton acceptOrderBtn" data-id="${order.orderId}" style="background:var(--black); color:#fff; border-color:var(--black); flex:1; min-width:130px; padding:8px 12px;" ${disabledAttr}>
+                <button
+                    class="secondaryButton orderStatusAction"
+                    data-id="${order.orderId}"
+                    data-status="Accepted"
+                >
                     ✅ Accept Order
                 </button>
-                <button class="secondaryButton rejectOrderBtn" data-id="${order.orderId}" style="color:#c62828; border-color:#c62828; flex:1; min-width:130px; padding:8px 12px;" ${disabledAttr}>
+
+                <button
+                    class="secondaryButton rejectOrderBtn"
+                    data-id="${order.orderId}"
+                    style="
+                        color:#c62828;
+                        border-color:#c62828;
+                    "
+                >
                     ❌ Reject Order
                 </button>
             `;
-        } else if (currentStatus === 'Preparing') {
+        }
+
+        if (currentStatus === 'Accepted') {
             return `
-                <button class="secondaryButton markReadyBtn" data-id="${order.orderId}" style="width:100%; padding:8px 12px;" ${disabledAttr}>
+                <button
+                    class="secondaryButton startPreparingBtn"
+                    data-id="${order.orderId}"
+                >
+                    🍳 Start Preparing
+                </button>
+
+                <button
+                    class="secondaryButton rejectOrderBtn"
+                    data-id="${order.orderId}"
+                    style="
+                        color:#c62828;
+                        border-color:#c62828;
+                    "
+                >
+                    ❌ Reject Order
+                </button>
+            `;
+        }
+
+        if (currentStatus === 'Preparing') {
+            return `
+                <button
+                    class="secondaryButton orderStatusAction"
+                    data-id="${order.orderId}"
+                    data-status="Ready"
+                >
                     🔔 Mark Ready for Pickup
                 </button>
             `;
-        } else if (currentStatus === 'Ready') {
+        }
+
+        if (currentStatus === 'Ready') {
             return `
-                <button class="secondaryButton markCompleteBtn" data-id="${order.orderId}" style="background:var(--black); color:#fff; width:100%; padding:8px 12px;" ${disabledAttr}>
+                <button
+                    class="defaultButton orderStatusAction"
+                    data-id="${order.orderId}"
+                    data-status="Complete"
+                    style="width:auto;"
+                >
                     🎉 Complete Pickup
                 </button>
             `;
-        } else if (currentStatus === 'Complete') {
-            return `<span style="color: green; font-weight: 600;">✓ Completed</span>`;
-        } else if (currentStatus === 'Rejected') {
-            return `<span style="color: #cc0000; font-weight: 600;">❌ Rejected</span>`;
-        } else {
-            return `<span style="font-size:0.85rem; color:var(--grey); font-style:italic;">Archived</span>`;
         }
+
+        if (currentStatus === 'Complete') {
+            return `
+                <span style="
+                    color:#2e7d32;
+                    font-weight:600;
+                ">
+                    ✓ Completed
+                </span>
+            `;
+        }
+
+        if (currentStatus === 'Rejected') {
+            return `
+                <span style="
+                    color:#c62828;
+                    font-weight:600;
+                ">
+                    ❌ Rejected and Refunded
+                </span>
+            `;
+        }
+
+        return `
+            <span style="
+                font-size:0.85rem;
+                color:var(--grey);
+                font-style:italic;
+            ">
+                No actions available
+            </span>
+        `;
     }
 
     function attachOrderActionListeners() {
-        // Accept & Prompt Prep Time (Option 1)
-        document.querySelectorAll('.acceptOrderBtn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (this.disabled) return;
-                const id = this.getAttribute('data-id');
-                const prepTime = prompt('⏰ Enter estimated prep time in minutes (e.g., 10, 15, 20):', '15');
-                
-                if (prepTime !== null && prepTime.trim() !== '') {
-                    updateOrderStatusWithDetails(id, 'Preparing', { estimatedPrepTime: prepTime.trim() });
-                    renderVendorOrders();
-                } else if (prepTime !== null) {
-                    updateOrderStatus(id, 'Preparing');
-                    renderVendorOrders();
-                }
-            });
-        });
 
-        // Reject & Prompt Reason + Automatic Refund (Option 4)
-        document.querySelectorAll('.rejectOrderBtn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (this.disabled) return;
-                const id = this.getAttribute('data-id');
-                const reasons = [
-                    "Item Out of Stock", 
-                    "Kitchen Closing Soon", 
-                    "High Order Volume Delay", 
-                    "Other / Unspecified"
-                ];
-                
-                const choice = prompt(`❌ Select Rejection Reason:\n\n1. Item Out of Stock\n2. Kitchen Closing Soon\n3. High Order Volume Delay\n4. Other\n\nEnter number (1-4):`, '1');
-                
-                if (choice) {
-                    const reasonText = reasons[parseInt(choice) - 1] || "Unspecified Delay";
-                    
-                    // 1. Calculate and execute refund to student balance
-                    const allOrders = getOrdersHistory();
-                    const orderToReject = allOrders.find(o => String(o.orderId) === String(id));
-                    
-                    if (orderToReject && orderToReject.currentStatus !== 'Rejected') {
-                        const refundAmount = Number(orderToReject.total || 0);
-                        const currentBalance = getMealPlanBalance();
-                        const updatedBalance = currentBalance + refundAmount;
-                        
-                        // Save updated balance
-                        saveMealPlanBalance(updatedBalance);
-                        
-                        alert(`Order #${id} rejected. Reason: "${reasonText}".\n\n💵 $${refundAmount.toFixed(2)} refunded to student meal-plan balance.`);
-                    } else {
-                        alert(`Order #${id} rejected. Reason logged: "${reasonText}".`);
+        // Standard sequential status transitions
+        document
+            .querySelectorAll('.orderStatusAction')
+            .forEach(button => {
+                button.addEventListener('click', async function () {
+                    const orderId =
+                        Number(this.dataset.id);
+
+                    const newStatus =
+                        this.dataset.status;
+
+                    await submitOrderStatus(
+                        orderId,
+                        newStatus,
+                        `Order moved to ${newStatus}`
+                    );
+                });
+            });
+
+        // Accepted orders move to Preparing with an optional ETA note
+        document
+            .querySelectorAll('.startPreparingBtn')
+            .forEach(button => {
+                button.addEventListener('click', async function () {
+                    const orderId =
+                        Number(this.dataset.id);
+
+                    const prepTime = prompt(
+                        'Enter the estimated preparation time in minutes:',
+                        '15'
+                    );
+
+                    if (prepTime === null) {
+                        return;
                     }
 
-                    // 2. Update Order Details & Status
-                    updateOrderStatusWithDetails(id, 'Rejected', { rejectionReason: reasonText });
-                    renderVendorOrders();
-                }
-            });
-        });
+                    const trimmedTime = prepTime.trim();
 
-        // Mark Ready
-        document.querySelectorAll('.markReadyBtn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (this.disabled) return;
-                const id = this.getAttribute('data-id');
-                updateOrderStatus(id, 'Ready');
-                renderVendorOrders();
-            });
-        });
+                    const notes = trimmedTime
+                        ? `Estimated preparation time: ${trimmedTime} minutes`
+                        : 'Order preparation started';
 
-        // Mark Complete
-        document.querySelectorAll('.markCompleteBtn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (this.disabled) return;
-                const id = this.getAttribute('data-id');
-                updateOrderStatus(id, 'Complete');
-                renderVendorOrders();
+                    await submitOrderStatus(
+                        orderId,
+                        'Preparing',
+                        notes
+                    );
+                });
             });
-        });
+
+        // Rejected orders require a reason and are refunded by Flask
+        document
+            .querySelectorAll('.rejectOrderBtn')
+            .forEach(button => {
+                button.addEventListener('click', async function () {
+                    const orderId =
+                        Number(this.dataset.id);
+
+                    const rejectionReason =
+                        getRejectionReason();
+
+                    if (!rejectionReason) {
+                        return;
+                    }
+
+                    await submitOrderStatus(
+                        orderId,
+                        'Rejected',
+                        rejectionReason
+                    );
+                });
+            });
     }
 
-    function updateOrderStatusWithDetails(orderId, status, details) {
-        const orders = getOrdersHistory();
-        const index = orders.findIndex(o => String(o.orderId) === String(orderId));
-        if (index > -1) {
-            orders[index].currentStatus = status;
-            if (details.estimatedPrepTime) orders[index].estimatedPrepTime = details.estimatedPrepTime;
-            if (details.rejectionReason) orders[index].rejectionReason = details.rejectionReason;
-            localStorage.setItem('campusFoodLinkLatestOrder', JSON.stringify(orders[index]));
-            localStorage.setItem('orders', JSON.stringify(orders));
+    function getRejectionReason() {
+        const reasons = [
+            'Item out of stock',
+            'Kitchen closing soon',
+            'High order volume',
+            'Other or unspecified reason'
+        ];
+
+        const choice = prompt(
+            'Select a rejection reason:\n\n' +
+            '1. Item out of stock\n' +
+            '2. Kitchen closing soon\n' +
+            '3. High order volume\n' +
+            '4. Other\n\n' +
+            'Enter a number from 1 to 4:',
+            '1'
+        );
+
+        if (choice === null) {
+            return null;
         }
+
+        const selectedIndex =
+            Number.parseInt(choice, 10) - 1;
+
+        return reasons[selectedIndex] ||
+            'Other or unspecified reason';
+    }
+
+    async function submitOrderStatus(
+        orderId,
+        newStatus,
+        notes
+    ) {
+        const actionButtons =
+            document.querySelectorAll(
+                `[data-id="${orderId}"]`
+            );
+
+        actionButtons.forEach(button => {
+            button.disabled = true;
+        });
+
+        try {
+            const response = await fetch(
+                `/api/orders/${orderId}/status`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        vendorId: ACTIVE_VENDOR_ID,
+                        status: newStatus,
+                        notes: notes
+                    })
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error ||
+                    'Unable to update the order status.'
+                );
+            }
+
+            if (result.refund) {
+                alert(
+                    `Order #${orderId} was rejected.\n\n` +
+                    `$${Number(result.refund.amount).toFixed(2)} ` +
+                    `was refunded to the student's meal-plan balance.`
+                );
+            }
+
+            await renderVendorOrders();
+
+        } catch (error) {
+            console.error(
+                'Unable to update order status:',
+                error
+            );
+
+            alert(error.message);
+
+            actionButtons.forEach(button => {
+                button.disabled = false;
+            });
+        }
+    }
+
+    function formatOrderDate(orderDate) {
+        if (!orderDate) {
+            return 'Date unavailable';
+        }
+
+        const parsedDate = new Date(
+            String(orderDate).replace(' ', 'T') + 'Z'
+        );
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return escapeHtml(orderDate);
+        }
+
+        return parsedDate.toLocaleString();
     }
 
     function getStatusColor(status) {
         const colors = {
-            'Pending': '#c5922e',   /* Cozy Gold */
-            'Preparing': '#1b3a28', /* Forest Green */
-            'Ready': '#2c4c38',     /* Sage Green */
-            'Complete': '#3d5c47',  /* Leaf Green */
-            'Rejected': '#c62828'   /* Alert Red */
+            Pending: '#c5922e',
+            Accepted: '#1f478d',
+            Preparing: '#1b3a28',
+            Ready: '#2c4c38',
+            Complete: '#3d5c47',
+            Rejected: '#c62828'
         };
+
         return colors[status] || '#3d5c47';
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
     // ========================================
-    // 8. MENU MANAGEMENT
+    // 9. MENU MANAGEMENT
     // ========================================
     function renderVendorMenu() {
         const container = document.getElementById('vendorMenuContainer');
@@ -417,8 +859,8 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.addEventListener('click', function () {
                 const itemId = Number(this.getAttribute('data-id'));
                 const newAvail = this.getAttribute('data-avail') === 'true';
-                saveMenuItem({ 
-                    id: itemId, 
+                saveMenuItem({
+                    id: itemId,
                     isAvailable: newAvail,
                     isActive: newAvail
                 });
@@ -438,7 +880,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 9. ADD NEW MENU ITEM
+    // 10. ADD NEW MENU ITEM
     // ========================================
     const addForm = document.getElementById('addMenuItemForm');
     if (addForm) {
@@ -474,7 +916,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 10. OPERATING HOURS MANAGEMENT
+    // 11. OPERATING HOURS MANAGEMENT
     // ========================================
 
     function updateStatusBanner() {
@@ -555,13 +997,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 11. INITIAL LOAD
+    // 12. INITIAL LOAD
     // ========================================
-    renderVendorOrders();
+    await renderVendorOrders();
     renderStatusBanner();
     renderOperatingHours();
 
     console.log('✅ Vendor dashboard loaded');
     console.log(`🏬 Vendor: ${activeVendor.name} (ID: ${ACTIVE_VENDOR_ID})`);
-    console.log(`📊 Status: ${vendorProfile?.isActive ? 'Active' : 'Inactive'}`);
+    console.log(`📊 Status: ${vendorProfile.isActive ? 'Active' : 'Inactive'}`);
 });

@@ -582,6 +582,323 @@ def get_student_orders(student_id):
     finally:
         connection.close()
 
+@app.route("/api/vendors/<int:vendor_id>/orders")
+def get_vendor_orders(vendor_id):
+    """Return one vendor profile and its orders from SQLite."""
+    connection = get_db_connection()
+
+    try:
+        # Confirm that the vendor exists.
+        vendor = connection.execute(
+            """
+            SELECT
+                VendorID,
+                VendorName,
+                Location,
+                OperatingHours,
+                OperatingStatus
+            FROM Vendor
+            WHERE VendorID = ?
+            """,
+            (vendor_id,),
+        ).fetchone()
+
+        if vendor is None:
+            return jsonify({"error": "Vendor not found"}), 404
+
+        # Retrieve this vendor's orders, newest first.
+        orders = connection.execute(
+            """
+            SELECT
+                FoodOrder.OrderID,
+                FoodOrder.StudentID,
+                FoodOrder.VendorID,
+                FoodOrder.OrderDate,
+                FoodOrder.OrderTotal,
+                FoodOrder.CurrentStatus,
+                FoodOrder.CompletedTime,
+                User.FirstName,
+                User.LastName
+            FROM FoodOrder
+            JOIN User
+                ON User.UserID = FoodOrder.StudentID
+            WHERE FoodOrder.VendorID = ?
+            ORDER BY FoodOrder.OrderDate DESC,
+                     FoodOrder.OrderID DESC
+            """,
+            (vendor_id,),
+        ).fetchall()
+
+        order_results = []
+
+        for order in orders:
+            # Retrieve the line items for this order.
+            items = connection.execute(
+                """
+                SELECT
+                    OrderItem.MenuItemID,
+                    MenuItem.ItemName,
+                    OrderItem.Quantity,
+                    OrderItem.UnitPrice,
+                    OrderItem.ItemTotal
+                FROM OrderItem
+                JOIN MenuItem
+                    ON MenuItem.MenuItemID = OrderItem.MenuItemID
+                WHERE OrderItem.OrderID = ?
+                ORDER BY OrderItem.OrderItemID
+                """,
+                (order["OrderID"],),
+            ).fetchall()
+
+            # Retrieve the most recent status-history record.
+            latest_status = connection.execute(
+                """
+                SELECT
+                    Status,
+                    ChangedAt,
+                    ChangedBy,
+                    Notes
+                FROM OrderStatus
+                WHERE OrderID = ?
+                ORDER BY ChangedAt DESC,
+                         OrderStatusID DESC
+                LIMIT 1
+                """,
+                (order["OrderID"],),
+            ).fetchone()
+
+            order_results.append({
+                "orderId": order["OrderID"],
+                "studentId": order["StudentID"],
+                "studentName": (
+                    f"{order['FirstName']} {order['LastName']}"
+                ),
+                "vendorId": order["VendorID"],
+                "orderDate": order["OrderDate"],
+                "total": float(order["OrderTotal"]),
+                "currentStatus": order["CurrentStatus"],
+                "completedTime": order["CompletedTime"],
+                "latestStatusNote": (
+                    latest_status["Notes"]
+                    if latest_status is not None
+                    else None
+                ),
+                "items": [
+                    {
+                        "itemId": item["MenuItemID"],
+                        "name": item["ItemName"],
+                        "quantity": item["Quantity"],
+                        "price": float(item["UnitPrice"]),
+                        "total": float(item["ItemTotal"]),
+                    }
+                    for item in items
+                ],
+            })
+
+        return jsonify({
+            "vendor": {
+                "id": vendor["VendorID"],
+                "name": vendor["VendorName"],
+                "location": vendor["Location"],
+                "operatingHours": vendor["OperatingHours"],
+                "isActive": (
+                    vendor["OperatingStatus"] == "Active"
+                ),
+            },
+            "orders": order_results,
+        })
+
+    finally:
+        connection.close()
+
+@app.route("/api/orders/<int:order_id>/status", methods=["PATCH"])
+def update_order_status(order_id):
+    """Update an order status and append an audit-history record."""
+    status_data = request.get_json(silent=True)
+
+    if not isinstance(status_data, dict):
+        return jsonify({"error": "A valid JSON request body is required"}), 400
+
+    vendor_id = status_data.get("vendorId")
+    new_status = status_data.get("status")
+    notes = status_data.get("notes")
+
+    if not isinstance(vendor_id, int):
+        return jsonify({"error": "A valid vendor ID is required"}), 400
+
+    allowed_transitions = {
+        "Pending": {"Accepted", "Rejected"},
+        "Accepted": {"Preparing", "Rejected"},
+        "Preparing": {"Ready"},
+        "Ready": {"Complete"},
+        "Complete": set(),
+        "Rejected": set(),
+    }
+
+    connection = get_db_connection()
+
+    try:
+        order = connection.execute(
+            """
+            SELECT
+                OrderID,
+                StudentID,
+                VendorID,
+                OrderTotal,
+                CurrentStatus
+            FROM FoodOrder
+            WHERE OrderID = ?
+            """,
+            (order_id,),
+        ).fetchone()
+
+        if order is None:
+            return jsonify({"error": "Order not found"}), 404
+
+        if order["VendorID"] != vendor_id:
+            return jsonify({
+                "error": "This order does not belong to the selected vendor"
+            }), 403
+
+        current_status = order["CurrentStatus"]
+        valid_next_statuses = allowed_transitions.get(current_status, set())
+
+        if new_status not in valid_next_statuses:
+            return jsonify({
+                "error": (
+                    f"Order cannot move from {current_status} "
+                    f"to {new_status}"
+                )
+            }), 400
+
+        # Use the vendor's active user account as the audit user.
+        vendor_user = connection.execute(
+            """
+            SELECT UserID
+            FROM User
+            WHERE VendorID = ?
+              AND Role = ?
+              AND AccountStatus = ?
+            ORDER BY UserID
+            LIMIT 1
+            """,
+            (vendor_id, "Vendor", "Active"),
+        ).fetchone()
+
+        if vendor_user is None:
+            return jsonify({
+                "error": "No active vendor user was found"
+            }), 400
+
+        changed_by = vendor_user["UserID"]
+
+        completed_time_sql = (
+            "CURRENT_TIMESTAMP"
+            if new_status == "Complete"
+            else "NULL"
+        )
+
+        connection.execute(
+            f"""
+            UPDATE FoodOrder
+            SET CurrentStatus = ?,
+                CompletedTime = {completed_time_sql}
+            WHERE OrderID = ?
+            """,
+            (new_status, order_id),
+        )
+
+        connection.execute(
+            """
+            INSERT INTO OrderStatus (
+                OrderID,
+                Status,
+                ChangedBy,
+                Notes
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                order_id,
+                new_status,
+                changed_by,
+                notes,
+            ),
+        )
+
+        refund = None
+
+        # Rejected orders return the full charged amount to the student.
+        if new_status == "Rejected":
+            student = connection.execute(
+                """
+                SELECT MealPlanBalance
+                FROM User
+                WHERE UserID = ?
+                """,
+                (order["StudentID"],),
+            ).fetchone()
+
+            previous_balance = float(student["MealPlanBalance"])
+            refund_amount = float(order["OrderTotal"])
+            new_balance = round(previous_balance + refund_amount, 2)
+
+            connection.execute(
+                """
+                UPDATE User
+                SET MealPlanBalance = ?
+                WHERE UserID = ?
+                """,
+                (new_balance, order["StudentID"]),
+            )
+
+            connection.execute(
+                """
+                INSERT INTO TransactionLog (
+                    UserID,
+                    OrderID,
+                    TransactionType,
+                    Amount,
+                    PreviousBalance,
+                    PostBalance,
+                    CreatedBy
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    order["StudentID"],
+                    order_id,
+                    "Refund",
+                    refund_amount,
+                    previous_balance,
+                    new_balance,
+                    changed_by,
+                ),
+            )
+
+            refund = {
+                "amount": refund_amount,
+                "newBalance": new_balance,
+            }
+
+        connection.commit()
+
+        return jsonify({
+            "message": "Order status updated successfully",
+            "orderId": order_id,
+            "previousStatus": current_status,
+            "currentStatus": new_status,
+            "notes": notes,
+            "refund": refund,
+        })
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
 @app.route("/<path:filename>")
 def frontend_file(filename):
     """Serve only approved frontend pages and assets."""
