@@ -486,6 +486,102 @@ def get_order(order_id):
     finally:
         connection.close()
 
+@app.route("/api/students/<int:student_id>/orders")
+def get_student_orders(student_id):
+    """Return all orders and line items for one student."""
+    connection = get_db_connection()
+
+    try:
+        student = connection.execute(
+            """
+            SELECT
+                UserID,
+                FirstName,
+                LastName,
+                Role
+            FROM User
+            WHERE UserID = ?
+            """,
+            (student_id,),
+        ).fetchone()
+
+        if student is None or student["Role"] != "Student":
+            return jsonify({"error": "Student not found"}), 404
+
+        orders = connection.execute(
+            """
+            SELECT
+                FoodOrder.OrderID,
+                FoodOrder.StudentID,
+                FoodOrder.VendorID,
+                FoodOrder.OrderDate,
+                FoodOrder.OrderTotal,
+                FoodOrder.CurrentStatus,
+                FoodOrder.CompletedTime,
+                Vendor.VendorName
+            FROM FoodOrder
+            JOIN Vendor
+                ON Vendor.VendorID = FoodOrder.VendorID
+            WHERE FoodOrder.StudentID = ?
+            ORDER BY FoodOrder.OrderDate DESC,
+                     FoodOrder.OrderID DESC
+            """,
+            (student_id,),
+        ).fetchall()
+
+        order_results = []
+
+        for order in orders:
+            items = connection.execute(
+                """
+                SELECT
+                    OrderItem.MenuItemID,
+                    MenuItem.ItemName,
+                    OrderItem.Quantity,
+                    OrderItem.UnitPrice,
+                    OrderItem.ItemTotal
+                FROM OrderItem
+                JOIN MenuItem
+                    ON MenuItem.MenuItemID = OrderItem.MenuItemID
+                WHERE OrderItem.OrderID = ?
+                ORDER BY OrderItem.OrderItemID
+                """,
+                (order["OrderID"],),
+            ).fetchall()
+
+            order_results.append({
+                "orderId": order["OrderID"],
+                "studentId": order["StudentID"],
+                "vendorId": order["VendorID"],
+                "vendorName": order["VendorName"],
+                "orderDate": order["OrderDate"],
+                "total": float(order["OrderTotal"]),
+                "currentStatus": order["CurrentStatus"],
+                "completedTime": order["CompletedTime"],
+                "items": [
+                    {
+                        "itemId": item["MenuItemID"],
+                        "name": item["ItemName"],
+                        "quantity": item["Quantity"],
+                        "price": float(item["UnitPrice"]),
+                        "total": float(item["ItemTotal"]),
+                    }
+                    for item in items
+                ],
+            })
+
+        return jsonify({
+            "student": {
+                "id": student["UserID"],
+                "firstName": student["FirstName"],
+                "lastName": student["LastName"],
+            },
+            "orders": order_results,
+        })
+
+    finally:
+        connection.close()
+
 @app.route("/<path:filename>")
 def frontend_file(filename):
     """Serve only approved frontend pages and assets."""

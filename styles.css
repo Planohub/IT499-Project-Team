@@ -648,7 +648,7 @@ body::after {
     font-weight: 700;
 }
 
-.vendorGridMessage p + p {
+.vendorGridMessage p+p {
     margin-top: 8px;
 }
 
@@ -1026,6 +1026,67 @@ body::after {
     font-size: 1.3rem;
 }
 
+.studentOrderCard {
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
+    background: var(--cardWhite);
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.08);
+}
+
+.studentOrderHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--lightGrey);
+    flex-wrap: wrap;
+}
+
+.studentOrderHeader h3 {
+    margin: 0;
+    color: var(--black);
+}
+
+.studentOrderDate {
+    margin-top: 3px;
+    color: var(--grey);
+    font-size: 0.85rem;
+}
+
+.studentOrderDetails {
+    padding: 12px;
+    border: 1px solid var(--lightGrey);
+    border-radius: 6px;
+    background: var(--white);
+}
+
+.studentOrderDetails ul {
+    padding-left: 20px;
+    margin-bottom: 8px;
+    color: var(--black);
+    font-size: 0.9rem;
+}
+
+.studentOrderItem {
+    margin-bottom: 4px;
+}
+
+.studentOrderTotal {
+    margin: 0;
+    padding-top: 7px;
+    border-top: 1px solid var(--border-soft);
+    color: var(--black);
+    font-weight: 700;
+}
+
+.studentOrderViewButton {
+    margin-top: 14px;
+}
+
 @media (max-width: 600px) {
     body {
         padding-bottom: 120px;
@@ -1040,6 +1101,11 @@ body::after {
     .checkoutOptions,
     .confirmationButtons {
         margin-bottom: 45px;
+    }
+
+    .studentOrderHeader {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }
 
