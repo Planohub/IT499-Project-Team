@@ -810,6 +810,13 @@ body::after {
     opacity: 1;
 }
 
+.menuItemDescription {
+    padding: 0 14px 14px;
+    color: var(--grey);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
 .menuItemPriceArea {
     padding: 10px 16px 14px 16px;
     border-top: 2px solid var(--black);

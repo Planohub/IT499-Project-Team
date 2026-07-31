@@ -1,127 +1,181 @@
 // ========================================
-// MENU.JS — Dynamic Menu Page Logic
+// MENU.JS — Database-Backed Menu Page
 // ========================================
 
-document.addEventListener('DOMContentLoaded', function () {
-    
-    // ========================================
-    // 1. GET ACTIVE STUDENT
-    // ========================================
+document.addEventListener('DOMContentLoaded', async function () {
     const activeStudent = getActiveStudentSession();
-    const studentId = activeStudent.userID;
-
-    // Update header badge
-    const studentBadge = document.getElementById('studentHeaderBadge');
-    if (studentBadge) {
-        studentBadge.textContent = `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
-    }
-    
-    // ========================================
-    // 1. GET SELECTED VENDOR
-    // ========================================
     const selectedVendor = getSelectedVendor();
 
-    // If no vendor selected, redirect back to student dashboard
-    if (!selectedVendor) {
+    updateStudentHeader(activeStudent);
+    updateBalance();
+    updateCartCount();
+
+    if (!selectedVendor || !selectedVendor.vendorId) {
         alert('Please select a vendor first.');
         window.location.href = 'student-dashboard.html';
         return;
     }
 
-    // ========================================
-    // 2. CHECK IF VENDOR IS OPEN
-    // ========================================
-    const isOpen = isVendorOpen(selectedVendor.vendorId);
-    const hours = getVendorHours(selectedVendor.vendorId);
+    const menuGrid = document.getElementById('menuItemGrid');
 
-    // If vendor is closed, show a message and prevent ordering
-    if (!isOpen) {
-        const menuGrid = document.getElementById('menuItemGrid');
-        if (menuGrid) {
-            menuGrid.innerHTML = `
-                <div style="text-align:center; padding:60px 20px; grid-column: 1 / -1;">
-                    <div style="font-size:4rem; margin-bottom:20px;">🔒</div>
-                    <h2 style="color:#c62828; margin-bottom:10px;">Vendor is Closed</h2>
-                    <p style="color:var(--grey); font-size:1.1rem; margin-bottom:10px;">
-                        ${selectedVendor.vendorName} is currently closed.
-                    </p>
-                    <p style="color:var(--grey); font-size:1rem; margin-bottom:20px;">
-                        Operating Hours: <strong>${hours}</strong>
-                    </p>
-                    <a href="student-dashboard.html" class="secondaryButton">← Back to Vendors</a>
-                </div>
-            `;
-        }
-
-        // Update vendor name and location
-        const vendorNameElement = document.getElementById('vendor-name');
-        const vendorLocationElement = document.getElementById('vendorLocation');
-        if (vendorNameElement) vendorNameElement.textContent = selectedVendor.vendorName + ' (Closed)';
-        if (vendorLocationElement) vendorLocationElement.textContent = selectedVendor.location || 'Location not specified';
-
-        // Add closed status banner
-        const header = document.querySelector('.menuPageHeader');
-        if (header) {
-            const banner = document.createElement('div');
-            banner.style.cssText = `
-                background-color: #ffebee;
-                border: 2px solid #c62828;
-                color: #c62828;
-                padding: 12px 16px;
-                border-radius: 8px;
-                margin-top: 10px;
-                font-weight: 600;
-            `;
-            banner.innerHTML = `🔴 This vendor is currently closed. Orders cannot be placed.`;
-            header.appendChild(banner);
-        }
-
-        // Hide cart button
-        const menuActions = document.querySelector('.menuActions');
-        if (menuActions) {
-            menuActions.style.display = 'none';
-        }
-
-        // Update cart count in nav
-        const cart = getCart();
-        const cartCount = cart.reduce((total, item) => {
-            return total + item.quantity;
-        }, 0);
-        const cartLink = document.getElementById('cartLink');
-        if (cartLink) {
-            cartLink.textContent = `Cart (${cartCount})`;
-        }
-
-        return; // Stop execution — don't load menu items
+    if (!menuGrid) {
+        console.error('Menu item grid was not found.');
+        return;
     }
 
-    // ========================================
-    // 3. UPDATE HEADER WITH VENDOR INFO (Open)
-    // ========================================
-    const vendorNameElement = document.getElementById('vendor-name');
-    const vendorLocationElement = document.getElementById('vendorLocation');
+    menuGrid.innerHTML = `
+        <div class="vendorGridMessage">
+            <p>Loading menu...</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(
+            `/api/vendors/${selectedVendor.vendorId}/menu`
+        );
+
+        if (response.status === 404) {
+            throw new Error('The selected vendor was not found.');
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                `Menu request failed with status ${response.status}`
+            );
+        }
+
+        const menuData = await response.json();
+        const vendor = menuData.vendor;
+        const menuItems = menuData.menuItems;
+
+        updateVendorHeader(vendor);
+
+        if (!vendor.isActive) {
+            showClosedVendor(
+                menuGrid,
+                vendor,
+                'This vendor is currently inactive.'
+            );
+            return;
+        }
+
+        const isOpen = getOpenStatus(vendor.operatingHours);
+
+        addVendorStatusBanner(vendor, isOpen);
+
+        if (!isOpen) {
+            showClosedVendor(
+                menuGrid,
+                vendor,
+                'This vendor is currently closed.'
+            );
+            return;
+        }
+
+        const availableItems = menuItems.filter(item =>
+            item.isActive === true &&
+            item.isAvailable === true
+        );
+
+        if (availableItems.length === 0) {
+            menuGrid.innerHTML = `
+                <div class="vendorGridMessage">
+                    <p>🍽️ No menu items are currently available.</p>
+                    <p>Please check back later.</p>
+                </div>
+            `;
+            return;
+        }
+
+        renderMenuItems(availableItems, menuGrid);
+        attachCartListeners(vendor);
+
+        console.log(
+            `✅ Loaded ${availableItems.length} menu items from SQLite`
+        );
+
+    } catch (error) {
+        console.error('Unable to load the vendor menu:', error);
+
+        menuGrid.innerHTML = `
+            <div class="vendorGridMessage vendorGridError">
+                <p>Unable to load this menu.</p>
+                <p>Please return to the vendor list and try again.</p>
+            </div>
+        `;
+    }
+});
+
+
+function updateStudentHeader(activeStudent) {
+    const studentBadge = document.getElementById('studentHeaderBadge');
+
+    if (studentBadge) {
+        studentBadge.textContent =
+            `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
+    }
+}
+
+
+function updateBalance() {
+    const balanceElement = document.getElementById('mealPlanBalance');
+
+    if (balanceElement) {
+        balanceElement.textContent =
+            `$${getMealPlanBalance().toFixed(2)}`;
+    }
+}
+
+
+function updateCartCount() {
+    const cartLink = document.getElementById('cartLink');
+
+    if (cartLink) {
+        cartLink.textContent = `Cart (${getCartCount()})`;
+    }
+}
+
+
+function updateVendorHeader(vendor) {
+    const vendorNameElement =
+        document.getElementById('vendor-name');
+
+    const vendorLocationElement =
+        document.getElementById('vendorLocation');
 
     if (vendorNameElement) {
-        vendorNameElement.textContent = selectedVendor.vendorName;
+        vendorNameElement.textContent = vendor.name;
     }
 
     if (vendorLocationElement) {
-        vendorLocationElement.textContent = selectedVendor.location || 'Location not specified';
+        vendorLocationElement.textContent =
+            vendor.location || 'Location not specified';
+    }
+}
+
+
+function addVendorStatusBanner(vendor, isOpen) {
+    const header = document.querySelector('.menuPageHeader');
+
+    if (!header) {
+        return;
     }
 
-    // Add open status banner
-    const header = document.querySelector('.menuPageHeader');
-    if (header) {
-        // Remove any existing banner
-        const existingBanner = header.querySelector('.status-banner');
-        if (existingBanner) existingBanner.remove();
+    const existingBanner =
+        header.querySelector('.status-banner');
 
-        const banner = document.createElement('div');
-        banner.className = 'status-banner';
+    if (existingBanner) {
+        existingBanner.remove();
+    }
+
+    const banner = document.createElement('div');
+    banner.className = 'status-banner';
+
+    if (isOpen) {
         banner.style.cssText = `
-            background-color: #e8f5e9;
-            border: 2px solid #2e7d32;
-            color: #2e7d32;
+            background-color: var(--success-background);
+            border: 2px solid var(--success);
+            color: var(--success);
             padding: 12px 16px;
             border-radius: 8px;
             margin-top: 10px;
@@ -132,135 +186,235 @@ document.addEventListener('DOMContentLoaded', function () {
             flex-wrap: wrap;
             gap: 10px;
         `;
+
         banner.innerHTML = `
-            <span>🟢 This vendor is currently <strong>Open</strong></span>
-            <span style="font-weight:400; font-size:0.9rem;">Hours: ${hours}</span>
+            <span>
+                🟢 This vendor is currently <strong>Open</strong>
+            </span>
+
+            <span style="font-weight:400; font-size:0.9rem;">
+                Hours: ${escapeHtml(vendor.operatingHours)}
+            </span>
         `;
-        header.appendChild(banner);
+    } else {
+        banner.style.cssText = `
+            background-color: var(--danger-background);
+            border: 2px solid var(--danger);
+            color: var(--danger);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-weight: 600;
+        `;
+
+        banner.textContent =
+            `🔴 Closed — Hours: ${vendor.operatingHours}`;
     }
 
-    // ========================================
-    // 4. UPDATE MEAL-PLAN BALANCE
-    // ========================================
-    const mealPlanBalanceElement = document.getElementById('mealPlanBalance');
-    if (mealPlanBalanceElement) {
-        mealPlanBalanceElement.textContent = `$${getMealPlanBalance().toFixed(2)}`;
-    }
+    header.appendChild(banner);
+}
 
-    // ========================================
-    // 5. UPDATE CART COUNT
-    // ========================================
-    const cart = getCart();
-    const cartCount = cart.reduce((total, item) => {
-        return total + item.quantity;
-    }, 0);
 
-    const cartLink = document.getElementById('cartLink');
-    if (cartLink) {
-        cartLink.textContent = `Cart (${cartCount})`;
-    }
-
-    // ========================================
-    // 6. LOAD AND RENDER MENU ITEMS
-    // ========================================
-    const menuGrid = document.getElementById('menuItemGrid');
-
-    // Get menu items for this vendor
-    const allMenuItems = getVendorMenuItems(selectedVendor.vendorId);
-
-    // Filter to show only active and available items
-    const availableItems = allMenuItems.filter(item => 
-        item.isActive === true && item.isAvailable === true
-    );
-
-    if (availableItems.length === 0) {
-        menuGrid.innerHTML = `
-            <div style="text-align:center; padding:60px 20px; grid-column: 1 / -1;">
-                <p style="font-size:1.2rem; color:var(--grey);">🍽️ No menu items currently available</p>
-                <p style="color:var(--lightGrey); margin-top:8px;">Please check back later</p>
+function showClosedVendor(menuGrid, vendor, message) {
+    menuGrid.innerHTML = `
+        <div class="vendorGridMessage">
+            <div style="font-size:4rem; margin-bottom:20px;">
+                🔒
             </div>
-        `;
-        return;
-    }
 
-    // Build menu item cards
-    let menuHTML = '';
-    availableItems.forEach(item => {
-        menuHTML += `
-            <div class="menuItemWrapper">
-                <span class="itemNameAbove">${item.name}</span>
-                <div class="menuItemBox" data-item="${item.name}" data-price="${item.price}" data-item-id="${item.id}">
-                    <div class="menuItemPicture">
-                        <span class="menuItemPictureOverlay">Add</span>
-                    </div>
-                    <div class="menuItemPriceArea">
-                        <span class="menuItemPrice">$${item.price.toFixed(2)}</span>
-                    </div>
+            <h2 style="color:var(--danger); margin-bottom:10px;">
+                Vendor Unavailable
+            </h2>
+
+            <p>
+                ${escapeHtml(message)}
+            </p>
+
+            <p style="margin-top:10px;">
+                Operating Hours:
+                <strong>
+                    ${escapeHtml(vendor.operatingHours)}
+                </strong>
+            </p>
+
+            <a
+                href="student-dashboard.html"
+                class="secondaryButton"
+                style="margin-top:20px;"
+            >
+                ← Back to Vendors
+            </a>
+        </div>
+    `;
+
+    const menuActions = document.querySelector('.menuActions');
+
+    if (menuActions) {
+        menuActions.style.display = 'none';
+    }
+}
+
+
+function renderMenuItems(items, menuGrid) {
+    menuGrid.innerHTML = items.map(item => `
+        <div class="menuItemWrapper">
+            <span class="itemNameAbove">
+                ${escapeHtml(item.name)}
+            </span>
+
+            <div
+                class="menuItemBox"
+                data-item-id="${item.id}"
+                data-item-name="${escapeHtml(item.name)}"
+                data-item-price="${item.price}"
+            >
+                <div class="menuItemPicture">
+                    <span class="menuItemPictureOverlay">
+                        Add
+                    </span>
                 </div>
+
+                <div class="menuItemPriceArea">
+                    <span class="menuItemPrice">
+                        $${Number(item.price).toFixed(2)}
+                    </span>
+                </div>
+
+                ${
+                    item.description
+                        ? `
+                            <p class="menuItemDescription">
+                                ${escapeHtml(item.description)}
+                            </p>
+                        `
+                        : ''
+                }
             </div>
-        `;
-    });
+        </div>
+    `).join('');
+}
 
-    menuGrid.innerHTML = menuHTML;
 
-    // ========================================
-    // 7. ADD TO CART FUNCTIONALITY
-    // ========================================
-    const menuCards = document.querySelectorAll('.menuItemBox');
+function attachCartListeners(vendor) {
+    const menuCards =
+        document.querySelectorAll('.menuItemBox[data-item-id]');
 
     menuCards.forEach(card => {
         card.addEventListener('click', function () {
-            const itemName = this.getAttribute('data-item');
-            const itemPrice = parseFloat(this.getAttribute('data-price'));
+            const itemId = Number(this.dataset.itemId);
+            const itemName = this.dataset.itemName;
+            const itemPrice = Number(this.dataset.itemPrice);
 
-            // Get current cart from localStorage
-            let cart = getCart();
+            const cart = getCart();
 
-            // Check if item already exists in cart
-            const existingItem = cart.find(item => item.item === itemName);
+            const existingItem = cart.find(item =>
+                Number(item.itemId) === itemId
+            );
 
             if (existingItem) {
-                existingItem.quantity++;
+                existingItem.quantity += 1;
             } else {
                 cart.push({
+                    itemId: itemId,
                     item: itemName,
                     price: itemPrice,
-                    quantity: 1
+                    quantity: 1,
+                    vendorId: vendor.id,
+                    vendorName: vendor.name
                 });
             }
 
-            // SAVE THE CART TO LOCALSTORAGE
             const saved = saveCart(cart);
-            console.log('💾 Cart saved:', saved, cart);
 
-            // Update cart count
-            const newCartCount = cart.reduce((total, item) => {
-                return total + item.quantity;
-            }, 0);
-
-            if (cartLink) {
-                cartLink.textContent = `Cart (${newCartCount})`;
+            if (!saved) {
+                alert('Unable to add this item to the cart.');
+                return;
             }
 
-            // Visual feedback
-            this.classList.add('added');
-            const overlay = this.querySelector('.menuItemPictureOverlay');
-            if (overlay) {
-                overlay.textContent = '✅ Added!';
-            }
+            updateCartCount();
+            showAddedFeedback(this);
 
-            setTimeout(() => {
-                this.classList.remove('added');
-                if (overlay) {
-                    overlay.textContent = 'Add';
-                }
-            }, 1500);
-
-            console.log(`✅ Added: ${itemName} ($${itemPrice}) - Cart: ${newCartCount}`);
+            console.log(
+                `✅ Added SQLite menu item ${itemId} to local cart`
+            );
         });
     });
+}
 
-    console.log(`✅ Menu loaded for vendor: ${selectedVendor.vendorName}`);
-    console.log(`📦 ${availableItems.length} items available`);
-    console.log(`🟢 Vendor is ${isOpen ? 'Open' : 'Closed'}`);
-});
+
+function showAddedFeedback(card) {
+    card.classList.add('added');
+
+    const overlay =
+        card.querySelector('.menuItemPictureOverlay');
+
+    if (overlay) {
+        overlay.textContent = '✅ Added!';
+    }
+
+    setTimeout(() => {
+        card.classList.remove('added');
+
+        if (overlay) {
+            overlay.textContent = 'Add';
+        }
+    }, 1500);
+}
+
+
+function getOpenStatus(operatingHours) {
+    if (
+        typeof operatingHours !== 'string' ||
+        !operatingHours.includes('-')
+    ) {
+        return true;
+    }
+
+    try {
+        const [openingTime, closingTime] =
+            operatingHours.split('-').map(time => time.trim());
+
+        const [openingHour, openingMinute] =
+            openingTime.split(':').map(Number);
+
+        const [closingHour, closingMinute] =
+            closingTime.split(':').map(Number);
+
+        const now = new Date();
+
+        const currentMinutes =
+            now.getHours() * 60 + now.getMinutes();
+
+        const openingMinutes =
+            openingHour * 60 + openingMinute;
+
+        const closingMinutes =
+            closingHour * 60 + closingMinute;
+
+        if (closingMinutes < openingMinutes) {
+            return (
+                currentMinutes >= openingMinutes ||
+                currentMinutes < closingMinutes
+            );
+        }
+
+        return (
+            currentMinutes >= openingMinutes &&
+            currentMinutes < closingMinutes
+        );
+
+    } catch (error) {
+        console.error('Unable to parse vendor hours:', error);
+        return true;
+    }
+}
+
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}

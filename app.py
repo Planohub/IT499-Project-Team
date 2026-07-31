@@ -87,6 +87,8 @@ def get_vendor_menu(vendor_id):
             SELECT
                 VendorID,
                 VendorName,
+                Location,
+                OperatingHours,
                 OperatingStatus
             FROM Vendor
             WHERE VendorID = ?
@@ -119,6 +121,8 @@ def get_vendor_menu(vendor_id):
             "vendor": {
                 "id": vendor["VendorID"],
                 "name": vendor["VendorName"],
+                "location": vendor["Location"],
+                "operatingHours": vendor["OperatingHours"],
                 "isActive": vendor["OperatingStatus"] == "Active",
             },
             "menuItems": [
