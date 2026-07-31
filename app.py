@@ -407,6 +407,85 @@ def create_order():
     finally:
         connection.close()
 
+@app.route("/api/orders/<int:order_id>")
+def get_order(order_id):
+    """Return one order and its line items from SQLite."""
+    connection = get_db_connection()
+
+    try:
+        order = connection.execute(
+            """
+            SELECT
+                FoodOrder.OrderID,
+                FoodOrder.StudentID,
+                FoodOrder.VendorID,
+                FoodOrder.OrderDate,
+                FoodOrder.OrderTotal,
+                FoodOrder.CurrentStatus,
+                FoodOrder.CompletedTime,
+                Vendor.VendorName
+            FROM FoodOrder
+            JOIN Vendor
+                ON Vendor.VendorID = FoodOrder.VendorID
+            WHERE FoodOrder.OrderID = ?
+            """,
+            (order_id,),
+        ).fetchone()
+
+        if order is None:
+            return jsonify({"error": "Order not found"}), 404
+
+        order_items = connection.execute(
+            """
+            SELECT
+                OrderItem.MenuItemID,
+                MenuItem.ItemName,
+                OrderItem.Quantity,
+                OrderItem.UnitPrice,
+                OrderItem.ItemTotal
+            FROM OrderItem
+            JOIN MenuItem
+                ON MenuItem.MenuItemID = OrderItem.MenuItemID
+            WHERE OrderItem.OrderID = ?
+            ORDER BY OrderItem.OrderItemID
+            """,
+            (order_id,),
+        ).fetchall()
+
+        subtotal = round(
+            sum(float(item["ItemTotal"]) for item in order_items),
+            2,
+        )
+
+        total = float(order["OrderTotal"])
+        tax = round(total - subtotal, 2)
+
+        return jsonify({
+            "orderId": order["OrderID"],
+            "studentId": order["StudentID"],
+            "vendorId": order["VendorID"],
+            "vendorName": order["VendorName"],
+            "orderDate": order["OrderDate"],
+            "items": [
+                {
+                    "itemId": item["MenuItemID"],
+                    "name": item["ItemName"],
+                    "quantity": item["Quantity"],
+                    "price": float(item["UnitPrice"]),
+                    "total": float(item["ItemTotal"]),
+                }
+                for item in order_items
+            ],
+            "subtotal": subtotal,
+            "tax": tax,
+            "total": total,
+            "currentStatus": order["CurrentStatus"],
+            "completedTime": order["CompletedTime"],
+        })
+
+    finally:
+        connection.close()
+
 @app.route("/<path:filename>")
 def frontend_file(filename):
     """Serve only approved frontend pages and assets."""
