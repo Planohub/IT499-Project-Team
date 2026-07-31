@@ -132,8 +132,8 @@ document.addEventListener('DOMContentLoaded', function () {
         tabMenuBtn.addEventListener('click', () => {
             ordersSection.style.display = 'none';
             menuSection.style.display = 'block';
-            tabOrdersBtn.className = 'secondaryButton';
             tabMenuBtn.className = 'defaultButton';
+            tabOrdersBtn.className = 'secondaryButton';
             renderVendorMenu();
         });
     }
@@ -244,84 +244,85 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // =========================================================================
-// Adding order times and rejection reasons to order history for better tracking and transparency
-// =========================================================================
+    function attachOrderActionListeners() {
+        // Accept & Prompt Prep Time (Option 1)
+        document.querySelectorAll('.acceptOrderBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.disabled) return;
+                const id = this.getAttribute('data-id');
+                const prepTime = prompt('⏰ Enter estimated prep time in minutes (e.g., 10, 15, 20):', '15');
+                
+                if (prepTime !== null && prepTime.trim() !== '') {
+                    updateOrderStatusWithDetails(id, 'Preparing', { estimatedPrepTime: prepTime.trim() });
+                    renderVendorOrders();
+                } else if (prepTime !== null) {
+                    updateOrderStatus(id, 'Preparing');
+                    renderVendorOrders();
+                }
+            });
+        });
 
-function attachOrderActionListeners() {
-    // 1. Accept Order & Prompt for Prep Time (Option 1)
-    document.querySelectorAll('.acceptOrderBtn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (this.disabled) return;
-            const id = this.getAttribute('data-id');
-            const prepTime = prompt('⏰ Enter estimated prep time in minutes (e.g., 10, 15, 20):', '15');
-            
-            if (prepTime !== null && prepTime.trim() !== '') {
-                updateOrderStatusWithDetails(id, 'Preparing', { estimatedPrepTime: prepTime.trim() });
+        // Reject & Prompt Reason + Automatic Refund (Option 4)
+        document.querySelectorAll('.rejectOrderBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.disabled) return;
+                const id = this.getAttribute('data-id');
+                const reasons = [
+                    "Item Out of Stock", 
+                    "Kitchen Closing Soon", 
+                    "High Order Volume Delay", 
+                    "Other / Unspecified"
+                ];
+                
+                const choice = prompt(`❌ Select Rejection Reason:\n\n1. Item Out of Stock\n2. Kitchen Closing Soon\n3. High Order Volume Delay\n4. Other\n\nEnter number (1-4):`, '1');
+                
+                if (choice) {
+                    const reasonText = reasons[parseInt(choice) - 1] || "Unspecified Delay";
+                    
+                    // 1. Calculate and execute refund to student balance
+                    const allOrders = getOrdersHistory();
+                    const orderToReject = allOrders.find(o => String(o.orderId) === String(id));
+                    
+                    if (orderToReject && orderToReject.currentStatus !== 'Rejected') {
+                        const refundAmount = Number(orderToReject.total || 0);
+                        const currentBalance = getMealPlanBalance();
+                        const updatedBalance = currentBalance + refundAmount;
+                        
+                        // Save updated balance
+                        saveMealPlanBalance(updatedBalance);
+                        
+                        alert(`Order #${id} rejected. Reason: "${reasonText}".\n\n💵 $${refundAmount.toFixed(2)} refunded to student meal-plan balance.`);
+                    } else {
+                        alert(`Order #${id} rejected. Reason logged: "${reasonText}".`);
+                    }
+
+                    // 2. Update Order Details & Status
+                    updateOrderStatusWithDetails(id, 'Rejected', { rejectionReason: reasonText });
+                    renderVendorOrders();
+                }
+            });
+        });
+
+        // Mark Ready
+        document.querySelectorAll('.markReadyBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.disabled) return;
+                const id = this.getAttribute('data-id');
+                updateOrderStatus(id, 'Ready');
                 renderVendorOrders();
-            } else if (prepTime !== null) {
-                updateOrderStatus(id, 'Preparing');
+            });
+        });
+
+        // Mark Complete
+        document.querySelectorAll('.markCompleteBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.disabled) return;
+                const id = this.getAttribute('data-id');
+                updateOrderStatus(id, 'Complete');
                 renderVendorOrders();
-            }
+            });
         });
-    });
-
-    // 2. Reject Order & Prompt for Structured Reason (Option 4)
-    document.querySelectorAll('.rejectOrderBtn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (this.disabled) return;
-            const id = this.getAttribute('data-id');
-            const reasons = [
-                "Item Out of Stock", 
-                "Kitchen Closing Soon", 
-                "High Order Volume Delay", 
-                "Other / Unspecified"
-            ];
-            
-            const choice = prompt(`❌ Select Rejection Reason:\n\n1. Item Out of Stock\n2. Kitchen Closing Soon\n3. High Order Volume Delay\n4. Other\n\nEnter number (1-4):`, '1');
-            
-            if (choice) {
-                const reasonText = reasons[parseInt(choice) - 1] || "Unspecified Delay";
-                updateOrderStatusWithDetails(id, 'Rejected', { rejectionReason: reasonText });
-                renderVendorOrders();
-                alert(`Order #${id} rejected. Reason logged: "${reasonText}".`);
-            }
-        });
-    });
-
-    // 3. Mark Ready for Pickup
-    document.querySelectorAll('.markReadyBtn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (this.disabled) return;
-            const id = this.getAttribute('data-id');
-            updateOrderStatus(id, 'Ready');
-            renderVendorOrders();
-        });
-    });
-
-    // 4. Complete Pickup
-    document.querySelectorAll('.markCompleteBtn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (this.disabled) return;
-            const id = this.getAttribute('data-id');
-            updateOrderStatus(id, 'Complete');
-            renderVendorOrders();
-        });
-    });
-}
-
-// Helper function to update status AND save extra details (ETA / Rejection Reason)
-function updateOrderStatusWithDetails(orderId, status, details) {
-    const orders = getOrdersHistory();
-    const index = orders.findIndex(o => String(o.orderId) === String(orderId));
-    if (index > -1) {
-        orders[index].currentStatus = status;
-        if (details.estimatedPrepTime) orders[index].estimatedPrepTime = details.estimatedPrepTime;
-        if (details.rejectionReason) orders[index].rejectionReason = details.rejectionReason;
-        localStorage.setItem('campusFoodLinkLatestOrder', JSON.stringify(orders[index]));
-        localStorage.setItem('orders', JSON.stringify(orders));
     }
-}
 
     function updateOrderStatusWithDetails(orderId, status, details) {
         const orders = getOrdersHistory();
@@ -330,6 +331,7 @@ function updateOrderStatusWithDetails(orderId, status, details) {
             orders[index].currentStatus = status;
             if (details.estimatedPrepTime) orders[index].estimatedPrepTime = details.estimatedPrepTime;
             if (details.rejectionReason) orders[index].rejectionReason = details.rejectionReason;
+            localStorage.setItem('campusFoodLinkLatestOrder', JSON.stringify(orders[index]));
             localStorage.setItem('orders', JSON.stringify(orders));
         }
     }
