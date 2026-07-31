@@ -1,5 +1,4 @@
-from flask import Flask, abort, send_from_directory
-from flask import Flask, abort, jsonify, send_from_directory
+from flask import Flask, abort, jsonify, request, send_from_directory
 from database import get_db_connection
 
 
@@ -142,6 +141,271 @@ def get_vendor_menu(vendor_id):
     finally:
         connection.close()
 
+@app.route("/api/orders", methods=["POST"])
+def create_order():
+    """Validate and create a student order in SQLite."""
+    order_data = request.get_json(silent=True)
+
+    if not isinstance(order_data, dict):
+        return jsonify({"error": "A valid JSON request body is required"}), 400
+
+    student_id = order_data.get("studentId")
+    vendor_id = order_data.get("vendorId")
+    cart_items = order_data.get("items")
+
+    if not isinstance(student_id, int):
+        return jsonify({"error": "A valid student ID is required"}), 400
+
+    if not isinstance(vendor_id, int):
+        return jsonify({"error": "A valid vendor ID is required"}), 400
+
+    if not isinstance(cart_items, list) or len(cart_items) == 0:
+        return jsonify({"error": "The order must contain at least one item"}), 400
+
+    connection = get_db_connection()
+
+    try:
+        student = connection.execute(
+            """
+            SELECT
+                UserID,
+                FirstName,
+                LastName,
+                MealPlanBalance,
+                AccountStatus
+            FROM User
+            WHERE UserID = ?
+              AND Role = ?
+            """,
+            (student_id, "Student"),
+        ).fetchone()
+
+        if student is None:
+            return jsonify({"error": "Student not found"}), 404
+
+        if student["AccountStatus"] != "Active":
+            return jsonify({"error": "Student account is inactive"}), 403
+
+        vendor = connection.execute(
+            """
+            SELECT
+                VendorID,
+                VendorName,
+                OperatingStatus
+            FROM Vendor
+            WHERE VendorID = ?
+            """,
+            (vendor_id,),
+        ).fetchone()
+
+        if vendor is None:
+            return jsonify({"error": "Vendor not found"}), 404
+
+        if vendor["OperatingStatus"] != "Active":
+            return jsonify({"error": "Vendor is inactive"}), 400
+
+        validated_items = []
+        subtotal = 0.0
+
+        for cart_item in cart_items:
+            if not isinstance(cart_item, dict):
+                return jsonify({"error": "Invalid cart item"}), 400
+
+            menu_item_id = cart_item.get("itemId")
+            quantity = cart_item.get("quantity")
+
+            if not isinstance(menu_item_id, int):
+                return jsonify({
+                    "error": "Every cart item must include a valid item ID"
+                }), 400
+
+            if not isinstance(quantity, int) or quantity <= 0:
+                return jsonify({
+                    "error": "Every cart item must have a positive quantity"
+                }), 400
+
+            menu_item = connection.execute(
+                """
+                SELECT
+                    MenuItemID,
+                    VendorID,
+                    ItemName,
+                    Price,
+                    IsAvailable,
+                    IsActive
+                FROM MenuItem
+                WHERE MenuItemID = ?
+                  AND VendorID = ?
+                """,
+                (menu_item_id, vendor_id),
+            ).fetchone()
+
+            if menu_item is None:
+                return jsonify({
+                    "error": f"Menu item {menu_item_id} was not found"
+                }), 400
+
+            if not menu_item["IsActive"] or not menu_item["IsAvailable"]:
+                return jsonify({
+                    "error": f"{menu_item['ItemName']} is unavailable"
+                }), 400
+
+            unit_price = float(menu_item["Price"])
+            item_total = round(unit_price * quantity, 2)
+            subtotal += item_total
+
+            validated_items.append({
+                "menuItemId": menu_item["MenuItemID"],
+                "name": menu_item["ItemName"],
+                "quantity": quantity,
+                "unitPrice": unit_price,
+                "itemTotal": item_total,
+            })
+
+        subtotal = round(subtotal, 2)
+        tax = round(subtotal * 0.075, 2)
+        order_total = round(subtotal + tax, 2)
+
+        previous_balance = float(student["MealPlanBalance"])
+
+        if order_total > previous_balance:
+            return jsonify({"error": "Insufficient meal-plan balance"}), 400
+
+        new_balance = round(previous_balance - order_total, 2)
+
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            INSERT INTO FoodOrder (
+                StudentID,
+                VendorID,
+                OrderTotal,
+                CurrentStatus
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (student_id, vendor_id, order_total, "Pending"),
+        )
+
+        order_id = cursor.lastrowid
+
+        for item in validated_items:
+            cursor.execute(
+                """
+                INSERT INTO OrderItem (
+                    OrderID,
+                    MenuItemID,
+                    Quantity,
+                    UnitPrice,
+                    ItemTotal
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    order_id,
+                    item["menuItemId"],
+                    item["quantity"],
+                    item["unitPrice"],
+                    item["itemTotal"],
+                ),
+            )
+
+        cursor.execute(
+            """
+            INSERT INTO OrderStatus (
+                OrderID,
+                Status,
+                ChangedBy,
+                Notes
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                order_id,
+                "Pending",
+                student_id,
+                "Order placed by student",
+            ),
+        )
+
+        cursor.execute(
+            """
+            UPDATE User
+            SET MealPlanBalance = ?
+            WHERE UserID = ?
+            """,
+            (new_balance, student_id),
+        )
+
+        cursor.execute(
+            """
+            INSERT INTO TransactionLog (
+                UserID,
+                OrderID,
+                TransactionType,
+                Amount,
+                PreviousBalance,
+                PostBalance,
+                CreatedBy
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                student_id,
+                order_id,
+                "Deduction",
+                order_total,
+                previous_balance,
+                new_balance,
+                student_id,
+            ),
+        )
+
+        connection.commit()
+
+        created_order = connection.execute(
+            """
+            SELECT OrderDate
+            FROM FoodOrder
+            WHERE OrderID = ?
+            """,
+            (order_id,),
+        ).fetchone()
+
+        return jsonify({
+            "message": "Order created successfully",
+            "newBalance": new_balance,
+            "order": {
+                "orderId": order_id,
+                "studentId": student_id,
+                "vendorId": vendor_id,
+                "vendorName": vendor["VendorName"],
+                "orderDate": created_order["OrderDate"],
+                "items": [
+                    {
+                        "itemId": item["menuItemId"],
+                        "name": item["name"],
+                        "price": item["unitPrice"],
+                        "quantity": item["quantity"],
+                        "total": item["itemTotal"],
+                    }
+                    for item in validated_items
+                ],
+                "subtotal": subtotal,
+                "tax": tax,
+                "total": order_total,
+                "currentStatus": "Pending",
+                "completedTime": None,
+            },
+        }), 201
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
 
 @app.route("/<path:filename>")
 def frontend_file(filename):

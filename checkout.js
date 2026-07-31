@@ -160,86 +160,86 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Process order on click (Place Order)
     if (placeOrderButton) {
-        placeOrderButton.addEventListener('click', function () {
+        placeOrderButton.addEventListener('click', async function () {
             const currentCart = getCart();
 
-            // Prevent placing an order if cart is empty
             if (currentCart.length === 0) {
-                alert('Your cart is empty. Please add items before placing an order.');
+                alert(
+                    'Your cart is empty. Please add items before placing an order.'
+                );
                 return;
             }
 
             const selectedVendor = getSelectedVendor();
 
-            // Student must select vendor to order
             if (!selectedVendor) {
                 alert('Please select a vendor before placing an order.');
                 window.location.href = 'student-dashboard.html';
                 return;
             }
 
-            // Calculate final order subtotal, tax, and total
-            let orderSubtotal = 0;
-            currentCart.forEach(item => {
-                orderSubtotal += item.price * item.quantity;
-            });
-            const orderTax = Number((orderSubtotal * 0.075).toFixed(2));
-            const orderTotal = Number((orderSubtotal + orderTax).toFixed(2));
+            const itemsWithoutIds = currentCart.filter(item =>
+                !Number.isInteger(Number(item.itemId))
+            );
 
-            // Check if student has sufficient meal-plan balance
-            const currentBalance = getMealPlanBalance();
-
-            if (orderTotal > currentBalance) {
-                alert('Insufficient meal-plan balance.');
+            if (itemsWithoutIds.length > 0) {
+                alert(
+                    'This cart contains older item data. Clear the cart and add the items again.'
+                );
                 return;
             }
 
-            const updatedBalance = currentBalance - orderTotal;
+            const targetVendorId = Number(
+                selectedVendor.vendorId || selectedVendor.id
+            );
 
-            // Defensive property checks for vendorId and vendorName
-            const targetVendorId = Number(selectedVendor.vendorId || selectedVendor.id || 1);
-            const targetVendorName = selectedVendor.vendorName || selectedVendor.name || 'Campus Vendor';
+            placeOrderButton.disabled = true;
+            placeOrderButton.textContent = 'Placing Order...';
 
-            // Create order object with order details
-            const order = {
-                orderId: getNextOrderId(),
-                studentId: studentId,
-                vendorId: targetVendorId,
-                vendorName: targetVendorName,
-                orderDate: new Date().toLocaleString(),
-                timestamp: Date.now(),
-                items: currentCart.map(item => ({
-                    name: item.item,
-                    price: item.price,
-                    quantity: item.quantity,
-                    total: item.price * item.quantity
-                })),
-                subtotal: Number(orderSubtotal.toFixed(2)),
-                tax: Number(orderTax.toFixed(2)),
-                total: Number(orderTotal.toFixed(2)),
-                currentStatus: 'Pending',
-                completedTime: null
-            };
+            try {
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        studentId: Number(studentId),
+                        vendorId: targetVendorId,
+                        items: currentCart.map(item => ({
+                            itemId: Number(item.itemId),
+                            quantity: Number(item.quantity)
+                        }))
+                    })
+                });
 
-            // Save order for confirmation page to retrieve
-            const wasSaved = saveOrder(order);
+                const result = await response.json();
 
-            if (!wasSaved) {
-                alert('Unable to place the order. Please try again.');
-                return;
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || 'Unable to place the order.'
+                    );
+                }
+
+                /*
+                 * Temporary compatibility:
+                 * confirmation.js still reads orders from localStorage.
+                 * We will replace that with a database GET endpoint next.
+                 */
+                saveOrder(result.order);
+                saveMealPlanBalance(Number(result.newBalance));
+
+                clearCart();
+
+                window.location.href =
+                    `confirmation.html?orderId=${result.order.orderId}`;
+
+            } catch (error) {
+                console.error('Unable to place order:', error);
+                alert(error.message);
+
+                placeOrderButton.disabled = false;
+                placeOrderButton.textContent = 'Place Order';
             }
-
-            // Deduct order total from meal-plan balance
-            const balanceWasSaved = saveMealPlanBalance(updatedBalance);
-
-            if (!balanceWasSaved) {
-                alert('Unable to update the meal-plan balance.');
-                return;
-            }
-
-            // Clear cart after saving the order to localStorage
-            clearCart();
-            window.location.href = `confirmation.html?orderId=${order.orderId}`;
         });
     }
 
