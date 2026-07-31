@@ -7,11 +7,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // 1. GET ACTIVE STUDENT
     // ========================================
     const activeStudent = getActiveStudentSession();
-    const studentId = activeStudent.userID;
+    const studentId = activeStudent ? activeStudent.userID : 101;
 
     // Update header badge
     const studentBadge = document.getElementById('studentHeaderBadge');
-    if (studentBadge) {
+    if (studentBadge && activeStudent) {
         studentBadge.textContent = `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
     }
 
@@ -40,109 +40,71 @@ document.addEventListener('DOMContentLoaded', function () {
     // 4. LOAD AND DISPLAY ORDERS
     // ========================================
     const ordersContainer = document.getElementById('ordersContainer');
+    if (!ordersContainer) return;
 
-    // Get all orders from localStorage
-    let allOrders = [];
-    try {
-        const ordersData = localStorage.getItem('orders');
-        if (ordersData) {
-            allOrders = JSON.parse(ordersData);
-        }
-    } catch (e) {
-        console.error('Unable to read orders', e);
-    }
-
-    // Filter orders for this student
-    const studentOrders = allOrders.filter(order => Number(order.studentId) === Number(studentId));
+    const allOrders = getOrdersHistory();
+    const studentOrders = allOrders.filter(o => Number(o.studentId) === Number(studentId));
 
     if (studentOrders.length === 0) {
-        ordersContainer.innerHTML = `
-            <div style="text-align:center; padding:60px 20px; border: 2px solid var(--lightGrey); border-radius: 8px;">
-                <p style="font-size:1.2rem; color:var(--grey);">📦 No orders yet</p>
-                <p style="color:var(--lightGrey); margin-top:8px;">Start ordering from your favorite vendors!</p>
-                <a href="student-dashboard.html" class="secondaryButton" style="margin-top:15px;">Browse Vendors →</a>
-            </div>
-        `;
+        ordersContainer.innerHTML = '<p style="text-align:center; padding:40px; color:var(--grey);">No past orders found.</p>';
         return;
     }
 
-    // Sort orders by date (newest first)
-    studentOrders.sort((a, b) => b.timestamp - a.timestamp);
+    // Sort: Newest orders first
+    studentOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-    // Build order cards
     let ordersHTML = '';
     studentOrders.forEach(order => {
-        const statusColor = getStatusColor(order.currentStatus);
-        const itemsList = order.items ? order.items.map(item => 
-            `${item.name} ×${item.quantity}`
-        ).join(', ') : 'No items';
+        const itemsHTML = order.items ? order.items.map(item => `
+            <li style="margin-bottom: 4px;">${item.quantity}x ${item.name || item.item} ($${((item.price || 0) * item.quantity).toFixed(2)})</li>
+        `).join('') : '<li>No item details</li>';
+
+        // ⏱️ Build ETA Message if set by vendor
+        let etaMsg = order.estimatedPrepTime ? 
+            `<p style="color: var(--black); font-size: 0.9rem; font-weight: 600; margin-top: 8px;">⏱️ <strong>Estimated Pickup:</strong> ~${order.estimatedPrepTime} mins</p>` : '';
+
+        // ❌ Build Rejection Message if set by vendor
+        let rejectMsg = order.rejectionReason ? 
+            `<p style="color: #c62828; font-size: 0.9rem; font-weight: 600; margin-top: 8px;">❌ <strong>Canceled:</strong> ${order.rejectionReason}</p>` : '';
 
         ordersHTML += `
-            <div style="border: 2px solid var(--lightGrey); border-radius: 8px; padding: 20px; margin-bottom: 16px; background: var(--white);">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div class="orderDetailsBox" style="border: 2px solid var(--black); border-radius: 10px; padding: 20px; margin-bottom: 20px; background: var(--cardWhite);">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--lightGrey); padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 6px;">
                     <div>
-                        <span style="font-weight: 700; font-size: 1.1rem;">Order #${order.orderId}</span>
-                        <span style="color: var(--grey); font-size: 0.9rem; margin-left: 12px;">${order.orderDate || 'Date not available'}</span>
+                        <h3 style="margin: 0; color: var(--black);">Order #${order.orderId} — ${order.vendorName || 'Vendor'}</h3>
+                        <p style="font-size: 0.85rem; color: var(--grey); margin-top: 2px;">${order.orderDate || 'N/A'}</p>
                     </div>
-                    <span style="font-weight: 600; color: ${statusColor}; background: ${statusColor}20; padding: 4px 16px; border-radius: 20px; font-size: 0.85rem;">
+                    <span class="orderStatusBadge" style="background-color: ${getStatusColor(order.currentStatus)}; color: #ffffff; padding: 4px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
                         ${order.currentStatus || 'Pending'}
                     </span>
                 </div>
-                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--lightGrey);">
-                    <p style="color: var(--grey); font-size: 0.9rem;">
-                        <strong>Vendor:</strong> ${order.vendorName || 'Unknown Vendor'}
+
+                ${etaMsg}
+                ${rejectMsg}
+
+                <div style="margin-top: 12px; background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid var(--lightGrey);">
+                    <ul style="padding-left: 20px; font-size: 0.9rem; color: var(--black); margin-bottom: 8px;">
+                        ${itemsHTML}
+                    </ul>
+                    <p style="font-weight: 700; font-size: 1rem; color: var(--black); margin: 0; border-top: 1px solid #eee; padding-top: 6px;">
+                        Total: $${Number(order.total || 0).toFixed(2)}
                     </p>
-                    <p style="color: var(--grey); font-size: 0.9rem;">
-                        <strong>Items:</strong> ${itemsList}
-                    </p>
-                    <p style="font-weight: 600; margin-top: 6px;">
-                        Total: $${order.total.toFixed(2)}
-                    </p>
-                </div>
-                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--lightGrey); display: flex; gap: 12px; flex-wrap: wrap;">
-                    <span style="font-size: 0.85rem; color: var(--grey);">
-                        <strong>Status History:</strong>
-                    </span>
-                    ${getStatusHistory(order)}
                 </div>
             </div>
         `;
     });
 
     ordersContainer.innerHTML = ordersHTML;
-
     console.log(`✅ Loaded ${studentOrders.length} orders for student ${studentId}`);
 });
 
-// ========================================
-// HELPER FUNCTIONS
-// ========================================
-
 function getStatusColor(status) {
     const colors = {
-        'Pending': '#f57f17',
-        'Accepted': '#0d47a1',
-        'Preparing': '#e65100',
-        'Ready': '#2e7d32',
-        'Complete': '#1b5e20',
-        'Rejected': '#c62828'
+        'Pending': '#c5922e',   /* Cozy Gold */
+        'Preparing': '#1b3a28', /* Forest Green */
+        'Ready': '#2c4c38',     /* Sage Green */
+        'Complete': '#3d5c47',  /* Leaf Green */
+        'Rejected': '#c62828'   /* Alert Red */
     };
-    return colors[status] || '#333';
-}
-
-function getStatusHistory(order) {
-    // If order has status history, display it
-    // Otherwise, show the current status as the only step
-    const statuses = order.statusHistory || [{ status: order.currentStatus || 'Pending', changedAt: order.orderDate || 'N/A' }];
-    
-    let html = '';
-    statuses.forEach((s, index) => {
-        html += `
-            <span style="font-size: 0.8rem; color: var(--grey); ${index > 0 ? 'margin-left: 8px;' : ''}">
-                ${index > 0 ? '→' : ''} ${s.status}
-                <span style="font-size: 0.7rem; color: var(--lightGrey);">(${s.changedAt || 'N/A'})</span>
-            </span>
-        `;
-    });
-    return html;
+    return colors[status] || '#3d5c47';
 }
