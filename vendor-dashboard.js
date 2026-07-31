@@ -7,13 +7,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // 1. GET ACTIVE VENDOR SESSION
     // ========================================
     const activeVendor = getActiveVendorSession();
-    const ACTIVE_VENDOR_ID = activeVendor.id;
+    const ACTIVE_VENDOR_ID = Number(activeVendor.id || activeVendor.vendorId || 1);
 
     // ========================================
     // 2. CHECK IF VENDOR IS ACTIVE
     // ========================================
     const allVendors = getAllVendors();
-    const vendorProfile = allVendors.find(v => Number(v.id) === Number(ACTIVE_VENDOR_ID));
+    const vendorProfile = allVendors.find(v => Number(v.id || v.vendorId) === ACTIVE_VENDOR_ID);
 
     // ========================================
     // 🔥 IF VENDOR IS INACTIVE — SHOW CONTACT ADMIN MESSAGE
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     const vendorBadge = document.getElementById('vendorHeaderBadge');
     if (vendorBadge) {
-        vendorBadge.textContent = `🏬 Vendor: ${activeVendor.name}`;
+        vendorBadge.textContent = `🏬 Vendor: ${activeVendor.name || vendorProfile.name}`;
         vendorBadge.style.color = '';
     }
 
@@ -57,9 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     function renderStatusBanner() {
         const isOpen = isVendorOpen(ACTIVE_VENDOR_ID);
-        const hours = getVendorHours(ACTIVE_VENDOR_ID);
         const statusText = isOpen ? 'Open' : 'Closed';
-        const statusColor = isOpen ? '#2e7d32' : '#c62828';
 
         const header = document.querySelector('.pageHeader');
         if (header) {
@@ -83,8 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 gap: 10px;
             `;
             banner.innerHTML = `
-                <span>🟢 Your vendor is currently <strong>${statusText}</strong>
-                </span>
+                <span>🟢 Your vendor is currently <strong>${statusText}</strong></span>
             `;
             header.appendChild(banner);
         }
@@ -100,6 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!hasActiveItems && vendorProfile && vendorProfile.isActive !== false) {
         const noItemsBanner = document.createElement('div');
+        noItemsBanner.className = 'no-items-banner';
         noItemsBanner.style.cssText = `
             background-color: #fff3cd;
             border: 1px solid #ffc107;
@@ -141,99 +139,192 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // 7. ORDER MANAGEMENT
+    // 7. ORDER MANAGEMENT (CARD-BASED MOBILE LAYOUT)
     // ========================================
     function renderVendorOrders() {
         const container = document.getElementById('vendorOrdersContainer');
         if (!container) return;
 
         const allOrders = getOrdersHistory();
-        const vendorOrders = allOrders.filter(o => Number(o.vendorId) === ACTIVE_VENDOR_ID);
+
+        // Safe normalization for vendor ID across all order schemas
+        const vendorOrders = allOrders.filter(o => {
+            const orderVendorId = Number(o.vendorId || o.vendorID || o.id);
+            return orderVendorId === ACTIVE_VENDOR_ID;
+        });
 
         if (vendorOrders.length === 0) {
             container.innerHTML = '<p style="color: var(--grey); padding: 15px 0;">No active orders found for this vendor.</p>';
             return;
         }
 
-        let html = `
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 2px solid var(--black);">
-                        <th style="padding: 10px;">Order #</th>
-                        <th style="padding: 10px;">Items</th>
-                        <th style="padding: 10px;">Total</th>
-                        <th style="padding: 10px;">Current Status</th>
-                        <th style="padding: 10px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+        // Sort: Newest orders at top
+        vendorOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
+        let html = '';
         vendorOrders.forEach(order => {
-            const itemsSummary = order.items ? order.items.map(i => `${i.name || i.item} (x${i.quantity})`).join(', ') : 'No details';
-            const status = order.currentStatus || 'Pending';
+            const statusColor = getStatusColor(order.currentStatus || 'Pending');
+            
+            // Build items list
+            const itemsList = order.items ? order.items.map(i => `<li style="margin-bottom:4px;">${i.quantity}x ${i.name || i.item} ($${((i.price || 0) * i.quantity).toFixed(2)})</li>`).join('') : '<li>No details</li>';
+
+            // Prepare ETA & Rejection Notes Display
+            let etaDisplay = order.estimatedPrepTime ? `<span style="font-size:0.85rem; color:var(--black); font-weight:600;">⏱️ ETA: ~${order.estimatedPrepTime} mins</span>` : '';
+            let rejectionDisplay = order.rejectionReason ? `<p style="color:#c62828; font-weight:600; font-size:0.85rem; margin-top:6px;">❌ Reason: ${order.rejectionReason}</p>` : '';
 
             html += `
-                <tr style="border-bottom: 1px solid var(--lightGrey);">
-                    <td style="padding: 12px 10px; font-weight: 700;">#${order.orderId}</td>
-                    <td style="padding: 12px 10px; max-width: 250px;">${itemsSummary}</td>
-                    <td style="padding: 12px 10px; font-weight: 600;">$${Number(order.total || 0).toFixed(2)}</td>
-                    <td style="padding: 12px 10px;">
-                        <span class="userBadge" style="background: #f0f0f0;">${status}</span>
-                    </td>
-                    <td style="padding: 12px 10px;">
-                        ${renderStatusActionButtons(order.orderId, status)}
-                    </td>
-                </tr>
+                <div class="vendorOrderCard" style="border: 2px solid var(--black); border-radius: 10px; padding: 18px; background: var(--cardWhite); margin-bottom: 20px;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--lightGrey); padding-bottom: 8px; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
+                        <h4 style="font-size: 1.1rem; color: var(--black); font-weight: 700; margin: 0;">Order #${order.orderId}</h4>
+                        <span style="font-size: 0.8rem; color: var(--grey);">${order.orderDate || 'N/A'}</span>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+                        <span style="display: inline-block; background-color: ${statusColor}; color: #ffffff; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; white-space: nowrap;">
+                            ${order.currentStatus || 'Pending'}
+                        </span>
+                        ${etaDisplay}
+                    </div>
+
+                    ${rejectionDisplay}
+
+                    <div style="margin-bottom: 14px; background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid var(--lightGrey);">
+                        <ul style="padding-left: 20px; font-size: 0.9rem; color: var(--black); margin-bottom: 8px;">
+                            ${itemsList}
+                        </ul>
+                        <p style="font-weight: 700; font-size: 1rem; color: var(--black); margin: 0; border-top: 1px solid #eee; padding-top: 6px;">
+                            Total: $${Number(order.total || 0).toFixed(2)}
+                        </p>
+                    </div>
+
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        ${getActionButtons(order)}
+                    </div>
+                </div>
             `;
         });
 
-        html += '</tbody></table>';
         container.innerHTML = html;
-
-        attachOrderStatusListeners();
+        attachOrderActionListeners();
     }
 
-    function renderStatusActionButtons(orderId, currentStatus) {
+    function getActionButtons(order) {
         const isInactive = vendorProfile && vendorProfile.isActive === false;
         const disabledAttr = isInactive ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
+        const currentStatus = order.currentStatus || 'Pending';
 
-        switch (currentStatus) {
-            case 'Pending':
-                return `
-                    <button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Accepted" style="padding: 4px 12px; background: #e6fffa;" ${disabledAttr}>Accept</button>
-                    <button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Rejected" style="padding: 4px 12px; color: #cc0000; border-color: #cc0000;" ${disabledAttr}>Reject</button>
-                `;
-            case 'Accepted':
-                return `<button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Preparing" style="padding: 4px 12px;" ${disabledAttr}>Start Preparing</button>`;
-            case 'Preparing':
-                return `<button class="secondaryButton actionBtn" data-id="${orderId}" data-status="Ready" style="padding: 4px 12px; background: #eef2ff;" ${disabledAttr}>Mark Ready</button>`;
-            case 'Ready':
-                return `<button class="defaultButton actionBtn" data-id="${orderId}" data-status="Complete" style="padding: 4px 12px; width: auto;" ${disabledAttr}>Complete Order</button>`;
-            case 'Complete':
-                return `<span style="color: green; font-weight: 600;">✓ Completed</span>`;
-            case 'Rejected':
-                return `<span style="color: #cc0000; font-weight: 600;">❌ Rejected</span>`;
-            default:
-                return `<span>N/A</span>`;
+        if (currentStatus === 'Pending') {
+            return `
+                <button class="secondaryButton acceptOrderBtn" data-id="${order.orderId}" style="background:var(--black); color:#fff; border-color:var(--black); flex:1; min-width:130px; padding:8px 12px;" ${disabledAttr}>
+                    ✅ Accept Order
+                </button>
+                <button class="secondaryButton rejectOrderBtn" data-id="${order.orderId}" style="color:#c62828; border-color:#c62828; flex:1; min-width:130px; padding:8px 12px;" ${disabledAttr}>
+                    ❌ Reject Order
+                </button>
+            `;
+        } else if (currentStatus === 'Preparing') {
+            return `
+                <button class="secondaryButton markReadyBtn" data-id="${order.orderId}" style="width:100%; padding:8px 12px;" ${disabledAttr}>
+                    🔔 Mark Ready for Pickup
+                </button>
+            `;
+        } else if (currentStatus === 'Ready') {
+            return `
+                <button class="secondaryButton markCompleteBtn" data-id="${order.orderId}" style="background:var(--black); color:#fff; width:100%; padding:8px 12px;" ${disabledAttr}>
+                    🎉 Complete Pickup
+                </button>
+            `;
+        } else if (currentStatus === 'Complete') {
+            return `<span style="color: green; font-weight: 600;">✓ Completed</span>`;
+        } else if (currentStatus === 'Rejected') {
+            return `<span style="color: #cc0000; font-weight: 600;">❌ Rejected</span>`;
+        } else {
+            return `<span style="font-size:0.85rem; color:var(--grey); font-style:italic;">Archived</span>`;
         }
     }
 
-    function attachOrderStatusListeners() {
-        document.querySelectorAll('.actionBtn').forEach(btn => {
-            btn.addEventListener('click', function () {
+    function attachOrderActionListeners() {
+        // Accept & Prompt Prep Time
+        document.querySelectorAll('.acceptOrderBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
                 if (this.disabled) return;
-                const orderId = this.getAttribute('data-id');
-                const newStatus = this.getAttribute('data-status');
-                if (updateOrderStatus(orderId, newStatus)) {
+                const id = this.getAttribute('data-id');
+                const prepTime = prompt('⏰ Enter estimated prep time in minutes (e.g., 10, 15, 20):', '15');
+                
+                if (prepTime !== null && prepTime.trim() !== '') {
+                    updateOrderStatusWithDetails(id, 'Preparing', { estimatedPrepTime: prepTime.trim() });
+                    renderVendorOrders();
+                } else if (prepTime !== null) {
+                    updateOrderStatus(id, 'Preparing');
                     renderVendorOrders();
                 }
             });
         });
+
+        // Reject & Select Reason
+        document.querySelectorAll('.rejectOrderBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.disabled) return;
+                const id = this.getAttribute('data-id');
+                const reasons = ["Item Out of Stock", "Kitchen Closing Soon", "High Order Volume Delay", "Other / Unspecified"];
+                
+                const choice = prompt(`❌ Select Rejection Reason:\n\n1. Item Out of Stock\n2. Kitchen Closing Soon\n3. High Order Volume Delay\n4. Other\n\nEnter number (1-4):`, '1');
+                
+                if (choice) {
+                    const reasonText = reasons[parseInt(choice) - 1] || "Unspecified Delay";
+                    updateOrderStatusWithDetails(id, 'Rejected', { rejectionReason: reasonText });
+                    renderVendorOrders();
+                    alert(`Order #${id} rejected. Reason logged: "${reasonText}".`);
+                }
+            });
+        });
+
+        // Mark Ready
+        document.querySelectorAll('.markReadyBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.disabled) return;
+                const id = this.getAttribute('data-id');
+                updateOrderStatus(id, 'Ready');
+                renderVendorOrders();
+            });
+        });
+
+        // Mark Complete
+        document.querySelectorAll('.markCompleteBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.disabled) return;
+                const id = this.getAttribute('data-id');
+                updateOrderStatus(id, 'Complete');
+                renderVendorOrders();
+            });
+        });
+    }
+
+    function updateOrderStatusWithDetails(orderId, status, details) {
+        const orders = getOrdersHistory();
+        const index = orders.findIndex(o => String(o.orderId) === String(orderId));
+        if (index > -1) {
+            orders[index].currentStatus = status;
+            if (details.estimatedPrepTime) orders[index].estimatedPrepTime = details.estimatedPrepTime;
+            if (details.rejectionReason) orders[index].rejectionReason = details.rejectionReason;
+            localStorage.setItem('orders', JSON.stringify(orders));
+        }
+    }
+
+    function getStatusColor(status) {
+        const colors = {
+            'Pending': '#c5922e',   /* Cozy Gold */
+            'Preparing': '#1b3a28', /* Forest Green */
+            'Ready': '#2c4c38',     /* Sage Green */
+            'Complete': '#3d5c47',  /* Leaf Green */
+            'Rejected': '#c62828'   /* Alert Red */
+        };
+        return colors[status] || '#3d5c47';
     }
 
     // ========================================
-    // 8. MENU MANAGEMENT — SHOWS ALL ITEMS (Active + Inactive)
+    // 8. MENU MANAGEMENT
     // ========================================
     function renderVendorMenu() {
         const container = document.getElementById('vendorMenuContainer');
@@ -364,15 +455,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateStatusBanner() {
         const isOpen = isVendorOpen(ACTIVE_VENDOR_ID);
-        const hours = getVendorHours(ACTIVE_VENDOR_ID);
         const statusText = isOpen ? 'Open' : 'Closed';
 
         const statusBanner = document.querySelector('.vendor-status-banner');
         if (statusBanner) {
             statusBanner.innerHTML = `
                 <span>🟢 Your vendor is currently <strong>${statusText}</strong></span>
-                    </a>
-                </span>
             `;
             statusBanner.style.borderColor = isOpen ? '#2e7d32' : '#c62828';
             statusBanner.style.color = isOpen ? '#2e7d32' : '#c62828';
