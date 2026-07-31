@@ -21,6 +21,7 @@ body {
     background: var(--white);
     color: var(--black);
     min-height: 100vh;
+    padding-bottom: 80px; /* Space for fixed balance badge */
 }
 
 .pageHeader {
@@ -841,4 +842,38 @@ body {
 
 .confirmationButtons .secondaryButton {
     padding: 10px 20px;
+}
+
+/* ----------------------------------
+   Mobile Responsive Bottom Clearance
+   ---------------------------------- */
+@media screen and (max-width: 600px) {
+    body {
+        padding-bottom: 110px; /* Extra clearance for smaller mobile screens */
+    }
+
+    footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: var(--white);
+        border-top: 2px solid var(--grey);
+        padding: 8px 12px;
+        text-align: center;
+        z-index: 999; /* Keeps footer above scrolling background items */
+    }
+
+    .balanceBadge {
+        display: inline-block;
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+
+    /* Pushes bottom action buttons up slightly for easier tapping */
+    .menuActions, 
+    .checkoutOptions, 
+    .confirmationButtons {
+        margin-bottom: 35px;
+    }
 }
