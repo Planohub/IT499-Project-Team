@@ -2,100 +2,144 @@
 // STUDENT-DASHBOARD.JS — Student Vendor Selection
 // ========================================
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
 
     // ========================================
     // 1. GET ACTIVE STUDENT
     // ========================================
     const activeStudent = getActiveStudentSession();
-    const studentId = activeStudent.userID;
 
-    // Update header badge
     const studentBadge = document.getElementById('studentHeaderBadge');
     if (studentBadge) {
-        studentBadge.textContent = `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
+        studentBadge.textContent =
+            `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
     }
 
     // ========================================
-    // 1. UPDATE MEAL-PLAN BALANCE
+    // 2. UPDATE MEAL-PLAN BALANCE
     // ========================================
-    const mealPlanBalanceElement = document.getElementById('mealPlanBalance');
+    const mealPlanBalanceElement =
+        document.getElementById('mealPlanBalance');
+
     if (mealPlanBalanceElement) {
-        mealPlanBalanceElement.textContent = `$${getMealPlanBalance().toFixed(2)}`;
+        mealPlanBalanceElement.textContent =
+            `$${getMealPlanBalance().toFixed(2)}`;
     }
 
     // ========================================
-    // 2. UPDATE CART COUNT
+    // 3. UPDATE CART COUNT
     // ========================================
-    const cart = getCart();
-    const cartCount = cart.reduce((total, item) => {
-        return total + item.quantity;
-    }, 0);
-
     const cartLink = document.getElementById('cartLink');
+
     if (cartLink) {
-        cartLink.textContent = `Cart (${cartCount})`;
+        cartLink.textContent = `Cart (${getCartCount()})`;
     }
 
     // ========================================
-    // 3. RENDER VENDOR GRID
+    // 4. LOAD VENDORS FROM FLASK / SQLITE
     // ========================================
     const vendorGrid = document.getElementById('vendorGrid');
 
-    const allVendors = getAllVendors();
-
-    const activeVendors = allVendors.filter(vendor => {
-        if (vendor.isActive === false) return false;
-        const menuItems = getVendorMenuItems(vendor.id);
-        const hasActiveItem = menuItems.some(item => 
-            item.isActive === true && item.isAvailable === true
-        );
-        return hasActiveItem;
-    });
-
-    if (activeVendors.length === 0) {
-        vendorGrid.innerHTML = `
-            <div style="text-align:center; padding:60px 20px; grid-column: 1 / -1;">
-                <p style="font-size:1.2rem; color:var(--grey);">🍽️ No vendors are currently available</p>
-                <p style="color:var(--lightGrey); margin-top:8px;">Please check back later</p>
-            </div>
-        `;
+    if (!vendorGrid) {
+        console.error('Vendor grid was not found.');
         return;
     }
 
-    let vendorHTML = '';
-    activeVendors.forEach(vendor => {
-        const menuItems = getVendorMenuItems(vendor.id);
-        const activeItemCount = menuItems.filter(item => 
-            item.isActive === true && item.isAvailable === true
-        ).length;
+    vendorGrid.innerHTML = `
+        <div class="vendorGridMessage">
+            <p>Loading vendors...</p>
+        </div>
+    `;
 
-        const isOpen = isVendorOpen(vendor.id);
-        const statusText = isOpen ? '🟢 Open' : '🔴 Closed';
-        const statusColor = isOpen ? '#2e7d32' : '#c62828';
-        const hours = getVendorHours(vendor.id);
+    try {
+        const response = await fetch('/api/vendors');
 
-        vendorHTML += `
-            <a href="menu.html" class="vendorBox" 
-               data-vendor-id="${vendor.id}" 
-               data-vendor-name="${vendor.name}" 
-               data-vendor-location="${vendor.location || 'Campus Location'}">
-                <h4>${vendor.name}</h4>
-                <p>${vendor.location || 'Location not specified'}</p>
-                <p style="font-size:0.8rem; color:${statusColor}; font-weight:600; margin-top:4px;">${statusText}</p>
-                <p style="font-size:0.75rem; color:var(--grey); margin-top:2px;">Hours: ${hours}</p>
-                <p style="font-size:0.8rem; color:var(--grey); margin-top:2px;">${activeItemCount} items available</p>
-                <span class="secondaryButton">View Menu →</span>
+        if (!response.ok) {
+            throw new Error(
+                `Vendor request failed with status ${response.status}`
+            );
+        }
+
+        const vendors = await response.json();
+
+        if (!Array.isArray(vendors) || vendors.length === 0) {
+            vendorGrid.innerHTML = `
+                <div class="vendorGridMessage">
+                    <p>🍽️ No vendors are currently available.</p>
+                    <p>Please check back later.</p>
+                </div>
+            `;
+            return;
+        }
+
+        renderVendors(vendors, vendorGrid);
+        attachVendorClickHandlers();
+
+        console.log(
+            `✅ Student dashboard loaded ${vendors.length} vendors from SQLite`
+        );
+
+    } catch (error) {
+        console.error('Unable to load vendors from the database:', error);
+
+        vendorGrid.innerHTML = `
+            <div class="vendorGridMessage vendorGridError">
+                <p>Unable to load vendors.</p>
+                <p>Please refresh the page or try again later.</p>
+            </div>
+        `;
+    }
+});
+
+
+function renderVendors(vendors, vendorGrid) {
+    vendorGrid.innerHTML = vendors.map(vendor => {
+        const openStatus = getOpenStatus(vendor.operatingHours);
+
+        const statusText = openStatus.isOpen
+            ? '🟢 Open'
+            : '🔴 Closed';
+
+        const statusClass = openStatus.isOpen
+            ? 'vendorStatusOpen'
+            : 'vendorStatusClosed';
+
+        return `
+            <a
+                href="menu.html"
+                class="vendorBox"
+                data-vendor-id="${vendor.id}"
+                data-vendor-name="${escapeHtml(vendor.name)}"
+                data-vendor-location="${escapeHtml(vendor.location)}"
+            >
+                <h4>${escapeHtml(vendor.name)}</h4>
+
+                <p>
+                    ${escapeHtml(
+                        vendor.location || 'Location not specified'
+                    )}
+                </p>
+
+                <p class="vendorStatus ${statusClass}">
+                    ${statusText}
+                </p>
+
+                <p class="vendorHours">
+                    Hours: ${escapeHtml(vendor.operatingHours)}
+                </p>
+
+                <span class="secondaryButton">
+                    View Menu →
+                </span>
             </a>
         `;
-    });
+    }).join('');
+}
 
-    vendorGrid.innerHTML = vendorHTML;
 
-    // ========================================
-    // 4. VENDOR CLICK HANDLER
-    // ========================================
-    const vendorLinks = document.querySelectorAll('.vendorBox[data-vendor-id]');
+function attachVendorClickHandlers() {
+    const vendorLinks =
+        document.querySelectorAll('.vendorBox[data-vendor-id]');
 
     vendorLinks.forEach(vendorLink => {
         vendorLink.addEventListener('click', function (event) {
@@ -107,11 +151,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 location: this.dataset.vendorLocation
             };
 
-            try {
-                localStorage.setItem('campusFoodLinkSelectedVendor', JSON.stringify(selectedVendor));
-                console.log('✅ Vendor saved:', selectedVendor);
-            } catch (e) {
-                console.error('❌ Error saving vendor:', e);
+            const saved = saveSelectedVendor(selectedVendor);
+
+            if (!saved) {
                 alert('Unable to select the vendor. Please try again.');
                 return;
             }
@@ -119,7 +161,65 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = this.getAttribute('href');
         });
     });
+}
 
-    console.log('✅ Student dashboard loaded');
-    console.log(`📦 ${activeVendors.length} active vendors with menu items`);
-});
+
+function getOpenStatus(operatingHours) {
+    if (
+        typeof operatingHours !== 'string' ||
+        !operatingHours.includes('-')
+    ) {
+        return { isOpen: true };
+    }
+
+    try {
+        const [openingTime, closingTime] = operatingHours
+            .split('-')
+            .map(time => time.trim());
+
+        const [openingHour, openingMinute] =
+            openingTime.split(':').map(Number);
+
+        const [closingHour, closingMinute] =
+            closingTime.split(':').map(Number);
+
+        const now = new Date();
+
+        const currentMinutes =
+            now.getHours() * 60 + now.getMinutes();
+
+        const openingMinutes =
+            openingHour * 60 + openingMinute;
+
+        const closingMinutes =
+            closingHour * 60 + closingMinute;
+
+        if (closingMinutes < openingMinutes) {
+            return {
+                isOpen:
+                    currentMinutes >= openingMinutes ||
+                    currentMinutes < closingMinutes
+            };
+        }
+
+        return {
+            isOpen:
+                currentMinutes >= openingMinutes &&
+                currentMinutes < closingMinutes
+        };
+
+    } catch (error) {
+        console.error('Unable to parse vendor hours:', error);
+        return { isOpen: true };
+    }
+}
+
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}

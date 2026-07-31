@@ -9,18 +9,38 @@
 }
 
 :root {
-    /* Cozy Green & Gold Palette */
-    --white: #e4ede2;       /* Relaxing Soft Cozy Sage Green Page Background */
-    --black: #1b3a28;       /* Prominent Deep Forest Green (Text, Headers, Main Buttons) */
-    --grey: #3d5c47;        /* Cozy Leaf Green (Subtitles & Secondary Borders) */
-    --lightGrey: #c5922e;   /* Cozy Gold / Amber Accent (Prices, Badges, Highlights) */
-    --cardWhite: #f4f8f3;   /* Pale Mint Warm White (Login Box, Cards, Navigation Bar) */
+    /* Brand palette */
+    --sage-background: #e4ede2;
+    --forest-green: #1b3a28;
+    --leaf-green: #3d5c47;
+    --warm-gold: #c5922e;
+    --card-background: #f4f8f3;
+    --logo-blue: #1f478d;
+
+    /* Supporting colors */
+    --white: #ffffff;
+    --danger: #c62828;
+    --danger-background: #ffebee;
+    --success: #2e7d32;
+    --success-background: #e8f5e9;
+    --border-soft: #b8c9bb;
+
+    /*
+       Compatibility aliases.
+       These keep existing teammate code working while the stylesheet
+       gradually moves toward clearer variable names.
+    */
+    --black: var(--forest-green);
+    --grey: var(--leaf-green);
+    --lightGrey: var(--warm-gold);
+    --cardWhite: var(--card-background);
+    --blue: var(--logo-blue);
 }
 
 body {
     font-family: Verdana, sans-serif;
     /* Soft Sage base + Warm Gold glow top-right + Forest Green glow bottom-left */
-    background: 
+    background:
         radial-gradient(circle at 90% 10%, rgba(197, 146, 46, 0.12) 0%, transparent 40%),
         radial-gradient(circle at 10% 85%, rgba(27, 58, 40, 0.08) 0%, transparent 40%),
         var(--white);
@@ -29,9 +49,9 @@ body {
     min-height: 100vh;
     padding-bottom: 90px;
 
-    }
+}
 
-    body::before {
+body::before {
     content: "";
     position: fixed;
     top: 0;
@@ -41,21 +61,24 @@ body {
     /* Ultra-faint inline SVG pattern */
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 10v10M13 10v6M17 10v6M15 20v10M40 10c2 0 4 2 4 6v4h-8v-4c0-4 2-6 4-6zm0 10v10' stroke='%231b3a28' stroke-width='1.2' fill='none' stroke-linecap='round' opacity='0.10'/%3E%3C/svg%3E");
     background-repeat: repeat;
-    pointer-events: none; /* Allows clicks to pass through */
+    pointer-events: none;
+    /* Allows clicks to pass through */
     z-index: -1;
-    }
+}
 
-    body::after {
+body::after {
     content: "";
     position: fixed;
     bottom: -50px;
     right: -50px;
     width: 350px;
     height: 350px;
-    background-image: url('CFL-Logo.png'); /* or CFL+Logo.png */
+    background-image: url('CFL-Logo.png');
+    /* or CFL+Logo.png */
     background-size: contain;
     background-repeat: no-repeat;
-    opacity: 0.08; /* Very faint so text stays clear */
+    opacity: 0.08;
+    /* Very faint so text stays clear */
     pointer-events: none;
     z-index: -1;
 }
@@ -198,7 +221,6 @@ body {
     }
 }
 
-
 /* --------
    Buttons
    -------- */
@@ -218,9 +240,16 @@ body {
 }
 
 .defaultButton:hover {
-    background: #112817;
-    border-color: #112817;
-    color: #ffffff;
+    background: var(--logo-blue);
+    border-color: var(--logo-blue);
+    color: var(--white);
+}
+
+.defaultButton:focus-visible,
+.secondaryButton:focus-visible,
+.roleLoginSection select:focus-visible {
+    outline: 3px solid rgba(31, 71, 141, 0.3);
+    outline-offset: 3px;
 }
 
 .secondaryButton {
@@ -334,54 +363,180 @@ body {
 }
 
 
-/* ----------
-   Login Page
-   ---------- */
+/* -------------------------
+ * ROLE SELECTION AND LOGIN 
+ * ------------------------- */
 
-.loginBox {
+.loginBox,
+.roleLandingPage {
+    min-height: calc(100vh - 52px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    padding: 20px;
+    padding: 32px 20px;
 }
 
 .loginHeader {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
 }
 
-.loginHeader h1 {
-    font-size: 2.5rem;
-    color: var(--black);
-    font-weight: 700;
-    letter-spacing: 1px;
+.loginLogo,
+.roleLandingLogo {
+    display: block;
+    width: 180px;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto 18px;
+    border-radius: 8px;
 }
 
-.loginHeader .loginSubtitle {
-    color: var(--grey);
+.loginHeader h1,
+.roleLandingCard h1 {
+    color: var(--forest-green);
+    font-size: clamp(2rem, 5vw, 2.7rem);
+    line-height: 1.1;
+    letter-spacing: 0.5px;
+}
+
+.loginSubtitle {
+    color: var(--leaf-green);
+    margin-top: 7px;
     font-size: 1rem;
-    margin-top: 5px;
-    font-weight: 500;
 }
 
-.loginCredentials {
-    border: 2px solid var(--black);
-    border-radius: 12px;
-    padding: 35px 35px 30px;
-    max-width: 380px;
+.loginCredentials,
+.roleLandingCard {
     width: 100%;
-    background: var(--cardWhite);
-    box-shadow: 0 4px 18px rgba(27, 58, 40, 0.12);
+    max-width: 440px;
+    padding: 34px;
+    text-align: center;
+    background: rgba(244, 248, 243, 0.96);
+    border: 2px solid var(--forest-green);
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(27, 58, 40, 0.14);
 }
 
+.roleLandingIntro {
+    margin: 26px 0 22px;
+}
+
+.roleLandingIntro h2,
 .loginCredentials h2 {
-    font-size: 1.3rem;
-    color: var(--black);
-    text-align: center;
+    color: var(--forest-green);
+    margin-bottom: 7px;
+    font-size: 1.35rem;
+}
+
+.roleLandingIntro p,
+.loginRoleDescription {
+    color: var(--leaf-green);
+    line-height: 1.5;
+}
+
+.roleButtonGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.roleLoginButton {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    box-sizing: border-box;
+    text-decoration: none;
+}
+
+.loginRoleIcon {
+    margin-bottom: 8px;
+    font-size: 2.25rem;
+}
+
+.roleLoginSection {
+    margin-top: 24px;
+    text-align: left;
+}
+
+.roleLoginSection label {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--forest-green);
+    font-size: 0.9rem;
     font-weight: 700;
-    margin-bottom: 20px;
+}
+
+.roleLoginSection select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--border-soft);
+    border-radius: 7px;
+    background: var(--white);
+    color: var(--forest-green);
+    font: inherit;
+}
+
+.roleLoginSection select:focus {
+    outline: 3px solid rgba(31, 71, 141, 0.16);
+    border-color: var(--logo-blue);
+}
+
+.roleLoginSection .defaultButton {
+    margin-top: 14px;
+}
+
+.simulatedLoginNotice {
+    margin-top: 22px;
+    padding: 11px 12px;
+    border: 1px solid rgba(197, 146, 46, 0.55);
+    border-radius: 7px;
+    background: rgba(197, 146, 46, 0.08);
+    color: var(--leaf-green);
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.backToRoleSelection {
+    display: inline-block;
+    margin-top: 18px;
+    color: var(--logo-blue);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.backToRoleSelection:hover {
+    text-decoration: underline;
+}
+
+.siteFooter {
+    position: relative;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-soft);
+    background: rgba(244, 248, 243, 0.95);
+    color: var(--leaf-green);
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 600px) {
+
+    .loginBox,
+    .roleLandingPage {
+        justify-content: flex-start;
+        padding-top: 40px;
+    }
+
+    .loginCredentials,
+    .roleLandingCard {
+        padding: 26px 20px;
+    }
+
+    .loginLogo,
+    .roleLandingLogo {
+        width: 150px;
+    }
 }
 
 
@@ -479,6 +634,46 @@ body {
 .vendorBox p {
     text-align: center;
     color: var(--grey);
+}
+
+.vendorGridMessage {
+    grid-column: 1 / -1;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--grey);
+}
+
+.vendorGridMessage p:first-child {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.vendorGridMessage p + p {
+    margin-top: 8px;
+}
+
+.vendorGridError {
+    color: var(--danger);
+}
+
+.vendorStatus {
+    margin-top: 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.vendorStatusOpen {
+    color: var(--success);
+}
+
+.vendorStatusClosed {
+    color: var(--danger);
+}
+
+.vendorHours {
+    margin-top: 2px;
+    color: var(--grey);
+    font-size: 0.75rem;
 }
 
 @media (max-width: 768px) {
@@ -579,7 +774,8 @@ body {
 
 .menuItemPicture {
     position: relative;
-    background: #d0e0d2; /* Soft Sage Green Picture Frame */
+    background: #d0e0d2;
+    /* Soft Sage Green Picture Frame */
     padding: 40px 20px;
     display: flex;
     flex-direction: column;
@@ -957,7 +1153,8 @@ body {
     border-radius: 20px;
     font-weight: 700;
     font-size: 0.85rem;
-    white-space: nowrap; /* PREVENTS TEXT WRAPPING ON MOBILE */
+    white-space: nowrap;
+    /* PREVENTS TEXT WRAPPING ON MOBILE */
     color: #ffffff;
 }
 
