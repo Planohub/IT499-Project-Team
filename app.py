@@ -77,7 +77,13 @@ def get_vendors():
 
 @app.route("/api/vendors/<int:vendor_id>/menu")
 def get_vendor_menu(vendor_id):
-    """Return active menu items for one vendor."""
+    """Return menu items for one vendor."""
+
+    # Vendor management can request inactive items also.
+    include_inactive = (
+        request.args.get("includeInactive", "false").lower() == "true"
+    )
+
     connection = get_db_connection()
 
     try:
@@ -98,23 +104,44 @@ def get_vendor_menu(vendor_id):
         if vendor is None:
             return jsonify({"error": "Vendor not found"}), 404
 
-        menu_items = connection.execute(
-            """
-            SELECT
-                MenuItemID,
-                VendorID,
-                ItemName,
-                Description,
-                Price,
-                IsAvailable,
-                IsActive
-            FROM MenuItem
-            WHERE VendorID = ?
-              AND IsActive = 1
-            ORDER BY ItemName
-            """,
-            (vendor_id,),
-        ).fetchall()
+        # Vendor management includes active and deactivated items.
+        if include_inactive:
+            menu_items = connection.execute(
+                """
+                SELECT
+                    MenuItemID,
+                    VendorID,
+                    ItemName,
+                    Description,
+                    Price,
+                    IsAvailable,
+                    IsActive
+                FROM MenuItem
+                WHERE VendorID = ?
+                ORDER BY ItemName
+                """,
+                (vendor_id,),
+            ).fetchall()
+
+        # Student-facing menus only include active items.
+        else:
+            menu_items = connection.execute(
+                """
+                SELECT
+                    MenuItemID,
+                    VendorID,
+                    ItemName,
+                    Description,
+                    Price,
+                    IsAvailable,
+                    IsActive
+                FROM MenuItem
+                WHERE VendorID = ?
+                  AND IsActive = 1
+                ORDER BY ItemName
+                """,
+                (vendor_id,),
+            ).fetchall()
 
         return jsonify({
             "vendor": {
@@ -140,6 +167,241 @@ def get_vendor_menu(vendor_id):
 
     finally:
         connection.close()
+
+
+@app.route("/api/vendors/<int:vendor_id>/menu", methods=["POST"])
+def create_vendor_menu_item(vendor_id):
+    """Create a new menu item for one vendor in SQLite."""
+
+    # Read the JSON object sent by vendor-dashboard.js.
+    menu_data = request.get_json(silent=True)
+
+    if not isinstance(menu_data, dict):
+        return jsonify({
+            "error": "A valid JSON request body is required"
+        }), 400
+
+    # Retrieve and normalize the submitted form values.
+    item_name = str(menu_data.get("name", "")).strip()
+    description = str(menu_data.get("description", "")).strip()
+    price = menu_data.get("price")
+
+    # Validate the required item name.
+    if not item_name:
+        return jsonify({
+            "error": "An item name is required"
+        }), 400
+
+    # Reject Boolean values because Python treats them as integers.
+    if isinstance(price, bool) or not isinstance(price, (int, float)):
+        return jsonify({
+            "error": "A valid menu-item price is required"
+        }), 400
+
+    price = round(float(price), 2)
+
+    if price <= 0:
+        return jsonify({
+            "error": "The menu-item price must be greater than zero"
+        }), 400
+
+    connection = get_db_connection()
+
+    try:
+        # Confirm that the target vendor exists.
+        vendor = connection.execute(
+            """
+            SELECT
+                VendorID,
+                VendorName,
+                OperatingStatus
+            FROM Vendor
+            WHERE VendorID = ?
+            """,
+            (vendor_id,),
+        ).fetchone()
+
+        if vendor is None:
+            return jsonify({
+                "error": "Vendor not found"
+            }), 404
+
+        # Prevent an inactive vendor from creating new menu items.
+        if vendor["OperatingStatus"] != "Active":
+            return jsonify({
+                "error": "Inactive vendors cannot add menu items"
+            }), 403
+
+        # Insert the menu item as active and available by default.
+        cursor = connection.execute(
+            """
+            INSERT INTO MenuItem (
+                VendorID,
+                ItemName,
+                Description,
+                Price,
+                IsAvailable,
+                IsActive
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                vendor_id,
+                item_name,
+                description or None,
+                price,
+                1,
+                1,
+            ),
+        )
+
+        menu_item_id = cursor.lastrowid
+
+        connection.commit()
+
+        # Return the new record in the same format used by the GET route.
+        return jsonify({
+            "message": "Menu item created successfully",
+            "menuItem": {
+                "id": menu_item_id,
+                "vendorId": vendor_id,
+                "name": item_name,
+                "description": description or None,
+                "price": price,
+                "isAvailable": True,
+                "isActive": True,
+            },
+        }), 201
+
+    except Exception:
+        # Undo the insert if any database operation fails.
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+@app.route("/api/menu-items/<int:menu_item_id>", methods=["PATCH"])
+def update_menu_item(menu_item_id):
+    """Update availability or active status for one menu item."""
+
+    # Read the JSON object sent by vendor-dashboard.js.
+    menu_data = request.get_json(silent=True)
+
+    if not isinstance(menu_data, dict):
+        return jsonify({
+            "error": "A valid JSON request body is required"
+        }), 400
+
+    vendor_id = menu_data.get("vendorId")
+    is_available = menu_data.get("isAvailable")
+    is_active = menu_data.get("isActive")
+
+    # Require the active vendor ID so vendors cannot edit other menus.
+    if not isinstance(vendor_id, int):
+        return jsonify({
+            "error": "A valid vendor ID is required"
+        }), 400
+
+    # Require at least one supported field.
+    if is_available is None and is_active is None:
+        return jsonify({
+            "error": "At least one menu-item property must be provided"
+        }), 400
+
+    if is_available is not None and not isinstance(is_available, bool):
+        return jsonify({
+            "error": "isAvailable must be true or false"
+        }), 400
+
+    if is_active is not None and not isinstance(is_active, bool):
+        return jsonify({
+            "error": "isActive must be true or false"
+        }), 400
+
+    connection = get_db_connection()
+
+    try:
+        # Confirm the item exists and belongs to the selected vendor.
+        menu_item = connection.execute(
+            """
+            SELECT
+                MenuItemID,
+                VendorID,
+                ItemName,
+                Description,
+                Price,
+                IsAvailable,
+                IsActive
+            FROM MenuItem
+            WHERE MenuItemID = ?
+            """,
+            (menu_item_id,),
+        ).fetchone()
+
+        if menu_item is None:
+            return jsonify({
+                "error": "Menu item not found"
+            }), 404
+
+        if menu_item["VendorID"] != vendor_id:
+            return jsonify({
+                "error": (
+                    "This menu item does not belong to "
+                    "the selected vendor"
+                )
+            }), 403
+
+        # Begin with the current database values.
+        updated_availability = bool(menu_item["IsAvailable"])
+        updated_active_status = bool(menu_item["IsActive"])
+
+        if is_available is not None:
+            updated_availability = is_available
+
+        if is_active is not None:
+            updated_active_status = is_active
+
+        # Deactivated items must also be unavailable.
+        if updated_active_status is False:
+            updated_availability = False
+
+        connection.execute(
+            """
+            UPDATE MenuItem
+            SET IsAvailable = ?,
+                IsActive = ?
+            WHERE MenuItemID = ?
+            """,
+            (
+                1 if updated_availability else 0,
+                1 if updated_active_status else 0,
+                menu_item_id,
+            ),
+        )
+
+        connection.commit()
+
+        return jsonify({
+            "message": "Menu item updated successfully",
+            "menuItem": {
+                "id": menu_item_id,
+                "vendorId": vendor_id,
+                "name": menu_item["ItemName"],
+                "description": menu_item["Description"],
+                "price": float(menu_item["Price"]),
+                "isAvailable": updated_availability,
+                "isActive": updated_active_status,
+            },
+        })
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
 
 @app.route("/api/orders", methods=["POST"])
 def create_order():

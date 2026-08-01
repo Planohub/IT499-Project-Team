@@ -838,7 +838,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         try {
             const response = await fetch(
-                `/api/vendors/${ACTIVE_VENDOR_ID}/menu`
+                `/api/vendors/${ACTIVE_VENDOR_ID}/menu?includeInactive=true`
             );
 
             const result = await response.json();
@@ -884,19 +884,57 @@ document.addEventListener('DOMContentLoaded', async function () {
         `;
 
             menuItems.forEach(item => {
-                const isAvailable =
-                    item.isActive === true &&
-                    item.isAvailable === true;
+                const statusText = item.isActive
+                    ? item.isAvailable
+                        ? '🟢 Available'
+                        : '🔴 Unavailable'
+                    : '⚫ Deactivated';
 
-                const statusText = isAvailable
-                    ? '🟢 Available'
-                    : item.isActive === false
-                        ? '⚫ Deactivated'
-                        : '🔴 Unavailable';
+                let actionButtons = '';
 
-                const toggleText = item.isAvailable
-                    ? 'Mark Unavailable'
-                    : 'Mark Available';
+                if (item.isActive) {
+                    actionButtons = `
+                        <button
+                            class="secondaryButton toggleAvailBtn"
+                            data-id="${item.id}"
+                            data-avail="${!item.isAvailable}"
+                            style="
+                                padding:4px 10px;
+                                font-size:0.8rem;
+                            "
+                        >
+                            ${item.isAvailable
+                            ? 'Mark Unavailable'
+                            : 'Mark Available'}
+                        </button>
+
+                        <button
+                            class="secondaryButton softDeleteBtn"
+                            data-id="${item.id}"
+                            style="
+                                padding:4px 10px;
+                                font-size:0.8rem;
+                                color:#cc0000;
+                                border-color:#cc0000;
+                            "
+                        >
+                            Deactivate
+                        </button>
+                    `;
+                } else {
+                    actionButtons = `
+                        <button
+                            class="secondaryButton reactivateItemBtn"
+                            data-id="${item.id}"
+                            style="
+                                padding:4px 10px;
+                                font-size:0.8rem;
+                            "
+                        >
+                            Reactivate
+                        </button>
+                    `;
+                }
 
                 html += `
                 <tr style="
@@ -928,30 +966,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </td>
 
                     <td style="padding:12px 10px;">
-                        <button
-                            class="secondaryButton toggleAvailBtn"
-                            data-id="${item.id}"
-                            data-avail="${!item.isAvailable}"
-                            style="
-                                padding:4px 10px;
-                                font-size:0.8rem;
-                            "
-                        >
-                            ${toggleText}
-                        </button>
-
-                        <button
-                            class="secondaryButton softDeleteBtn"
-                            data-id="${item.id}"
-                            style="
-                                padding:4px 10px;
-                                font-size:0.8rem;
-                                color:#cc0000;
-                                border-color:#cc0000;
-                            "
-                        >
-                            Deactivate
-                        </button>
+                        ${actionButtons}
                     </td>
                 </tr>
             `;
@@ -964,10 +979,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             container.innerHTML = html;
 
-            /*
-             * The action buttons are displayed now, but their database-backed
-             * PATCH handlers will be connected in the next step.
-             */
+            attachMenuActionListeners();
+
             console.log(
                 `✅ Loaded ${menuItems.length} SQLite menu items ` +
                 `for vendor ${ACTIVE_VENDOR_ID}`
@@ -986,62 +999,257 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function attachMenuActionListeners() {
-        document.querySelectorAll('.toggleAvailBtn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const itemId = Number(this.getAttribute('data-id'));
-                const newAvail = this.getAttribute('data-avail') === 'true';
-                saveMenuItem({
-                    id: itemId,
-                    isAvailable: newAvail,
-                    isActive: newAvail
+
+        // ========================================
+        // TOGGLE MENU-ITEM AVAILABILITY
+        // ========================================
+        document
+            .querySelectorAll('.toggleAvailBtn')
+            .forEach(button => {
+                button.addEventListener('click', async function () {
+                    const itemId = Number(this.dataset.id);
+                    const newAvailability =
+                        this.dataset.avail === 'true';
+
+                    this.disabled = true;
+
+                    try {
+                        // Persist the availability change through Flask.
+                        const response = await fetch(
+                            `/api/menu-items/${itemId}`,
+                            {
+                                method: 'PATCH',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    vendorId: ACTIVE_VENDOR_ID,
+                                    isAvailable: newAvailability
+                                })
+                            }
+                        );
+
+                        const result = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(
+                                result.error ||
+                                'Unable to update menu-item availability.'
+                            );
+                        }
+
+                        // Reload the SQLite-backed menu and warning banner.
+                        await renderVendorMenu();
+                        await checkForActiveMenuItems();
+
+                    } catch (error) {
+                        console.error(
+                            'Unable to update menu-item availability:',
+                            error
+                        );
+
+                        alert(error.message);
+                        this.disabled = false;
+                    }
                 });
-                renderVendorMenu();
+            });
+
+        // ========================================
+        // DEACTIVATE MENU ITEM
+        // ========================================
+        document.querySelectorAll('.softDeleteBtn').forEach(button => {
+            button.addEventListener('click', async function () {
+                const itemId = Number(this.dataset.id);
+
+                const confirmed = confirm(
+                    'Deactivating this item hides it from students ' +
+                    'while preserving historical order records. Continue?'
+                );
+
+                if (!confirmed) {
+                    return;
+                }
+
+                this.disabled = true;
+
+                try {
+                    // Soft-delete the item through Flask and SQLite.
+                    const response = await fetch(
+                        `/api/menu-items/${itemId}`,
+                        {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                vendorId: ACTIVE_VENDOR_ID,
+                                isActive: false,
+                                isAvailable: false
+                            })
+                        }
+                    );
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(
+                            result.error ||
+                            'Unable to deactivate the menu item.'
+                        );
+                    }
+
+                    // Reload the menu table and active-item warning.
+                    await renderVendorMenu();
+                    await checkForActiveMenuItems();
+
+                } catch (error) {
+                    console.error(
+                        'Unable to deactivate menu item:',
+                        error
+                    );
+
+                    alert(error.message);
+                    this.disabled = false;
+                }
             });
         });
 
-        document.querySelectorAll('.softDeleteBtn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const itemId = Number(this.getAttribute('data-id'));
-                if (confirm('Deactivating this item hides it from students while preserving historical order logs. Proceed?')) {
-                    saveMenuItem({ id: itemId, isActive: false, isAvailable: false });
-                    renderVendorMenu();
+        // ========================================
+        // REACTIVATE MENU ITEM
+        // ========================================
+        document.querySelectorAll('.reactivateItemBtn').forEach(button => {
+            button.addEventListener('click', async function () {
+                const itemId = Number(this.dataset.id);
+
+                this.disabled = true;
+
+                try {
+                    // Restore the item as active but unavailable by default.
+                    const response = await fetch(
+                        `/api/menu-items/${itemId}`,
+                        {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                vendorId: ACTIVE_VENDOR_ID,
+                                isActive: true,
+                                isAvailable: false
+                            })
+                        }
+                    );
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(
+                            result.error ||
+                            'Unable to reactivate the menu item.'
+                        );
+                    }
+
+                    await renderVendorMenu();
+                    await checkForActiveMenuItems();
+
+                } catch (error) {
+                    console.error(
+                        'Unable to reactivate menu item:',
+                        error
+                    );
+
+                    alert(error.message);
+                    this.disabled = false;
                 }
             });
         });
     }
 
     // ========================================
-    // 10. ADD NEW MENU ITEM
+    // 10. ADD NEW MENU ITEM THROUGH FLASK
     // ========================================
     const addForm = document.getElementById('addMenuItemForm');
+
     if (addForm) {
-        addForm.addEventListener('submit', function (e) {
-            e.preventDefault();
+        addForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
 
-            const name = document.getElementById('newItemName').value.trim();
-            const price = parseFloat(document.getElementById('newItemPrice').value);
-            const description = document.getElementById('newItemDesc').value.trim();
+            // Read and validate the submitted form values.
+            const name =
+                document.getElementById('newItemName').value.trim();
 
-            if (!name || isNaN(price) || price <= 0) {
-                alert('Please enter a valid item name and positive price.');
+            const price =
+                Number.parseFloat(
+                    document.getElementById('newItemPrice').value
+                );
+
+            const description =
+                document.getElementById('newItemDesc').value.trim();
+
+            if (!name || Number.isNaN(price) || price <= 0) {
+                alert(
+                    'Please enter a valid item name and positive price.'
+                );
                 return;
             }
 
-            saveMenuItem({
-                vendorId: ACTIVE_VENDOR_ID,
-                name: name,
-                price: price,
-                description: description
-            });
+            const submitButton =
+                addForm.querySelector('button[type="submit"]');
 
-            alert(`✅ "${name}" added successfully to your menu!`);
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Adding...';
+            }
 
-            addForm.reset();
-            renderVendorMenu();
+            try {
+                // Send the new menu item to Flask for SQLite storage.
+                const response = await fetch(
+                    `/api/vendors/${ACTIVE_VENDOR_ID}/menu`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            price: price,
+                            description: description
+                        })
+                    }
+                );
 
-            const noItemsBanner = document.querySelector('.no-items-banner');
-            if (noItemsBanner) {
-                noItemsBanner.remove();
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error ||
+                        'Unable to add the menu item.'
+                    );
+                }
+
+                alert(
+                    `✅ "${result.menuItem.name}" was added successfully.`
+                );
+
+                addForm.reset();
+
+                // Refresh the SQLite-backed menu table and warning banner.
+                await renderVendorMenu();
+                await checkForActiveMenuItems();
+
+            } catch (error) {
+                console.error(
+                    'Unable to add menu item:',
+                    error
+                );
+
+                alert(error.message);
+
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Add Menu Item';
+                }
             }
         });
     }
