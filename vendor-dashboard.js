@@ -208,43 +208,72 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // ========================================
-    // 6. CHECK FOR ACTIVE MENU ITEMS
+    // 6. CHECK FOR ACTIVE MENU ITEMS IN SQLITE
     // ========================================
+    async function checkForActiveMenuItems() {
+        try {
+            const response = await fetch(
+                `/api/vendors/${ACTIVE_VENDOR_ID}/menu`
+            );
 
-    /*
-     * Vendor menu management still uses localStorage temporarily.
-     * This warning will move to SQLite when menu management is migrated.
-     */
-    const menuItems = getVendorMenuItems(ACTIVE_VENDOR_ID);
+            const result = await response.json();
 
-    const hasActiveItems = menuItems.some(item =>
-        item.isActive === true &&
-        item.isAvailable === true
-    );
+            if (!response.ok) {
+                throw new Error(
+                    result.error || 'Unable to load vendor menu items.'
+                );
+            }
 
-    if (!hasActiveItems) {
-        const noItemsBanner = document.createElement('div');
-        noItemsBanner.className = 'no-items-banner';
+            const menuItems = Array.isArray(result.menuItems)
+                ? result.menuItems
+                : [];
 
-        noItemsBanner.style.cssText = `
-            background-color: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        `;
+            const hasActiveItems = menuItems.some(item =>
+                item.isActive === true &&
+                item.isAvailable === true
+            );
 
-        noItemsBanner.innerHTML = `
-            ⚠️ <strong>Your vendor account has no active menu items.</strong>
-            Students cannot see your menu. Use the Menu Management tab
-            to reactivate or add items.
-        `;
+            const existingBanner =
+                document.querySelector('.no-items-banner');
 
-        const pageHeader = document.querySelector('.pageHeader');
+            if (existingBanner) {
+                existingBanner.remove();
+            }
 
-        if (pageHeader) {
-            pageHeader.after(noItemsBanner);
+            if (!hasActiveItems) {
+                const noItemsBanner =
+                    document.createElement('div');
+
+                noItemsBanner.className = 'no-items-banner';
+
+                noItemsBanner.style.cssText = `
+                background-color: #fff3cd;
+                border: 1px solid #ffc107;
+                color: #856404;
+                padding: 12px 16px;
+                border-radius: 8px;
+                margin-bottom: 15px;
+            `;
+
+                noItemsBanner.innerHTML = `
+                ⚠️ <strong>Your vendor account has no active menu items.</strong>
+                Students cannot see your menu. Use the Menu Management tab
+                to reactivate or add items.
+            `;
+
+                const pageHeader =
+                    document.querySelector('.pageHeader');
+
+                if (pageHeader) {
+                    pageHeader.after(noItemsBanner);
+                }
+            }
+
+        } catch (error) {
+            console.error(
+                'Unable to check active vendor menu items:',
+                error
+            );
         }
     }
 
@@ -277,14 +306,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             tabMenuBtn.className = 'secondaryButton';
         });
 
-        tabMenuBtn.addEventListener('click', function () {
+        tabMenuBtn.addEventListener('click', async function () {
             ordersSection.style.display = 'none';
             menuSection.style.display = 'block';
 
             tabMenuBtn.className = 'defaultButton';
             tabOrdersBtn.className = 'secondaryButton';
 
-            renderVendorMenu();
+            await renderVendorMenu();
         });
     }
 
@@ -790,68 +819,170 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // ========================================
-    // 9. MENU MANAGEMENT
+    // 9. DATABASE-BACKED MENU MANAGEMENT
     // ========================================
-    function renderVendorMenu() {
-        const container = document.getElementById('vendorMenuContainer');
-        if (!container) return;
+    async function renderVendorMenu() {
+        const container =
+            document.getElementById('vendorMenuContainer');
 
-        const menuItems = getVendorMenuItems(ACTIVE_VENDOR_ID);
-
-        if (menuItems.length === 0) {
-            container.innerHTML = '<p style="color: var(--grey);">No items found in your vendor menu.</p>';
+        if (!container) {
             return;
         }
 
-        const isVendorInactive = vendorProfile && vendorProfile.isActive === false;
+        // Show a temporary loading message while Flask queries SQLite.
+        container.innerHTML = `
+        <div class="vendorGridMessage">
+            <p>Loading vendor menu...</p>
+        </div>
+    `;
 
-        let warningHTML = '';
-        if (isVendorInactive) {
-            warningHTML = `
-                <div style="background: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 12px 16px; border-radius: 8px; margin-bottom: 15px;">
-                    ⚠️ <strong>Your account is currently inactive.</strong> Students cannot see your menu. 
-                    You can prepare your items here, then contact Dining Services Administration to reactivate your account.
-                </div>
+        try {
+            const response = await fetch(
+                `/api/vendors/${ACTIVE_VENDOR_ID}/menu`
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error || 'Unable to load the vendor menu.'
+                );
+            }
+
+            const menuItems = Array.isArray(result.menuItems)
+                ? result.menuItems
+                : [];
+
+            if (menuItems.length === 0) {
+                container.innerHTML = `
+                <p style="color:var(--grey);">
+                    No items were found in your vendor menu.
+                </p>
             `;
-        }
+                return;
+            }
 
-        let html = warningHTML + `
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            let html = `
+            <table style="
+                width:100%;
+                border-collapse:collapse;
+                text-align:left;
+            ">
                 <thead>
-                    <tr style="border-bottom: 2px solid var(--black);">
-                        <th style="padding: 10px;">Item Name</th>
-                        <th style="padding: 10px;">Price</th>
-                        <th style="padding: 10px;">Description</th>
-                        <th style="padding: 10px;">Status</th>
-                        <th style="padding: 10px;">Actions</th>
+                    <tr style="
+                        border-bottom:2px solid var(--black);
+                    ">
+                        <th style="padding:10px;">Item Name</th>
+                        <th style="padding:10px;">Price</th>
+                        <th style="padding:10px;">Description</th>
+                        <th style="padding:10px;">Status</th>
+                        <th style="padding:10px;">Actions</th>
                     </tr>
                 </thead>
+
                 <tbody>
         `;
 
-        menuItems.forEach(item => {
-            const isItemActive = item.isActive !== false && item.isAvailable === true;
-            const statusText = isItemActive ? '🟢 Available' : '🔴 Inactive';
-            const toggleText = isItemActive ? 'Mark Inactive' : 'Mark Available';
+            menuItems.forEach(item => {
+                const isAvailable =
+                    item.isActive === true &&
+                    item.isAvailable === true;
 
-            html += `
-                <tr style="border-bottom: 1px solid var(--lightGrey);">
-                    <td style="padding: 12px 10px; font-weight: 600;">${item.name}</td>
-                    <td style="padding: 12px 10px;">$${Number(item.price).toFixed(2)}</td>
-                    <td style="padding: 12px 10px; color: var(--grey); font-size: 0.9rem;">${item.description || 'N/A'}</td>
-                    <td style="padding: 12px 10px;">${statusText}</td>
-                    <td style="padding: 12px 10px;">
-                        <button class="secondaryButton toggleAvailBtn" data-id="${item.id}" data-avail="${!isItemActive}" style="padding: 4px 10px; font-size: 0.8rem;">${toggleText}</button>
-                        <button class="secondaryButton softDeleteBtn" data-id="${item.id}" style="padding: 4px 10px; font-size: 0.8rem; color: #cc0000; border-color: #cc0000;">Delete</button>
+                const statusText = isAvailable
+                    ? '🟢 Available'
+                    : item.isActive === false
+                        ? '⚫ Deactivated'
+                        : '🔴 Unavailable';
+
+                const toggleText = item.isAvailable
+                    ? 'Mark Unavailable'
+                    : 'Mark Available';
+
+                html += `
+                <tr style="
+                    border-bottom:1px solid var(--lightGrey);
+                ">
+                    <td style="
+                        padding:12px 10px;
+                        font-weight:600;
+                    ">
+                        ${escapeHtml(item.name)}
+                    </td>
+
+                    <td style="padding:12px 10px;">
+                        $${Number(item.price).toFixed(2)}
+                    </td>
+
+                    <td style="
+                        padding:12px 10px;
+                        color:var(--grey);
+                        font-size:0.9rem;
+                    ">
+                        ${escapeHtml(
+                    item.description || 'N/A'
+                )}
+                    </td>
+
+                    <td style="padding:12px 10px;">
+                        ${statusText}
+                    </td>
+
+                    <td style="padding:12px 10px;">
+                        <button
+                            class="secondaryButton toggleAvailBtn"
+                            data-id="${item.id}"
+                            data-avail="${!item.isAvailable}"
+                            style="
+                                padding:4px 10px;
+                                font-size:0.8rem;
+                            "
+                        >
+                            ${toggleText}
+                        </button>
+
+                        <button
+                            class="secondaryButton softDeleteBtn"
+                            data-id="${item.id}"
+                            style="
+                                padding:4px 10px;
+                                font-size:0.8rem;
+                                color:#cc0000;
+                                border-color:#cc0000;
+                            "
+                        >
+                            Deactivate
+                        </button>
                     </td>
                 </tr>
             `;
-        });
+            });
 
-        html += '</tbody></table>';
-        container.innerHTML = html;
+            html += `
+                </tbody>
+            </table>
+        `;
 
-        attachMenuActionListeners();
+            container.innerHTML = html;
+
+            /*
+             * The action buttons are displayed now, but their database-backed
+             * PATCH handlers will be connected in the next step.
+             */
+            console.log(
+                `✅ Loaded ${menuItems.length} SQLite menu items ` +
+                `for vendor ${ACTIVE_VENDOR_ID}`
+            );
+
+        } catch (error) {
+            console.error('Unable to load vendor menu:', error);
+
+            container.innerHTML = `
+            <div class="vendorGridMessage vendorGridError">
+                <p>Unable to load the vendor menu.</p>
+                <p>Please refresh the page or try again later.</p>
+            </div>
+        `;
+        }
     }
 
     function attachMenuActionListeners() {
@@ -1000,6 +1131,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // 12. INITIAL LOAD
     // ========================================
     await renderVendorOrders();
+    await checkForActiveMenuItems();
     renderStatusBanner();
     renderOperatingHours();
 
