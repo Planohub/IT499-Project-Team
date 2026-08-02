@@ -11,6 +11,7 @@ app = Flask(__name__)
 ALLOWED_FRONTEND_FILES = {
     "index.html",
     "login.html",
+    "login.js",
     "student-dashboard.html",
     "student-dashboard.js",
     "menu.html",
@@ -74,6 +75,244 @@ def get_vendors():
             }
             for vendor in vendors
         ])
+
+    finally:
+        connection.close()
+
+@app.route("/api/admin/vendors")
+def get_admin_vendors():
+    """Return all vendors for administrator management."""
+
+    connection = get_db_connection()
+
+    try:
+        vendors = connection.execute(
+            """
+            SELECT
+                VendorID,
+                VendorName,
+                Location,
+                OperatingHours,
+                OperatingStatus
+            FROM Vendor
+            ORDER BY VendorName
+            """
+        ).fetchall()
+
+        return jsonify([
+            {
+                "id": vendor["VendorID"],
+                "name": vendor["VendorName"],
+                "location": vendor["Location"],
+                "operatingHours": vendor["OperatingHours"],
+                "isActive": (
+                    vendor["OperatingStatus"] == "Active"
+                ),
+            }
+            for vendor in vendors
+        ])
+
+    finally:
+        connection.close()
+
+@app.route("/api/admin/vendors", methods=["POST"])
+def create_admin_vendor():
+    """Create a new campus vendor in SQLite."""
+
+    # Read the JSON object sent by admin-vendors.js.
+    vendor_data = request.get_json(silent=True)
+
+    if not isinstance(vendor_data, dict):
+        return jsonify({
+            "error": "A valid JSON request body is required"
+        }), 400
+
+    # Normalize the submitted values.
+    vendor_name = str(
+        vendor_data.get("name", "")
+    ).strip()
+
+    location = str(
+        vendor_data.get("location", "")
+    ).strip()
+
+    operating_hours = str(
+        vendor_data.get(
+            "operatingHours",
+            "08:00 - 20:00"
+        )
+    ).strip()
+
+    if not vendor_name:
+        return jsonify({
+            "error": "A vendor name is required"
+        }), 400
+
+    if not location:
+        return jsonify({
+            "error": "A campus location is required"
+        }), 400
+
+    # Validate the same 24-hour format used elsewhere in the application.
+    hours_pattern = re.compile(
+        r"^(?:[01]\d|2[0-3]):[0-5]\d"
+        r"\s*-\s*"
+        r"(?:[01]\d|2[0-3]):[0-5]\d$"
+    )
+
+    if not hours_pattern.fullmatch(operating_hours):
+        return jsonify({
+            "error": (
+                "Operating hours must use the format "
+                "HH:MM - HH:MM"
+            )
+        }), 400
+
+    opening_time, closing_time = [
+        value.strip()
+        for value in operating_hours.split("-", 1)
+    ]
+
+    normalized_hours = f"{opening_time} - {closing_time}"
+
+    connection = get_db_connection()
+
+    try:
+        # Prevent duplicate vendor names in the development database.
+        existing_vendor = connection.execute(
+            """
+            SELECT VendorID
+            FROM Vendor
+            WHERE LOWER(VendorName) = LOWER(?)
+            """,
+            (vendor_name,),
+        ).fetchone()
+
+        if existing_vendor is not None:
+            return jsonify({
+                "error": "A vendor with this name already exists"
+            }), 409
+
+        # New vendors begin as active.
+        cursor = connection.execute(
+            """
+            INSERT INTO Vendor (
+                VendorName,
+                Location,
+                OperatingHours,
+                OperatingStatus
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                vendor_name,
+                location,
+                normalized_hours,
+                "Active",
+            ),
+        )
+
+        vendor_id = cursor.lastrowid
+
+        connection.commit()
+
+        return jsonify({
+            "message": "Vendor created successfully",
+            "vendor": {
+                "id": vendor_id,
+                "name": vendor_name,
+                "location": location,
+                "operatingHours": normalized_hours,
+                "isActive": True,
+            },
+        }), 201
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+@app.route(
+    "/api/admin/vendors/<int:vendor_id>/status",
+    methods=["PATCH"]
+)
+def update_admin_vendor_status(vendor_id):
+    """Activate or deactivate one vendor in SQLite."""
+
+    # Read the JSON object sent by admin-vendors.js.
+    status_data = request.get_json(silent=True)
+
+    if not isinstance(status_data, dict):
+        return jsonify({
+            "error": "A valid JSON request body is required"
+        }), 400
+
+    is_active = status_data.get("isActive")
+
+    if not isinstance(is_active, bool):
+        return jsonify({
+            "error": "isActive must be true or false"
+        }), 400
+
+    new_status = "Active" if is_active else "Inactive"
+
+    connection = get_db_connection()
+
+    try:
+        # Confirm that the vendor exists.
+        vendor = connection.execute(
+            """
+            SELECT
+                VendorID,
+                VendorName,
+                OperatingStatus
+            FROM Vendor
+            WHERE VendorID = ?
+            """,
+            (vendor_id,),
+        ).fetchone()
+
+        if vendor is None:
+            return jsonify({
+                "error": "Vendor not found"
+            }), 404
+
+        # Avoid unnecessary writes if the vendor already has this status.
+        if vendor["OperatingStatus"] == new_status:
+            return jsonify({
+                "message": "Vendor status was already up to date",
+                "vendor": {
+                    "id": vendor_id,
+                    "name": vendor["VendorName"],
+                    "isActive": is_active,
+                },
+            })
+
+        connection.execute(
+            """
+            UPDATE Vendor
+            SET OperatingStatus = ?
+            WHERE VendorID = ?
+            """,
+            (new_status, vendor_id),
+        )
+
+        connection.commit()
+
+        return jsonify({
+            "message": "Vendor status updated successfully",
+            "vendor": {
+                "id": vendor_id,
+                "name": vendor["VendorName"],
+                "isActive": is_active,
+            },
+        })
+
+    except Exception:
+        connection.rollback()
+        raise
 
     finally:
         connection.close()
