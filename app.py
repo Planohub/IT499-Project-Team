@@ -1,3 +1,6 @@
+# Require the existing 24-hour format used throughout the prototype.
+import re
+
 from flask import Flask, abort, jsonify, request, send_from_directory
 from database import get_db_connection
 
@@ -396,6 +399,105 @@ def update_menu_item(menu_item_id):
         })
 
     except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+@app.route("/api/vendors/<int:vendor_id>/hours", methods=["PATCH"])
+def update_vendor_hours(vendor_id):
+    """Update one vendor's operating hours in SQLite."""
+
+    # Read the JSON object sent by vendor-dashboard.js.
+    hours_data = request.get_json(silent=True)
+
+    if not isinstance(hours_data, dict):
+        return jsonify({
+            "error": "A valid JSON request body is required"
+        }), 400
+
+    operating_hours = hours_data.get("operatingHours")
+
+    if not isinstance(operating_hours, str):
+        return jsonify({
+            "error": "Operating hours must be provided as text"
+        }), 400
+
+    operating_hours = operating_hours.strip()
+
+    hours_pattern = re.compile(
+        r"^(?:[01]\d|2[0-3]):[0-5]\d"
+        r"\s*-\s*"
+        r"(?:[01]\d|2[0-3]):[0-5]\d$"
+    )
+
+    if not hours_pattern.fullmatch(operating_hours):
+        return jsonify({
+            "error": (
+                "Operating hours must use the format "
+                "HH:MM - HH:MM"
+            )
+        }), 400
+
+    # Normalize optional spaces around the hyphen.
+    opening_time, closing_time = [
+        value.strip()
+        for value in operating_hours.split("-", 1)
+    ]
+
+    normalized_hours = f"{opening_time} - {closing_time}"
+
+    connection = get_db_connection()
+
+    try:
+        # Confirm that the vendor exists before updating it.
+        vendor = connection.execute(
+            """
+            SELECT
+                VendorID,
+                VendorName,
+                OperatingStatus
+            FROM Vendor
+            WHERE VendorID = ?
+            """,
+            (vendor_id,),
+        ).fetchone()
+
+        if vendor is None:
+            return jsonify({
+                "error": "Vendor not found"
+            }), 404
+
+        # Only active vendors may manage their operating hours.
+        if vendor["OperatingStatus"] != "Active":
+            return jsonify({
+                "error": "Inactive vendors cannot update operating hours"
+            }), 403
+
+        connection.execute(
+            """
+            UPDATE Vendor
+            SET OperatingHours = ?
+            WHERE VendorID = ?
+            """,
+            (normalized_hours, vendor_id),
+        )
+
+        connection.commit()
+
+        return jsonify({
+            "message": "Operating hours updated successfully",
+            "vendor": {
+                "id": vendor_id,
+                "name": vendor["VendorName"],
+                "operatingHours": normalized_hours,
+                "isActive": True,
+            },
+        })
+
+    except Exception:
+        # Undo the update if a database operation fails.
         connection.rollback()
         raise
 

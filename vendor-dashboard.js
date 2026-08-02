@@ -154,53 +154,57 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // ========================================
-    // 5. RENDER OPEN/CLOSED STATUS BANNER
+    // 5. RENDER DATABASE-BACKED STATUS BANNER
     // ========================================
-
-    /*
-     * Operating-hours management is still prototype-backed for now.
-     * This will move to Flask and SQLite in a later step.
-     */
     function renderStatusBanner() {
-        const isOpen = isVendorOpen(ACTIVE_VENDOR_ID);
-        const statusText = isOpen ? 'Open' : 'Closed';
-        const statusIcon = isOpen ? '🟢' : '🔴';
-
+        const operatingHours = vendorProfile.operatingHours || 'Hours unavailable';
+        const openStatus = getVendorOpenStatus(operatingHours);
+        const statusText = openStatus.isOpen ? 'Open' : 'Closed';
+        const statusIcon = openStatus.isOpen ? '🟢' : '🔴';
+        const statusColor = openStatus.isOpen ? '#2e7d32' : '#c62828';
+        const statusBackground = openStatus.isOpen ? '#e8f5e9' : '#ffebee';
         const header = document.querySelector('.pageHeader');
 
         if (!header) {
             return;
         }
 
-        const existingBanner =
-            header.querySelector('.vendor-status-banner');
+        const existingBanner = header.querySelector('.vendor-status-banner');
 
         if (existingBanner) {
             existingBanner.remove();
         }
 
         const banner = document.createElement('div');
+
         banner.className = 'vendor-status-banner';
 
         banner.style.cssText = `
-            background-color: ${isOpen ? '#e8f5e9' : '#ffebee'};
-            border: 2px solid ${isOpen ? '#2e7d32' : '#c62828'};
-            color: ${isOpen ? '#2e7d32' : '#c62828'};
-            padding: 10px 16px;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
+            background-color:${statusBackground};
+            border:2px solid ${statusColor};
+            color:${statusColor};
+            padding:10px 16px;
+            border-radius:8px;
+            margin-top:10px;
+            font-weight:600;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:10px;
         `;
 
         banner.innerHTML = `
             <span>
                 ${statusIcon} Your vendor is currently
                 <strong>${statusText}</strong>
+            </span>
+
+            <span style="
+                font-size:0.9rem;
+                font-weight:400;
+            ">
+                Hours: ${escapeHtml(operatingHours)}
             </span>
         `;
 
@@ -247,19 +251,19 @@ document.addEventListener('DOMContentLoaded', async function () {
                 noItemsBanner.className = 'no-items-banner';
 
                 noItemsBanner.style.cssText = `
-                background-color: #fff3cd;
-                border: 1px solid #ffc107;
-                color: #856404;
-                padding: 12px 16px;
-                border-radius: 8px;
-                margin-bottom: 15px;
-            `;
+                    background-color: #fff3cd;
+                    border: 1px solid #ffc107;
+                    color: #856404;
+                    padding: 12px 16px;
+                    border-radius: 8px;
+                    margin-bottom: 15px;
+                `;
 
                 noItemsBanner.innerHTML = `
-                ⚠️ <strong>Your vendor account has no active menu items.</strong>
-                Students cannot see your menu. Use the Menu Management tab
-                to reactivate or add items.
-            `;
+                    ⚠️ <strong>Your vendor account has no active menu items.</strong>
+                    Students cannot see your menu. Use the Menu Management tab
+                    to reactivate or add items.
+                `;
 
                 const pageHeader =
                     document.querySelector('.pageHeader');
@@ -280,17 +284,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     // ========================================
     // 7. TAB NAVIGATION
     // ========================================
-    const tabOrdersBtn =
-        document.getElementById('tabOrdersBtn');
-
-    const tabMenuBtn =
-        document.getElementById('tabMenuBtn');
-
-    const ordersSection =
-        document.getElementById('ordersSection');
-
-    const menuSection =
-        document.getElementById('menuSection');
+    const tabOrdersBtn = document.getElementById('tabOrdersBtn');
+    const tabMenuBtn = document.getElementById('tabMenuBtn');
+    const ordersSection = document.getElementById('ordersSection');
+    const menuSection = document.getElementById('menuSection');
 
     if (
         tabOrdersBtn &&
@@ -321,8 +318,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // 8. DATABASE-BACKED ORDER MANAGEMENT
     // ========================================
     async function renderVendorOrders() {
-        const container =
-            document.getElementById('vendorOrdersContainer');
+        const container = document.getElementById('vendorOrdersContainer');
 
         if (!container) {
             return;
@@ -388,11 +384,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function buildOrderCard(order) {
-        const status =
-            order.currentStatus || 'Pending';
+        const status = order.currentStatus || 'Pending';
 
-        const statusColor =
-            getStatusColor(status);
+        const statusColor = getStatusColor(status);
 
         const itemsList = Array.isArray(order.items)
             ? order.items.map(item => `
@@ -506,8 +500,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function getActionButtons(order) {
-        const currentStatus =
-            order.currentStatus || 'Pending';
+        const currentStatus = order.currentStatus || 'Pending';
 
         if (currentStatus === 'Pending') {
             return `
@@ -615,77 +608,68 @@ document.addEventListener('DOMContentLoaded', async function () {
     function attachOrderActionListeners() {
 
         // Standard sequential status transitions
-        document
-            .querySelectorAll('.orderStatusAction')
-            .forEach(button => {
-                button.addEventListener('click', async function () {
-                    const orderId =
-                        Number(this.dataset.id);
+        document.querySelectorAll('.orderStatusAction').forEach(button => {
+            button.addEventListener('click', async function () {
+                const orderId =
+                    Number(this.dataset.id);
 
-                    const newStatus =
-                        this.dataset.status;
+                const newStatus =
+                    this.dataset.status;
 
-                    await submitOrderStatus(
-                        orderId,
-                        newStatus,
-                        `Order moved to ${newStatus}`
-                    );
-                });
+                await submitOrderStatus(
+                    orderId,
+                    newStatus,
+                    `Order moved to ${newStatus}`
+                );
             });
+        });
 
         // Accepted orders move to Preparing with an optional ETA note
-        document
-            .querySelectorAll('.startPreparingBtn')
-            .forEach(button => {
-                button.addEventListener('click', async function () {
-                    const orderId =
-                        Number(this.dataset.id);
+        document.querySelectorAll('.startPreparingBtn').forEach(button => {
+            button.addEventListener('click', async function () {
+                const orderId =
+                    Number(this.dataset.id);
 
-                    const prepTime = prompt(
-                        'Enter the estimated preparation time in minutes:',
-                        '15'
-                    );
+                const prepTime = prompt(
+                    'Enter the estimated preparation time in minutes:',
+                    '15'
+                );
 
-                    if (prepTime === null) {
-                        return;
-                    }
+                if (prepTime === null) {
+                    return;
+                }
 
-                    const trimmedTime = prepTime.trim();
+                const trimmedTime = prepTime.trim();
 
-                    const notes = trimmedTime
-                        ? `Estimated preparation time: ${trimmedTime} minutes`
-                        : 'Order preparation started';
+                const notes = trimmedTime
+                    ? `Estimated preparation time: ${trimmedTime} minutes`
+                    : 'Order preparation started';
 
-                    await submitOrderStatus(
-                        orderId,
-                        'Preparing',
-                        notes
-                    );
-                });
+                await submitOrderStatus(
+                    orderId,
+                    'Preparing',
+                    notes
+                );
             });
+        });
 
         // Rejected orders require a reason and are refunded by Flask
-        document
-            .querySelectorAll('.rejectOrderBtn')
-            .forEach(button => {
-                button.addEventListener('click', async function () {
-                    const orderId =
-                        Number(this.dataset.id);
+        document.querySelectorAll('.rejectOrderBtn').forEach(button => {
+            button.addEventListener('click', async function () {
+                const orderId = Number(this.dataset.id);
+                const rejectionReason = getRejectionReason();
 
-                    const rejectionReason =
-                        getRejectionReason();
+                if (!rejectionReason) {
+                    return;
+                }
 
-                    if (!rejectionReason) {
-                        return;
-                    }
-
-                    await submitOrderStatus(
-                        orderId,
-                        'Rejected',
-                        rejectionReason
-                    );
-                });
+                await submitOrderStatus(
+                    orderId,
+                    'Rejected',
+                    rejectionReason
+                );
             });
+        });
     }
 
     function getRejectionReason() {
@@ -710,8 +694,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             return null;
         }
 
-        const selectedIndex =
-            Number.parseInt(choice, 10) - 1;
+        const selectedIndex = Number.parseInt(choice, 10) - 1;
 
         return reasons[selectedIndex] ||
             'Other or unspecified reason';
@@ -722,10 +705,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         newStatus,
         notes
     ) {
-        const actionButtons =
-            document.querySelectorAll(
-                `[data-id="${orderId}"]`
-            );
+        const actionButtons = document.querySelectorAll(
+            `[data-id="${orderId}"]`
+        );
 
         actionButtons.forEach(button => {
             button.disabled = true;
@@ -818,12 +800,70 @@ document.addEventListener('DOMContentLoaded', async function () {
             .replaceAll("'", '&#039;');
     }
 
+    // Determine whether the vendor is currently open from its SQLite hours.
+    function getVendorOpenStatus(operatingHours) {
+        if (typeof operatingHours !== 'string' || !operatingHours.includes('-')) {
+            return { isOpen: false };
+        }
+
+        try {
+            const [openingTime, closingTime] = operatingHours
+                .split('-')
+                .map(time => time.trim());
+
+            const [openingHour, openingMinute] =
+                openingTime.split(':').map(Number);
+
+            const [closingHour, closingMinute] =
+                closingTime.split(':').map(Number);
+
+            const values = [
+                openingHour,
+                openingMinute,
+                closingHour,
+                closingMinute
+            ];
+
+            if (values.some(value => Number.isNaN(value))) {
+                return { isOpen: false };
+            }
+
+            const now = new Date();
+
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const openingMinutes = openingHour * 60 + openingMinute;
+            const closingMinutes = closingHour * 60 + closingMinute;
+
+            // Support operating periods that continue past midnight.
+            if (closingMinutes < openingMinutes) {
+                return {
+                    isOpen:
+                        currentMinutes >= openingMinutes ||
+                        currentMinutes < closingMinutes
+                };
+            }
+
+            return {
+                isOpen:
+                    currentMinutes >= openingMinutes &&
+                    currentMinutes < closingMinutes
+            };
+
+        } catch (error) {
+            console.error(
+                'Unable to interpret vendor operating hours:',
+                error
+            );
+
+            return { isOpen: false };
+        }
+    }
+
     // ========================================
     // 9. DATABASE-BACKED MENU MANAGEMENT
     // ========================================
     async function renderVendorMenu() {
-        const container =
-            document.getElementById('vendorMenuContainer');
+        const container = document.getElementById('vendorMenuContainer');
 
         if (!container) {
             return;
@@ -831,10 +871,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         // Show a temporary loading message while Flask queries SQLite.
         container.innerHTML = `
-        <div class="vendorGridMessage">
-            <p>Loading vendor menu...</p>
-        </div>
-    `;
+            <div class="vendorGridMessage">
+                <p>Loading vendor menu...</p>
+            </div>
+        `;
 
         try {
             const response = await fetch(
@@ -1003,56 +1043,53 @@ document.addEventListener('DOMContentLoaded', async function () {
         // ========================================
         // TOGGLE MENU-ITEM AVAILABILITY
         // ========================================
-        document
-            .querySelectorAll('.toggleAvailBtn')
-            .forEach(button => {
-                button.addEventListener('click', async function () {
-                    const itemId = Number(this.dataset.id);
-                    const newAvailability =
-                        this.dataset.avail === 'true';
+        document.querySelectorAll('.toggleAvailBtn').forEach(button => {
+            button.addEventListener('click', async function () {
+                const itemId = Number(this.dataset.id);
+                const newAvailability = this.dataset.avail === 'true';
 
-                    this.disabled = true;
+                this.disabled = true;
 
-                    try {
-                        // Persist the availability change through Flask.
-                        const response = await fetch(
-                            `/api/menu-items/${itemId}`,
-                            {
-                                method: 'PATCH',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    vendorId: ACTIVE_VENDOR_ID,
-                                    isAvailable: newAvailability
-                                })
-                            }
-                        );
-
-                        const result = await response.json();
-
-                        if (!response.ok) {
-                            throw new Error(
-                                result.error ||
-                                'Unable to update menu-item availability.'
-                            );
+                try {
+                    // Persist the availability change through Flask.
+                    const response = await fetch(
+                        `/api/menu-items/${itemId}`,
+                        {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                vendorId: ACTIVE_VENDOR_ID,
+                                isAvailable: newAvailability
+                            })
                         }
+                    );
 
-                        // Reload the SQLite-backed menu and warning banner.
-                        await renderVendorMenu();
-                        await checkForActiveMenuItems();
+                    const result = await response.json();
 
-                    } catch (error) {
-                        console.error(
-                            'Unable to update menu-item availability:',
-                            error
+                    if (!response.ok) {
+                        throw new Error(
+                            result.error ||
+                            'Unable to update menu-item availability.'
                         );
-
-                        alert(error.message);
-                        this.disabled = false;
                     }
-                });
+
+                    // Reload the SQLite-backed menu and warning banner.
+                    await renderVendorMenu();
+                    await checkForActiveMenuItems();
+
+                } catch (error) {
+                    console.error(
+                        'Unable to update menu-item availability:',
+                        error
+                    );
+
+                    alert(error.message);
+                    this.disabled = false;
+                }
             });
+        });
 
         // ========================================
         // DEACTIVATE MENU ITEM
@@ -1175,16 +1212,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             event.preventDefault();
 
             // Read and validate the submitted form values.
-            const name =
-                document.getElementById('newItemName').value.trim();
+            const name = document.getElementById('newItemName').value.trim();
 
             const price =
                 Number.parseFloat(
                     document.getElementById('newItemPrice').value
                 );
 
-            const description =
-                document.getElementById('newItemDesc').value.trim();
+            const description = document.getElementById('newItemDesc').value.trim();
 
             if (!name || Number.isNaN(price) || price <= 0) {
                 alert(
@@ -1193,8 +1228,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
 
-            const submitButton =
-                addForm.querySelector('button[type="submit"]');
+            const submitButton = addForm.querySelector('button[type="submit"]');
 
             if (submitButton) {
                 submitButton.disabled = true;
@@ -1255,84 +1289,152 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // ========================================
-    // 11. OPERATING HOURS MANAGEMENT
+    // 11. DATABASE-BACKED OPERATING HOURS
     // ========================================
-
-    function updateStatusBanner() {
-        const isOpen = isVendorOpen(ACTIVE_VENDOR_ID);
-        const statusText = isOpen ? 'Open' : 'Closed';
-
-        const statusBanner = document.querySelector('.vendor-status-banner');
-        if (statusBanner) {
-            statusBanner.innerHTML = `
-                <span>🟢 Your vendor is currently <strong>${statusText}</strong></span>
-            `;
-            statusBanner.style.borderColor = isOpen ? '#2e7d32' : '#c62828';
-            statusBanner.style.color = isOpen ? '#2e7d32' : '#c62828';
-            statusBanner.style.backgroundColor = isOpen ? '#e8f5e9' : '#ffebee';
-        }
-    }
-
     function renderOperatingHours() {
         const hoursContainer = document.getElementById('operatingHoursContainer');
-        if (!hoursContainer) return;
 
-        const currentHours = getVendorHours(ACTIVE_VENDOR_ID);
-        const isOpen = isVendorOpen(ACTIVE_VENDOR_ID);
-        const statusText = isOpen ? '🟢 Open' : '🔴 Closed';
-        const statusColor = isOpen ? '#2e7d32' : '#c62828';
+        if (!hoursContainer) {
+            return;
+        }
+
+        const currentHours = vendorProfile.operatingHours || '08:00 - 20:00';
+        const openStatus = getVendorOpenStatus(currentHours);
+        const statusText = openStatus.isOpen ? '🟢 Open' : '🔴 Closed';
+        const statusColor = openStatus.isOpen ? '#2e7d32' : '#c62828';
 
         hoursContainer.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; padding: 15px 0;">
-                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <label for="vendorHoursInput" style="font-weight: 600;">Operating Hours:</label>
-                    <input type="text" id="vendorHoursInput" value="${currentHours}" 
-                           placeholder="e.g., 07:00 - 20:00" 
-                           style="padding: 8px 12px; border: 1px solid var(--lightGrey); border-radius: 4px; width: 180px;">
-                    <button id="updateHoursBtn" class="secondaryButton" style="padding: 8px 20px;">Update Hours</button>
+            <div style="
+                display:flex;
+                align-items:center;
+                gap:15px;
+                flex-wrap:wrap;
+                padding:15px 0;
+            ">
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    gap:10px;
+                    flex-wrap:wrap;
+                ">
+                    <label
+                        for="vendorHoursInput"
+                        style="font-weight:600;"
+                    >
+                        Operating Hours:
+                    </label>
+
+                    <input
+                        type="text"
+                        id="vendorHoursInput"
+                        value="${escapeHtml(currentHours)}"
+                        placeholder="e.g., 07:00 - 20:00"
+                        style="
+                            padding:8px 12px;
+                            border:1px solid var(--lightGrey);
+                            border-radius:4px;
+                            width:180px;
+                        "
+                    >
+
+                    <button
+                        id="updateHoursBtn"
+                        class="secondaryButton"
+                        style="padding:8px 20px;"
+                    >
+                        Update Hours
+                    </button>
                 </div>
-                <div style="font-size: 1.1rem; font-weight: 600;">
-                    Current Status: <span style="color: ${statusColor};">${statusText}</span>
+
+                <div style="
+                    font-size:1.1rem;
+                    font-weight:600;
+                ">
+                    Current Status:
+                    <span style="color:${statusColor};">
+                        ${statusText}
+                    </span>
                 </div>
             </div>
-            <div style="font-size: 0.85rem; color: var(--grey); margin-top: 5px;">
-                💡 Hours format: <strong>HH:MM - HH:MM</strong> (e.g., 07:00 - 20:00 for 7 AM to 8 PM)
+
+            <div style="
+                font-size:0.85rem;
+                color:var(--grey);
+                margin-top:5px;
+            ">
+                💡 Use 24-hour format:
+                <strong>HH:MM - HH:MM</strong>,
+                such as 07:00 - 20:00.
             </div>
-        `;
+    `;
 
-        const updateBtn = document.getElementById('updateHoursBtn');
-        if (updateBtn) {
-            updateBtn.addEventListener('click', function () {
-                const input = document.getElementById('vendorHoursInput');
-                const newHours = input.value.trim();
+        const updateButton = document.getElementById('updateHoursBtn');
 
-                if (!newHours || !newHours.includes('-')) {
-                    alert('⚠️ Please enter hours in format: HH:MM - HH:MM (e.g., 07:00 - 20:00)');
-                    return;
-                }
-
-                const parts = newHours.split('-').map(s => s.trim());
-                if (parts.length !== 2) {
-                    alert('⚠️ Please enter hours in format: HH:MM - HH:MM');
-                    return;
-                }
-
-                const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
-                if (!timeRegex.test(parts[0]) || !timeRegex.test(parts[1])) {
-                    alert('⚠️ Please use valid time format (HH:MM). Example: 07:00 - 20:00');
-                    return;
-                }
-
-                const success = updateVendorHours(ACTIVE_VENDOR_ID, newHours);
-                if (success) {
-                    alert('✅ Operating hours updated successfully!');
-                    renderOperatingHours();
-                    updateStatusBanner();
-                } else {
-                    alert('❌ Failed to update hours. Please try again.');
-                }
-            });
+        if (!updateButton) {
+            return;
         }
+
+        updateButton.addEventListener('click', async function () {
+            const input = document.getElementById('vendorHoursInput');
+            const newHours = input.value.trim();
+            const hoursPattern = /^([01]\d|2[0-3]):[0-5]\d\s*-\s*([01]\d|2[0-3]):[0-5]\d$/;
+
+            if (!hoursPattern.test(newHours)) {
+                alert(
+                    'Please enter operating hours in the format ' +
+                    'HH:MM - HH:MM.'
+                );
+                return;
+            }
+
+            updateButton.disabled = true;
+            updateButton.textContent = 'Updating...';
+
+            try {
+                // Persist the new operating hours through Flask.
+                const response = await fetch(
+                    `/api/vendors/${ACTIVE_VENDOR_ID}/hours`,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            operatingHours: newHours
+                        })
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error ||
+                        'Unable to update operating hours.'
+                    );
+                }
+
+                // Keep the in-memory vendor profile synchronized with SQLite.
+                vendorProfile.operatingHours =
+                    result.vendor.operatingHours;
+
+                alert('✅ Operating hours updated successfully.');
+
+                renderOperatingHours();
+                renderStatusBanner();
+
+            } catch (error) {
+                console.error(
+                    'Unable to update operating hours:',
+                    error
+                );
+
+                alert(error.message);
+
+                updateButton.disabled = false;
+                updateButton.textContent = 'Update Hours';
+            }
+        });
     }
 
     // ========================================
