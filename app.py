@@ -914,6 +914,168 @@ def add_admin_student_funds(student_id):
     finally:
         connection.close()
 
+# Admin-facing operational reports endpoint
+@app.route("/api/admin/reports")
+def get_admin_reports():
+    """Return operational reporting data from SQLite."""
+
+    connection = get_db_connection()
+
+    try:
+        # --------------------------------------------------
+        # OVERALL ORDER SUMMARY
+        # --------------------------------------------------
+        summary = connection.execute(
+            """
+            SELECT
+                COUNT(*) AS TotalOrders,
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN CurrentStatus != 'Rejected'
+                            THEN OrderTotal
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS TotalRevenue,
+                COALESCE(
+                    AVG(
+                        CASE
+                            WHEN CurrentStatus != 'Rejected'
+                            THEN OrderTotal
+                        END
+                    ),
+                    0
+                ) AS AverageOrderValue
+            FROM FoodOrder
+            """
+        ).fetchone()
+
+        # --------------------------------------------------
+        # VENDOR ORDER VOLUME AND PERFORMANCE
+        # --------------------------------------------------
+        vendor_rows = connection.execute(
+            """
+            SELECT
+                Vendor.VendorID,
+                Vendor.VendorName,
+                COUNT(FoodOrder.OrderID) AS OrderCount,
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN FoodOrder.CurrentStatus != 'Rejected'
+                            THEN FoodOrder.OrderTotal
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS TotalRevenue,
+                COALESCE(
+                    AVG(
+                        CASE
+                            WHEN FoodOrder.CurrentStatus != 'Rejected'
+                            THEN FoodOrder.OrderTotal
+                        END
+                    ),
+                    0
+                ) AS AverageOrderValue
+            FROM Vendor
+            LEFT JOIN FoodOrder
+                ON FoodOrder.VendorID = Vendor.VendorID
+            GROUP BY
+                Vendor.VendorID,
+                Vendor.VendorName
+            ORDER BY
+                OrderCount DESC,
+                Vendor.VendorName
+            """
+        ).fetchall()
+
+        # --------------------------------------------------
+        # TOP-SELLING MENU ITEMS
+        # Rejected orders are excluded because they were refunded.
+        # --------------------------------------------------
+        item_rows = connection.execute(
+            """
+            SELECT
+                MenuItem.MenuItemID,
+                MenuItem.ItemName,
+                SUM(OrderItem.Quantity) AS QuantitySold,
+                SUM(OrderItem.ItemTotal) AS TotalRevenue
+            FROM OrderItem
+            JOIN FoodOrder
+                ON FoodOrder.OrderID = OrderItem.OrderID
+            JOIN MenuItem
+                ON MenuItem.MenuItemID = OrderItem.MenuItemID
+            WHERE FoodOrder.CurrentStatus != 'Rejected'
+            GROUP BY
+                MenuItem.MenuItemID,
+                MenuItem.ItemName
+            ORDER BY
+                QuantitySold DESC,
+                TotalRevenue DESC,
+                MenuItem.ItemName
+            """
+        ).fetchall()
+
+        # --------------------------------------------------
+        # HOURLY ORDER DISTRIBUTION
+        # SQLite returns the hour as 00 through 23.
+        # --------------------------------------------------
+        hourly_rows = connection.execute(
+            """
+            SELECT
+                CAST(strftime('%H', OrderDate) AS INTEGER) AS OrderHour,
+                COUNT(*) AS OrderCount
+            FROM FoodOrder
+            GROUP BY strftime('%H', OrderDate)
+            ORDER BY OrderHour
+            """
+        ).fetchall()
+
+        return jsonify({
+            "summary": {
+                "totalOrders": summary["TotalOrders"],
+                "totalRevenue": float(summary["TotalRevenue"]),
+                "averageOrderValue": float(
+                    summary["AverageOrderValue"]
+                ),
+            },
+            "vendorPerformance": [
+                {
+                    "vendorId": row["VendorID"],
+                    "vendorName": row["VendorName"],
+                    "orderCount": row["OrderCount"],
+                    "totalRevenue": float(row["TotalRevenue"]),
+                    "averageOrderValue": float(
+                        row["AverageOrderValue"]
+                    ),
+                }
+                for row in vendor_rows
+            ],
+            "buyingTrends": [
+                {
+                    "itemId": row["MenuItemID"],
+                    "itemName": row["ItemName"],
+                    "quantitySold": row["QuantitySold"],
+                    "totalRevenue": float(row["TotalRevenue"]),
+                }
+                for row in item_rows
+            ],
+            "peakHours": [
+                {
+                    "hour": row["OrderHour"],
+                    "orderCount": row["OrderCount"],
+                }
+                for row in hourly_rows
+            ],
+        })
+
+    finally:
+        connection.close()
+
+
 # Vendor-facing menu retrieval endpoint
 @app.route("/api/vendors/<int:vendor_id>/menu")
 def get_vendor_menu(vendor_id):
@@ -1009,6 +1171,7 @@ def get_vendor_menu(vendor_id):
         connection.close()
 
 
+# Vendor menu item creation endpoint
 @app.route("/api/vendors/<int:vendor_id>/menu", methods=["POST"])
 def create_vendor_menu_item(vendor_id):
     """Create a new menu item for one vendor in SQLite."""
@@ -1121,6 +1284,8 @@ def create_vendor_menu_item(vendor_id):
     finally:
         connection.close()
 
+
+# Menu item update endpoint
 @app.route("/api/menu-items/<int:menu_item_id>", methods=["PATCH"])
 def update_menu_item(menu_item_id):
     """Update availability or active status for one menu item."""
@@ -1242,6 +1407,8 @@ def update_menu_item(menu_item_id):
     finally:
         connection.close()
 
+
+# Vendor operating hours update endpoint
 @app.route("/api/vendors/<int:vendor_id>/hours", methods=["PATCH"])
 def update_vendor_hours(vendor_id):
     """Update one vendor's operating hours in SQLite."""
@@ -1342,6 +1509,7 @@ def update_vendor_hours(vendor_id):
         connection.close()
 
 
+# Student order creation endpoint
 @app.route("/api/orders", methods=["POST"])
 def create_order():
     """Validate and create a student order in SQLite."""

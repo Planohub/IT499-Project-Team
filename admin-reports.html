@@ -10,25 +10,25 @@
 
 <body>
     <nav class="navigationBar">
-    <div class="navigationContainer">
-        <div class="navigationBrand">
-            <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
-            <img src="CFL-Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
-            <span>CampusFoodLink+</span>
-            </a>
-        </div>
-        <div class="navigationLinks">
-            <a href="admin-dashboard.html">Dashboard</a>
-            <a href="admin-reports.html" class="active">Reports</a>
-            <a href="admin-vendors.html">Vendors</a>
-            <a href="admin-students.html">Students</a>
-            <a href="index.html">Logout</a>
-        </div>
-        <div class="navigationUser">
+        <div class="navigationContainer">
+            <div class="navigationBrand">
+                <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="CFL-Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
+                    <span>CampusFoodLink+</span>
+                </a>
+            </div>
+            <div class="navigationLinks">
+                <a href="admin-dashboard.html">Dashboard</a>
+                <a href="admin-reports.html" class="active">Reports</a>
+                <a href="admin-vendors.html">Vendors</a>
+                <a href="admin-students.html">Students</a>
+                <a href="index.html">Logout</a>
+            </div>
+            <div class="navigationUser">
                 <span class="userBadge">📊 Admin</span>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
     <div class="vendorSelectionContainer">
         <div class="pageHeader">
@@ -39,42 +39,45 @@
         <div class="vendorGrid" style="margin-bottom: 25px;">
             <div class="vendorBox" style="min-height: 120px; padding: 20px;">
                 <h4>Total Revenue</h4>
-                <p id="totalRevenue" style="font-size: 1.8rem; font-weight: 700; color: var(--black); margin-top: 5px;">$0.00</p>
+                <p id="totalRevenue" style="font-size: 1.8rem; font-weight: 700; color: var(--black); margin-top: 5px;">
+                    $0.00</p>
             </div>
             <div class="vendorBox" style="min-height: 120px; padding: 20px;">
                 <h4>Total Orders</h4>
-                <p id="totalOrders" style="font-size: 1.8rem; font-weight: 700; color: var(--black); margin-top: 5px;">0</p>
+                <p id="totalOrders" style="font-size: 1.8rem; font-weight: 700; color: var(--black); margin-top: 5px;">0
+                </p>
             </div>
             <div class="vendorBox" style="min-height: 120px; padding: 20px;">
                 <h4>Avg Order Value</h4>
-                <p id="avgOrderValue" style="font-size: 1.8rem; font-weight: 700; color: var(--black); margin-top: 5px;">$0.00</p>
+                <p id="avgOrderValue"
+                    style="font-size: 1.8rem; font-weight: 700; color: var(--black); margin-top: 5px;">$0.00</p>
             </div>
         </div>
 
         <div class="orderDetailsBox" style="margin-bottom: 25px;">
             <h3>Vendor Order Volume & Performance</h3>
             <div id="vendorPerformanceContainer" style="margin-top: 15px; overflow-x: auto;">
-                </div>
+            </div>
         </div>
 
         <div class="orderDetailsBox" style="margin-bottom: 25px;">
             <h3>Buying Trends: Top Selling Menu Items</h3>
             <div id="buyingTrendsContainer" style="margin-top: 15px; overflow-x: auto;">
-                </div>
+            </div>
         </div>
 
         <div class="orderDetailsBox" style="margin-bottom: 25px;">
             <h3>Peak-Demand Periods (Hourly Order Distribution)</h3>
             <div id="peakHoursContainer" style="margin-top: 15px; overflow-x: auto;">
-                </div>
+            </div>
         </div>
     </div>
 
-    <script src="storage.js"></script>
     <script src="admin-reports.js"></script>
 
-    <footer style="background-color:#f1f1f1; text-align:center; padding:10px; font-size:14px; color:#555; border-top:1px solid #ccc;">
-    <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 0.7.6</span>
+    <footer
+        style="background-color:#f1f1f1; text-align:center; padding:10px; font-size:14px; color:#555; border-top:1px solid #ccc;">
+        <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 0.7.6</span>
     </footer>
 </body>
 

@@ -1,232 +1,404 @@
 /**
- * CampusFoodLink+ — Operational Reports Engine (admin-reports.js)
- * Generates reporting metrics for Dining Services administrators based on order history.
+ * CampusFoodLink+ — Operational Reports Engine
+ * Loads reporting metrics from Flask and SQLite.
  */
 
-document.addEventListener('DOMContentLoaded', function () {
-    // 🔥 Get REAL orders from localStorage
-    const orders = getOrdersHistory();
-
-    console.log('📊 Admin Reports — Orders loaded:', orders);
-
-    // Render all operational report modules
-    renderPurchasesSummary(orders);
-    renderVendorPerformance(orders);
-    renderBuyingTrends(orders);
-    renderPeakHours(orders);
+document.addEventListener('DOMContentLoaded', async function () {
+    await loadOperationalReports();
 });
 
+async function loadOperationalReports() {
+    showLoadingMessages();
+
+    try {
+        const response = await fetch('/api/admin/reports');
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error ||
+                'Unable to load operational reports.'
+            );
+        }
+
+        renderPurchasesSummary(result.summary || {});
+        renderVendorPerformance(
+            Array.isArray(result.vendorPerformance)
+                ? result.vendorPerformance
+                : []
+        );
+        renderBuyingTrends(
+            Array.isArray(result.buyingTrends)
+                ? result.buyingTrends
+                : []
+        );
+        renderPeakHours(
+            Array.isArray(result.peakHours)
+                ? result.peakHours
+                : []
+        );
+
+        console.log(
+            '✅ Operational reports loaded from SQLite'
+        );
+
+    } catch (error) {
+        console.error(
+            'Unable to load operational reports:',
+            error
+        );
+
+        showReportError();
+    }
+}
+
+function showLoadingMessages() {
+    const containers = [
+        'vendorPerformanceContainer',
+        'buyingTrendsContainer',
+        'peakHoursContainer'
+    ];
+
+    containers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+
+        if (container) {
+            container.innerHTML = `
+                <div class="vendorGridMessage">
+                    <p>Loading report data...</p>
+                </div>
+            `;
+        }
+    });
+}
+
+function showReportError() {
+    const containers = [
+        'vendorPerformanceContainer',
+        'buyingTrendsContainer',
+        'peakHoursContainer'
+    ];
+
+    containers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+
+        if (container) {
+            container.innerHTML = `
+                <div class="vendorGridMessage vendorGridError">
+                    <p>Unable to load report data.</p>
+                    <p>Please refresh the page or try again later.</p>
+                </div>
+            `;
+        }
+    });
+}
+
 /**
- * 1. PURCHASES SUMMARY (Total Sales, Order Volume, Average Order Value)
+ * 1. PURCHASES SUMMARY
  */
-function renderPurchasesSummary(orders) {
+function renderPurchasesSummary(summary) {
     const totalOrdersElem = document.getElementById('totalOrders');
     const totalRevenueElem = document.getElementById('totalRevenue');
     const avgOrderValueElem = document.getElementById('avgOrderValue');
+    const totalOrders = Number(summary.totalOrders || 0);
+    const totalRevenue = Number(summary.totalRevenue || 0);
+    const averageOrderValue = Number(summary.averageOrderValue || 0);
 
-    const totalOrdersCount = orders.length;
-    const totalRevenueSum = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const avgValue = totalOrdersCount > 0 ? totalRevenueSum / totalOrdersCount : 0;
+    if (totalOrdersElem) {
+        totalOrdersElem.textContent = totalOrders;
+    }
 
-    if (totalOrdersElem) totalOrdersElem.textContent = totalOrdersCount;
-    if (totalRevenueElem) totalRevenueElem.textContent = `$${totalRevenueSum.toFixed(2)}`;
-    if (avgOrderValueElem) avgOrderValueElem.textContent = `$${avgValue.toFixed(2)}`;
+    if (totalRevenueElem) {
+        totalRevenueElem.textContent =
+            `$${totalRevenue.toFixed(2)}`;
+    }
+
+    if (avgOrderValueElem) {
+        avgOrderValueElem.textContent =
+            `$${averageOrderValue.toFixed(2)}`;
+    }
 }
 
 /**
- * 2. VENDOR ORDER VOLUME & PERFORMANCE
+ * 2. VENDOR ORDER VOLUME AND PERFORMANCE
  */
-function renderVendorPerformance(orders) {
+function renderVendorPerformance(vendors) {
     const container = document.getElementById('vendorPerformanceContainer');
-    if (!container) return;
 
-    if (orders.length === 0) {
-        container.innerHTML = '<p style="color: var(--grey);">No vendor transaction data available.</p>';
+    if (!container) {
         return;
     }
 
-    const vendorStats = {};
+    if (vendors.length === 0) {
+        container.innerHTML = `
+            <p style="color:var(--grey);">
+                No vendor performance data available.
+            </p>
+        `;
+        return;
+    }
 
-    orders.forEach(order => {
-        const vendor = order.vendorName || 'Unknown Vendor';
-        if (!vendorStats[vendor]) {
-            vendorStats[vendor] = { orderCount: 0, totalSales: 0 };
-        }
-        vendorStats[vendor].orderCount += 1;
-        vendorStats[vendor].totalSales += (order.total || 0);
-    });
-
-    let tableHTML = `
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    let html = `
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            text-align:left;
+        ">
             <thead>
-                <tr style="border-bottom: 2px solid var(--black);">
-                    <th style="padding: 10px;">Vendor Name</th>
-                    <th style="padding: 10px;">Order Volume</th>
-                    <th style="padding: 10px;">Total Revenue</th>
-                    <th style="padding: 10px;">Avg Sale / Order</th>
+                <tr style="
+                    border-bottom:2px solid var(--black);
+                ">
+                    <th style="padding:10px;">
+                        Vendor Name
+                    </th>
+                    <th style="padding:10px;">
+                        Order Volume
+                    </th>
+                    <th style="padding:10px;">
+                        Total Revenue
+                    </th>
+                    <th style="padding:10px;">
+                        Avg Sale / Order
+                    </th>
                 </tr>
             </thead>
             <tbody>
     `;
 
-    for (const [vendorName, stats] of Object.entries(vendorStats)) {
-        const avgVendorSale = stats.orderCount > 0 ? stats.totalSales / stats.orderCount : 0;
-        tableHTML += `
-            <tr style="border-bottom: 1px solid var(--lightGrey);">
-                <td style="padding: 12px 10px; font-weight: 600;">${vendorName}</td>
-                <td style="padding: 12px 10px;">${stats.orderCount} orders</td>
-                <td style="padding: 12px 10px;">$${stats.totalSales.toFixed(2)}</td>
-                <td style="padding: 12px 10px;">$${avgVendorSale.toFixed(2)}</td>
+    vendors.forEach(vendor => {
+        html += `
+            <tr style="
+                border-bottom:1px solid var(--lightGrey);
+            ">
+                <td style="
+                    padding:12px 10px;
+                    font-weight:600;
+                ">
+                    ${escapeHtml(vendor.vendorName)}
+                </td>
+
+                <td style="padding:12px 10px;">
+                    ${Number(vendor.orderCount)} orders
+                </td>
+
+                <td style="padding:12px 10px;">
+                    $${Number(
+            vendor.totalRevenue
+        ).toFixed(2)}
+                </td>
+
+                <td style="padding:12px 10px;">
+                    $${Number(
+            vendor.averageOrderValue
+        ).toFixed(2)}
+                </td>
             </tr>
         `;
-    }
+    });
 
-    tableHTML += '</tbody></table>';
-    container.innerHTML = tableHTML;
+    html += `
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = html;
 }
 
 /**
- * 3. BUYING TRENDS (Top Menu Items)
+ * 3. BUYING TRENDS
  */
-function renderBuyingTrends(orders) {
+function renderBuyingTrends(items) {
     const container = document.getElementById('buyingTrendsContainer');
-    if (!container) return;
 
-    if (orders.length === 0) {
-        container.innerHTML = '<p style="color: var(--grey);">No item sales data available.</p>';
+    if (!container) {
         return;
     }
 
-    const itemStats = {};
-
-    orders.forEach(order => {
-        if (Array.isArray(order.items)) {
-            order.items.forEach(item => {
-                const itemName = item.name || item.item || 'Unknown Item';
-                const qty = item.quantity || 1;
-                const revenue = item.total || (item.price * qty) || 0;
-
-                if (!itemStats[itemName]) {
-                    itemStats[itemName] = { quantitySold: 0, totalRevenue: 0 };
-                }
-                itemStats[itemName].quantitySold += qty;
-                itemStats[itemName].totalRevenue += revenue;
-            });
-        }
-    });
-
-    // Sort items by units sold descending
-    const sortedItems = Object.entries(itemStats).sort((a, b) => b[1].quantitySold - a[1].quantitySold);
-
-    if (sortedItems.length === 0) {
-        container.innerHTML = '<p style="color: var(--grey);">No item sales data available.</p>';
+    if (items.length === 0) {
+        container.innerHTML = `
+            <p style="color:var(--grey);">
+                No item sales data available.
+            </p>
+        `;
         return;
     }
 
-    let tableHTML = `
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    let html = `
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            text-align:left;
+        ">
             <thead>
-                <tr style="border-bottom: 2px solid var(--black);">
-                    <th style="padding: 10px;">Menu Item</th>
-                    <th style="padding: 10px;">Units Sold</th>
-                    <th style="padding: 10px;">Total Revenue</th>
+                <tr style="
+                    border-bottom:2px solid var(--black);
+                ">
+                    <th style="padding:10px;">
+                        Menu Item
+                    </th>
+                    <th style="padding:10px;">
+                        Units Sold
+                    </th>
+                    <th style="padding:10px;">
+                        Total Revenue
+                    </th>
                 </tr>
             </thead>
             <tbody>
     `;
 
-    sortedItems.forEach(([itemName, stats]) => {
-        tableHTML += `
-            <tr style="border-bottom: 1px solid var(--lightGrey);">
-                <td style="padding: 12px 10px; font-weight: 600;">${itemName}</td>
-                <td style="padding: 12px 10px;">${stats.quantitySold} units</td>
-                <td style="padding: 12px 10px;">$${stats.totalRevenue.toFixed(2)}</td>
+    items.forEach(item => {
+        html += `
+            <tr style="
+                border-bottom:1px solid var(--lightGrey);
+            ">
+                <td style="
+                    padding:12px 10px;
+                    font-weight:600;
+                ">
+                    ${escapeHtml(item.itemName)}
+                </td>
+
+                <td style="padding:12px 10px;">
+                    ${Number(item.quantitySold)} units
+                </td>
+
+                <td style="padding:12px 10px;">
+                    $${Number(
+            item.totalRevenue
+        ).toFixed(2)}
+                </td>
             </tr>
         `;
     });
 
-    tableHTML += '</tbody></table>';
-    container.innerHTML = tableHTML;
+    html += `
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = html;
 }
 
 /**
- * 4. PEAK-DEMAND PERIODS (Orders Grouped by Hour of Day)
+ * 4. PEAK-DEMAND PERIODS
  */
-function renderPeakHours(orders) {
+function renderPeakHours(hours) {
     const container = document.getElementById('peakHoursContainer');
-    if (!container) return;
 
-    if (orders.length === 0) {
-        container.innerHTML = '<p style="color: var(--grey);">No time-series data available.</p>';
+    if (!container) {
         return;
     }
 
-    // Initialize 24-hour slots
-    const hourCounts = {};
-
-    orders.forEach(order => {
-        let orderTime;
-
-        // Try to parse the order date in different formats
-        if (order.timestamp) {
-            orderTime = new Date(order.timestamp);
-        } else if (order.orderDate) {
-            orderTime = new Date(order.orderDate);
-        } else {
-            orderTime = new Date();
-        }
-
-        const hour = isNaN(orderTime.getTime()) ? new Date().getHours() : orderTime.getHours();
-
-        // Format 12-hour display string (e.g., "12:00 PM - 1:00 PM")
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
-        const timeSlot = `${formattedHour}:00 ${ampm}`;
-
-        hourCounts[timeSlot] = (hourCounts[timeSlot] || 0) + 1;
-    });
-
-    // Sort by hour (chronological)
-    const sortedHours = Object.entries(hourCounts).sort((a, b) => {
-        const hourA = parseInt(a[0].split(':')[0]);
-        const hourB = parseInt(b[0].split(':')[0]);
-        return hourA - hourB;
-    });
-
-    if (sortedHours.length === 0) {
-        container.innerHTML = '<p style="color: var(--grey);">No time-series data available.</p>';
+    if (hours.length === 0) {
+        container.innerHTML = `
+            <p style="color:var(--grey);">
+                No time-series data available.
+            </p>
+        `;
         return;
     }
 
-    let tableHTML = `
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    let html = `
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            text-align:left;
+        ">
             <thead>
-                <tr style="border-bottom: 2px solid var(--black);">
-                    <th style="padding: 10px;">Time Slot</th>
-                    <th style="padding: 10px;">Order Volume</th>
-                    <th style="padding: 10px;">Demand Indicator</th>
+                <tr style="
+                    border-bottom:2px solid var(--black);
+                ">
+                    <th style="padding:10px;">
+                        Time Slot
+                    </th>
+                    <th style="padding:10px;">
+                        Order Volume
+                    </th>
+                    <th style="padding:10px;">
+                        Demand Indicator
+                    </th>
                 </tr>
             </thead>
             <tbody>
     `;
 
-    for (const [timeSlot, count] of sortedHours) {
+    hours.forEach(hourRecord => {
+        const hour = Number(hourRecord.hour);
+        const count = Number(hourRecord.orderCount);
+        const timeSlot = formatHourSlot(hour);
+
         let indicator = '🟢 Normal';
+
         if (count >= 5) {
             indicator = '🔴 Peak Demand';
         } else if (count >= 3) {
             indicator = '🟡 Moderate Demand';
         }
 
-        tableHTML += `
-            <tr style="border-bottom: 1px solid var(--lightGrey);">
-                <td style="padding: 12px 10px; font-weight: 600;">${timeSlot}</td>
-                <td style="padding: 12px 10px;">${count} order(s)</td>
-                <td style="padding: 12px 10px;">${indicator}</td>
+        html += `
+            <tr style="
+                border-bottom:1px solid var(--lightGrey);
+            ">
+                <td style="
+                    padding:12px 10px;
+                    font-weight:600;
+                ">
+                    ${timeSlot}
+                </td>
+
+                <td style="padding:12px 10px;">
+                    ${count} order(s)
+                </td>
+
+                <td style="padding:12px 10px;">
+                    ${indicator}
+                </td>
             </tr>
         `;
-    }
+    });
 
-    tableHTML += '</tbody></table>';
-    container.innerHTML = tableHTML;
+    html += `
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = html;
+}
+
+function formatHourSlot(hour) {
+    const normalizedHour =
+        Number.isInteger(hour) &&
+            hour >= 0 &&
+            hour <= 23
+            ? hour
+            : 0;
+
+    const nextHour = (normalizedHour + 1) % 24;
+
+    return (
+        `${formatHour(normalizedHour)} - ` +
+        `${formatHour(nextHour)}`
+    );
+}
+
+function formatHour(hour) {
+    const period =
+        hour >= 12 ? 'PM' : 'AM';
+
+    const displayHour =
+        hour % 12 === 0
+            ? 12
+            : hour % 12;
+
+    return `${displayHour}:00 ${period}`;
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }
