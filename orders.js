@@ -20,11 +20,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Update header badge with the active student
     const studentBadge = document.getElementById('studentHeaderBadge');
 
-    if (studentBadge) {
-        studentBadge.textContent =
-            `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
-    }
-
     // ========================================
     // 2. UPDATE CART COUNT
     // ========================================
@@ -32,6 +27,43 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     if (cartLink) {
         cartLink.textContent = `Cart (${getCartCount()})`;
+    }
+
+    const mealPlanBalanceElement = document.getElementById('mealPlanBalance');
+
+    try {
+        const profileResponse = await fetch(
+            `/api/students/${studentId}/profile`
+        );
+
+        const student = await profileResponse.json();
+
+        if (!profileResponse.ok) {
+            throw new Error(
+                student.error ||
+                'Unable to load the student profile.'
+            );
+        }
+
+        if (studentBadge) {
+            studentBadge.textContent = `🎓 ${student.firstName} ${student.lastName}`;
+        }
+
+        if (mealPlanBalanceElement) {
+            mealPlanBalanceElement.textContent = `$${Number(student.balance).toFixed(2)}`;
+        }
+
+        setActiveStudentSession(student);
+
+    } catch (error) {
+        console.error(
+            'Unable to load student profile:',
+            error
+        );
+
+        alert(error.message);
+        window.location.href = 'login.html?role=student';
+        return;
     }
 
     // ========================================
