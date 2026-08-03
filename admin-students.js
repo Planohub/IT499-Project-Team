@@ -5,97 +5,282 @@
 
 let selectedStudentId = null;
 
-document.addEventListener('DOMContentLoaded', function () {
-    renderStudentDirectory();
+document.addEventListener('DOMContentLoaded', async function () {
+    await renderStudentDirectory();
 
-    const addStudentForm = document.getElementById('addStudentForm');
+    // ========================================
+    // ADD STUDENT THROUGH FLASK
+    // ========================================
+    const addStudentForm =
+        document.getElementById('addStudentForm');
+
     if (addStudentForm) {
-        addStudentForm.addEventListener('submit', function (e) {
-            e.preventDefault();
+        addStudentForm.addEventListener(
+            'submit',
+            async function (event) {
+                event.preventDefault();
 
-            const firstName = document.getElementById('studentFirstName').value.trim();
-            const lastName = document.getElementById('studentLastName').value.trim();
-            const email = document.getElementById('studentEmail').value.trim();
+                const firstName = document.getElementById('studentFirstName').value.trim();
+                const lastName = document.getElementById('studentLastName').value.trim();
+                const email = document.getElementById('studentEmail').value.trim();
 
-            if (!firstName || !lastName || !email) {
-                alert('Please fill in all fields.');
-                return;
+                if (!firstName || !lastName || !email) {
+                    alert('Please fill in all fields.');
+                    return;
+                }
+
+                const submitButton =
+                    addStudentForm.querySelector(
+                        'button[type="submit"]'
+                    );
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Adding...';
+                }
+
+                try {
+                    const response = await fetch(
+                        '/api/admin/students',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                firstName: firstName,
+                                lastName: lastName,
+                                email: email
+                            })
+                        }
+                    );
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(
+                            result.error ||
+                            'Unable to create the student account.'
+                        );
+                    }
+
+                    addStudentForm.reset();
+
+                    alert(
+                        `✅ Student "${result.student.firstName} ` +
+                        `${result.student.lastName}" created successfully.`
+                    );
+
+                    await renderStudentDirectory();
+
+                } catch (error) {
+                    console.error(
+                        'Unable to create student:',
+                        error
+                    );
+
+                    alert(error.message);
+
+                } finally {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent =
+                            '➕ Add Student Account';
+                    }
+                }
             }
-
-            const success = addStudent({
-                firstName: firstName,
-                lastName: lastName,
-                email: email
-            });
-
-            if (success) {
-                addStudentForm.reset();
-                alert(`✅ Student "${firstName} ${lastName}" created successfully!`);
-                renderStudentDirectory();
-            } else {
-                alert('❌ Failed to create student. Please try again.');
-            }
-        });
+        );
     }
 });
 
-function renderStudentDirectory() {
+async function renderStudentDirectory() {
     const container = document.getElementById('studentDirectoryContainer');
-    if (!container) return;
 
-    const students = getStudents();
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="vendorGridMessage">
+            <p>Loading student accounts...</p>
+        </div>
+    `;
+
+    let students = [];
+
+    try {
+        const response = await fetch('/api/admin/students');
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error ||
+                'Unable to load student accounts.'
+            );
+        }
+
+        students = Array.isArray(result)
+            ? result
+            : [];
+
+    } catch (error) {
+        console.error(
+            'Unable to load administrator student data:',
+            error
+        );
+
+        container.innerHTML = `
+            <div class="vendorGridMessage vendorGridError">
+                <p>Unable to load student accounts.</p>
+                <p>Please refresh the page or try again later.</p>
+            </div>
+        `;
+
+        return;
+    }
 
     if (students.length === 0) {
-        container.innerHTML = '<p style="color: var(--grey);">No students registered in the system.</p>';
+        container.innerHTML = `
+            <p style="color:var(--grey);">
+                No students registered in the system.
+            </p>
+        `;
         return;
     }
 
     let html = `
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            text-align:left;
+        ">
             <thead>
-                <tr style="border-bottom: 2px solid var(--black);">
-                    <th style="padding: 10px;">ID</th>
-                    <th style="padding: 10px;">Name</th>
-                    <th style="padding: 10px;">Email</th>
-                    <th style="padding: 10px;">Balance</th>
-                    <th style="padding: 10px;">Status</th>
-                    <th style="padding: 10px;">Actions</th>
+                <tr style="border-bottom:2px solid var(--black);">
+                    <th style="padding:10px;">ID</th>
+                    <th style="padding:10px;">Name</th>
+                    <th style="padding:10px;">Email</th>
+                    <th style="padding:10px;">Balance</th>
+                    <th style="padding:10px;">Status</th>
+                    <th style="padding:10px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
-    students.forEach(s => {
-        const balance = getStudentBalance(s.userID);
-        const isActive = s.accountStatus !== 'Suspended';
-        const statusBadge = isActive
-            ? '<span class="userBadge" style="background: #e6fffa; color: #007a5a; border-color: #007a5a;">🟢 Active</span>'
-            : '<span class="userBadge" style="background: #ffe6e6; color: #cc0000; border-color: #cc0000;">🔴 Suspended</span>';
+    students.forEach(student => {
+        const statusBadge = student.isActive
+            ? `
+                <span
+                    class="userBadge"
+                    style="
+                        background:#e6fffa;
+                        color:#007a5a;
+                        border-color:#007a5a;
+                    "
+                >
+                    🟢 Active
+                </span>
+            `
+            : `
+                <span
+                    class="userBadge"
+                    style="
+                        background:#ffe6e6;
+                        color:#cc0000;
+                        border-color:#cc0000;
+                    "
+                >
+                    🔴 Inactive
+                </span>
+            `;
 
-        const actionButton = isActive
-            ? `<button class="secondaryButton suspendStudentBtn" data-id="${s.userID}" data-name="${s.firstName} ${s.lastName}" style="padding: 4px 12px; color: #cc0000; border-color: #cc0000; font-size: 0.85rem;">Suspend</button>`
-            : `<button class="secondaryButton activateStudentBtn" data-id="${s.userID}" data-name="${s.firstName} ${s.lastName}" style="padding: 4px 12px; font-size: 0.85rem;">Activate</button>`;
+        const actionButton = student.isActive
+            ? `
+                <button
+                    class="secondaryButton suspendStudentBtn"
+                    data-id="${student.id}"
+                    data-name="${escapeHtml(
+                `${student.firstName} ${student.lastName}`
+            )}"
+                    style="
+                        padding:4px 12px;
+                        color:#cc0000;
+                        border-color:#cc0000;
+                        font-size:0.85rem;
+                    "
+                >
+                    Deactivate
+                </button>
+            `
+            : `
+                <button
+                    class="secondaryButton activateStudentBtn"
+                    data-id="${student.id}"
+                    data-name="${escapeHtml(
+                `${student.firstName} ${student.lastName}`
+            )}"
+                    style="
+                        padding:4px 12px;
+                        font-size:0.85rem;
+                    "
+                >
+                    Activate
+                </button>
+            `;
 
         html += `
-            <tr style="border-bottom: 1px solid var(--lightGrey); cursor: pointer;" class="student-row" data-id="${s.userID}">
-                <td style="padding: 12px 10px; font-weight: 600;">#${s.userID}</td>
-                <td style="padding: 12px 10px; font-weight: 600;">${s.firstName} ${s.lastName}</td>
-                <td style="padding: 12px 10px; color: var(--grey);">${s.email}</td>
-                <td style="padding: 12px 10px; font-weight: 600;">$${balance.toFixed(2)}</td>
-                <td style="padding: 12px 10px;">${statusBadge}</td>
-                <td style="padding: 12px 10px;">${actionButton}</td>
+            <tr
+                class="student-row"
+                data-id="${student.id}"
+                style="
+                    border-bottom:1px solid var(--lightGrey);
+                    cursor:pointer;
+                "
+            >
+                <td style="padding:12px 10px; font-weight:600;">
+                    #${student.id}
+                </td>
+
+                <td style="padding:12px 10px; font-weight:600;">
+                    ${escapeHtml(student.firstName)}
+                    ${escapeHtml(student.lastName)}
+                </td>
+
+                <td style="padding:12px 10px; color:var(--grey);">
+                    ${escapeHtml(student.email)}
+                </td>
+
+                <td style="padding:12px 10px; font-weight:600;">
+                    $${Number(student.balance).toFixed(2)}
+                </td>
+
+                <td style="padding:12px 10px;">
+                    ${statusBadge}
+                </td>
+
+                <td style="padding:12px 10px;">
+                    ${actionButton}
+                </td>
             </tr>
         `;
     });
 
-    html += '</tbody></table>';
+    html += `
+            </tbody>
+        </table>
+    `;
+
     container.innerHTML = html;
 
     document.querySelectorAll('.student-row').forEach(row => {
         row.addEventListener('click', function () {
-            const studentId = Number(this.dataset.id);
-            selectedStudentId = studentId;
-            renderStudentDetails(studentId);
+            selectedStudentId = Number(this.dataset.id);
+
+            /*
+             * Student details are still prototype-backed for now.
+             * They will be migrated after the directory is verified.
+             */
+            renderStudentDetails(selectedStudentId);
         });
     });
 
@@ -119,7 +304,7 @@ function renderStudentDetails(studentId) {
     }
 
     const balance = getStudentBalance(studentId);
-    const isActive = student.accountStatus !== 'Suspended';
+    const isActive = student.accountStatus === 'Active';
 
     // Build complete transaction history
     const orders = getOrdersHistory();
@@ -171,8 +356,15 @@ function renderStudentDetails(studentId) {
 
         if (log.transactionType === 'Adjustment' && log.amount > 0) {
             typeDisplay = '💰 Fund Added';
-        } else if (log.transactionType === 'Adjustment' && log.amount === 0 && notes.toLowerCase().includes('suspend')) {
-            typeDisplay = '🔴 Suspended';
+        } else if (
+            log.transactionType === 'Adjustment' &&
+            log.amount === 0 &&
+            (
+                notes.toLowerCase().includes('inactive') ||
+                notes.toLowerCase().includes('deactiv')
+            )
+        ) {
+            typeDisplay = '🔴 Deactivated';
         } else if (log.transactionType === 'Adjustment' && log.amount === 0 && notes.toLowerCase().includes('activ')) {
             typeDisplay = '🟢 Activated';
         } else if (log.transactionType === 'Adjustment' && log.amount === 0 && notes.toLowerCase().includes('created')) {
@@ -209,7 +401,7 @@ function renderStudentDetails(studentId) {
                 <p style="color: var(--grey); font-size: 0.9rem;">Email: ${student.email}</p>
                 <p style="color: var(--grey); font-size: 0.9rem;">Student ID: #${student.userID}</p>
                 <p style="font-weight: 700; font-size: 1.2rem; margin-top: 8px;">Balance: $${balance.toFixed(2)}</p>
-                <p style="color: var(--grey); font-size: 0.9rem;">Status: ${isActive ? '🟢 Active' : '🔴 Suspended'}</p>
+                <p style="color: var(--grey); font-size: 0.9rem;">Status: ${isActive ? '🟢 Active' : '🔴 Inactive'}</p>
                 <p style="color: var(--grey); font-size: 0.9rem;">Total Orders: ${studentOrders.length}</p>
             </div>
             <div style="border: 1px solid var(--lightGrey); border-radius: 8px; padding: 16px; background: var(--white);">
@@ -239,51 +431,51 @@ function renderStudentDetails(studentId) {
                         </thead>
                         <tbody>
                             ${combinedHistory.map(t => {
-                                let color = '#333';
-                                let amountDisplay = '';
-                                let detailsDisplay = '';
+        let color = '#333';
+        let amountDisplay = '';
+        let detailsDisplay = '';
 
-                                if (t.type === 'Purchase') {
-                                    color = '#cc0000';
-                                    amountDisplay = `-$${t.amount.toFixed(2)}`;
-                                    detailsDisplay = `
-                                        <strong>${t.vendor || 'Unknown'}</strong><br>
-                                        <span style="font-size: 0.8rem; color: var(--grey);">${t.items || 'No items'}</span><br>
-                                        <span style="font-size: 0.8rem; color: var(--grey);">Subtotal: $${(t.subtotal || 0).toFixed(2)} | Tax: $${(t.tax || 0).toFixed(2)}</span>
-                                    `;
-                                } else if (t.typeDisplay === '💰 Fund Added') {
-                                    color = '#007a5a';
-                                    amountDisplay = `+$${t.amount.toFixed(2)}`;
-                                    detailsDisplay = `<span style="color: var(--grey); font-size: 0.85rem;">${t.notes || 'Funds added'}</span>`;
-                                } else if (t.typeDisplay === '🔴 Suspended') {
-                                    color = '#cc0000';
-                                    amountDisplay = '—';
-                                    detailsDisplay = `<span style="color: #cc0000; font-size: 0.85rem;">${t.notes || 'Account suspended'}</span>`;
-                                } else if (t.typeDisplay === '🟢 Activated') {
-                                    color = '#007a5a';
-                                    amountDisplay = '—';
-                                    detailsDisplay = `<span style="color: #007a5a; font-size: 0.85rem;">${t.notes || 'Account activated'}</span>`;
-                                } else if (t.typeDisplay === '📝 Account Created') {
-                                    color = '#0066cc';
-                                    amountDisplay = '—';
-                                    detailsDisplay = `<span style="color: #0066cc; font-size: 0.85rem;">${t.notes || 'Account created'}</span>`;
-                                } else {
-                                    amountDisplay = `$${t.amount.toFixed(2)}`;
-                                    detailsDisplay = t.notes || 'Admin action';
-                                }
+        if (t.type === 'Purchase') {
+            color = '#cc0000';
+            amountDisplay = `-$${t.amount.toFixed(2)}`;
+            detailsDisplay = `
+                            <strong>${t.vendor || 'Unknown'}</strong><br>
+                            <span style="font-size: 0.8rem; color: var(--grey);">${t.items || 'No items'}</span><br>
+                            <span style="font-size: 0.8rem; color: var(--grey);">Subtotal: $${(t.subtotal || 0).toFixed(2)} | Tax: $${(t.tax || 0).toFixed(2)}</span>
+                            `;
+        } else if (t.typeDisplay === '💰 Fund Added') {
+            color = '#007a5a';
+            amountDisplay = `+$${t.amount.toFixed(2)}`;
+            detailsDisplay = `<span style="color: var(--grey); font-size: 0.85rem;">${t.notes || 'Funds added'}</span>`;
+        } else if (t.typeDisplay === '🔴 Deactivated') {
+            color = '#cc0000';
+            amountDisplay = '—';
+            detailsDisplay = `<span style="color: #cc0000; font-size: 0.85rem;">${t.notes || 'Account deactivated'}</span>`;
+        } else if (t.typeDisplay === '🟢 Activated') {
+            color = '#007a5a';
+            amountDisplay = '—';
+            detailsDisplay = `<span style="color: #007a5a; font-size: 0.85rem;">${t.notes || 'Account activated'}</span>`;
+        } else if (t.typeDisplay === '📝 Account Created') {
+            color = '#0066cc';
+            amountDisplay = '—';
+            detailsDisplay = `<span style="color: #0066cc; font-size: 0.85rem;">${t.notes || 'Account created'}</span>`;
+        } else {
+            amountDisplay = `$${t.amount.toFixed(2)}`;
+            detailsDisplay = t.notes || 'Admin action';
+        }
 
-                                const balanceDisplay = (t.balanceBefore !== null && t.balanceAfter !== null) 
-                                    ? `$${t.balanceBefore.toFixed(2)} → $${t.balanceAfter.toFixed(2)}`
-                                    : '—';
+        const balanceDisplay = (t.balanceBefore !== null && t.balanceAfter !== null)
+            ? `$${t.balanceBefore.toFixed(2)} → $${t.balanceAfter.toFixed(2)}`
+            : '—';
 
-                                let adminDisplay = '—';
-                                if (t.createdBy === 'Admin' && t.createdByName) {
-                                    adminDisplay = t.createdByName;
-                                } else if (t.createdBy === 'Student') {
-                                    adminDisplay = 'Student (self)';
-                                }
+        let adminDisplay = '—';
+        if (t.createdBy === 'Admin' && t.createdByName) {
+            adminDisplay = t.createdByName;
+        } else if (t.createdBy === 'Student') {
+            adminDisplay = 'Student (self)';
+        }
 
-                                return `
+        return `
                                     <tr style="border-bottom: 1px solid var(--lightGrey);">
                                         <td style="padding: 8px; font-size: 0.8rem; white-space: nowrap;">${new Date(t.date).toLocaleString()}</td>
                                         <td style="padding: 8px; font-weight: 600; color: ${color}; white-space: nowrap;">${t.typeDisplay}</td>
@@ -294,7 +486,7 @@ function renderStudentDetails(studentId) {
                                         <td style="padding: 8px; font-size: 0.85rem; color: var(--grey);">${adminDisplay}</td>
                                     </tr>
                                 `;
-                            }).join('')}
+    }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -349,139 +541,129 @@ function renderStudentDetails(studentId) {
 }
 
 function attachStudentActionListeners() {
-    document.querySelectorAll('.suspendStudentBtn').forEach(btn => {
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
+
+    // ========================================
+    // DEACTIVATE STUDENT
+    // ========================================
+    document.querySelectorAll('.suspendStudentBtn').forEach(button => {
+        button.addEventListener('click', async function (event) {
+            event.stopPropagation();
+
             const studentId = Number(this.dataset.id);
             const studentName = this.dataset.name;
 
-            if (confirm(`⚠️ Are you sure you want to suspend "${studentName}"?\n\nThis student will no longer be able to place orders.`)) {
-                const admin = getActiveAdminSession();
-                const adminName = admin ? `${admin.firstName} ${admin.lastName}` : 'System Admin';
+            const confirmed = confirm(
+                `Are you sure you want to deactivate "${studentName}"?\n\n` +
+                'This student will no longer be able to place orders.'
+            );
 
-                const transactionLog = JSON.parse(localStorage.getItem('campusFoodLinkTransactionLog')) || [];
-                const currentBalance = getStudentBalance(studentId);
-
-                transactionLog.push({
-                    transactionID: Date.now(),
-                    userID: studentId,
-                    orderID: null,
-                    transactionType: 'Adjustment',
-                    amount: 0,
-                    previousBalance: currentBalance,
-                    postBalance: currentBalance,
-                    createdAt: new Date().toISOString(),
-                    createdBy: admin ? admin.userID : 301,
-                    notes: `Account suspended by ${adminName}`
-                });
-
-                localStorage.setItem('campusFoodLinkTransactionLog', JSON.stringify(transactionLog));
-
-                setStudentActiveState(studentId, false);
-                renderStudentDirectory();
-                if (selectedStudentId === studentId) {
-                    renderStudentDetails(studentId);
-                }
-                alert(`✅ "${studentName}" has been suspended.`);
+            if (!confirmed) {
+                return;
             }
+
+            await submitStudentStatusChange(
+                studentId,
+                studentName,
+                'Inactive'
+            );
         });
     });
 
-    document.querySelectorAll('.activateStudentBtn').forEach(btn => {
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
+    // ========================================
+    // ACTIVATE STUDENT
+    // ========================================
+    document.querySelectorAll('.activateStudentBtn').forEach(button => {
+        button.addEventListener('click', async function (event) {
+            event.stopPropagation();
+
             const studentId = Number(this.dataset.id);
             const studentName = this.dataset.name;
 
-            if (confirm(`✅ Are you sure you want to activate "${studentName}"?\n\nThis student will be able to place orders again.`)) {
-                const admin = getActiveAdminSession();
-                const adminName = admin ? `${admin.firstName} ${admin.lastName}` : 'System Admin';
+            const confirmed = confirm(
+                `Are you sure you want to activate "${studentName}"?\n\n` +
+                'This student will be able to place orders again.'
+            );
 
-                const transactionLog = JSON.parse(localStorage.getItem('campusFoodLinkTransactionLog')) || [];
-                const currentBalance = getStudentBalance(studentId);
-
-                transactionLog.push({
-                    transactionID: Date.now(),
-                    userID: studentId,
-                    orderID: null,
-                    transactionType: 'Adjustment',
-                    amount: 0,
-                    previousBalance: currentBalance,
-                    postBalance: currentBalance,
-                    createdAt: new Date().toISOString(),
-                    createdBy: admin ? admin.userID : 301,
-                    notes: `Account activated by ${adminName}`
-                });
-
-                localStorage.setItem('campusFoodLinkTransactionLog', JSON.stringify(transactionLog));
-
-                setStudentActiveState(studentId, true);
-                renderStudentDirectory();
-                if (selectedStudentId === studentId) {
-                    renderStudentDetails(studentId);
-                }
-                alert(`✅ "${studentName}" has been activated.`);
+            if (!confirmed) {
+                return;
             }
+
+            await submitStudentStatusChange(
+                studentId,
+                studentName,
+                'Active'
+            );
         });
     });
 }
 
-function setStudentActiveState(studentId, isActive) {
-    let allUsers = JSON.parse(localStorage.getItem(STUDENTS_STORAGE_KEY)) || [];
-    const index = allUsers.findIndex(u => Number(u.userID) === Number(studentId));
-    if (index === -1) return false;
-    allUsers[index].accountStatus = isActive ? 'Active' : 'Suspended';
-    localStorage.setItem(STUDENTS_STORAGE_KEY, JSON.stringify(allUsers));
-    return true;
-}
+async function submitStudentStatusChange(
+    studentId,
+    studentName,
+    accountStatus
+) {
+    const actionButtons = document.querySelectorAll(
+        `[data-id="${studentId}"] button`
+    );
 
-function addStudent(studentData) {
-    let allUsers = JSON.parse(localStorage.getItem(STUDENTS_STORAGE_KEY)) || [];
+    actionButtons.forEach(button => {
+        button.disabled = true;
+    });
 
-    if (allUsers.some(u => u.email === studentData.email)) {
-        alert('A student with this email already exists.');
-        return false;
+    try {
+        const response = await fetch(
+            `/api/admin/students/${studentId}/status`,
+            {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    accountStatus: accountStatus
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error ||
+                'Unable to update the student account status.'
+            );
+        }
+
+        alert(
+            accountStatus === 'Active'
+                ? `✅ "${studentName}" has been activated.`
+                : `✅ "${studentName}" has been deactivated.`
+        );
+
+        await renderStudentDirectory();
+
+        if (selectedStudentId === studentId) {
+            renderStudentDetails(studentId);
+        }
+
+    } catch (error) {
+        console.error(
+            'Unable to update student status:',
+            error
+        );
+
+        alert(error.message);
+
+        actionButtons.forEach(button => {
+            button.disabled = false;
+        });
     }
+}
 
-    const maxId = allUsers.reduce((max, u) => Math.max(max, u.userID || 0), 0);
-    const newId = maxId + 1;
-
-    const newStudent = {
-        userID: newId,
-        firstName: studentData.firstName,
-        lastName: studentData.lastName,
-        email: studentData.email,
-        password: 'hashed',
-        role: 'Student',
-        vendorID: null,
-        mealPlanBalance: 0.00,
-        accountStatus: 'Active'
-    };
-
-    allUsers.push(newStudent);
-    localStorage.setItem(STUDENTS_STORAGE_KEY, JSON.stringify(allUsers));
-
-    saveStudentBalance(newId, 0.00);
-
-    const admin = getActiveAdminSession();
-    const adminName = admin ? `${admin.firstName} ${admin.lastName}` : 'System Admin';
-
-    const transactionLog = JSON.parse(localStorage.getItem('campusFoodLinkTransactionLog')) || [];
-
-    transactionLog.push({
-        transactionID: Date.now(),
-        userID: newId,
-        orderID: null,
-        transactionType: 'Adjustment',
-        amount: 0.00,
-        previousBalance: 0.00,
-        postBalance: 0.00,
-        createdAt: new Date().toISOString(),
-        createdBy: admin ? admin.userID : 301,
-        notes: `Account created by ${adminName}`
-    });
-
-    localStorage.setItem('campusFoodLinkTransactionLog', JSON.stringify(transactionLog));
-
-    return true;
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }

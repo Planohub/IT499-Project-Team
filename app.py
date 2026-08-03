@@ -37,13 +37,13 @@ ALLOWED_FRONTEND_FILES = {
     "CFL-Logo.png",
 }
 
-
+# Frontend routes
 @app.route("/")
 def home():
     """Serve the existing login page."""
     return send_from_directory(app.root_path, "index.html")
 
-
+# Vendor API endpoints
 @app.route("/api/vendors")
 def get_vendors():
     """Return active vendors from SQLite."""
@@ -79,6 +79,8 @@ def get_vendors():
     finally:
         connection.close()
 
+
+# Admin-facing vendor management endpoints
 @app.route("/api/admin/vendors")
 def get_admin_vendors():
     """Return all vendors for administrator management."""
@@ -115,6 +117,7 @@ def get_admin_vendors():
     finally:
         connection.close()
 
+# Admin-facing vendor creation endpoint
 @app.route("/api/admin/vendors", methods=["POST"])
 def create_admin_vendor():
     """Create a new campus vendor in SQLite."""
@@ -234,6 +237,8 @@ def create_admin_vendor():
     finally:
         connection.close()
 
+
+# Admin-facing vendor status update endpoint
 @app.route(
     "/api/admin/vendors/<int:vendor_id>/status",
     methods=["PATCH"]
@@ -317,6 +322,289 @@ def update_admin_vendor_status(vendor_id):
     finally:
         connection.close()
 
+# Admin-facing student retrieval endpoint
+@app.route("/api/admin/students")
+def get_admin_students():
+    """Return all student accounts for administrator management."""
+
+    connection = get_db_connection()
+
+    try:
+        students = connection.execute(
+            """
+            SELECT
+                UserID,
+                FirstName,
+                LastName,
+                Email,
+                MealPlanBalance,
+                AccountStatus
+            FROM User
+            WHERE Role = ?
+            ORDER BY LastName, FirstName, UserID
+            """,
+            ("Student",),
+        ).fetchall()
+
+        return jsonify([
+            {
+                "id": student["UserID"],
+                "firstName": student["FirstName"],
+                "lastName": student["LastName"],
+                "email": student["Email"],
+                "balance": float(student["MealPlanBalance"]),
+                "accountStatus": student["AccountStatus"],
+                "isActive": student["AccountStatus"] == "Active",
+            }
+            for student in students
+        ])
+
+    finally:
+        connection.close()
+
+
+# Admin-facing create student endpoint
+@app.route("/api/admin/students", methods=["POST"])
+def create_admin_student():
+    """Create a new student account in SQLite."""
+
+    # Read the JSON object sent by admin-students.js.
+    student_data = request.get_json(silent=True)
+
+    if not isinstance(student_data, dict):
+        return jsonify({
+            "error": "A valid JSON request body is required"
+        }), 400
+
+    first_name = str(
+        student_data.get("firstName", "")
+    ).strip()
+
+    last_name = str(
+        student_data.get("lastName", "")
+    ).strip()
+
+    email = str(
+        student_data.get("email", "")
+    ).strip()
+
+    if not first_name:
+        return jsonify({
+            "error": "A first name is required"
+        }), 400
+
+    if not last_name:
+        return jsonify({
+            "error": "A last name is required"
+        }), 400
+
+    if not email:
+        return jsonify({
+            "error": "An email address is required"
+        }), 400
+
+    connection = get_db_connection()
+
+    try:
+        # Prevent duplicate accounts that use the same email address.
+        existing_user = connection.execute(
+            """
+            SELECT UserID
+            FROM User
+            WHERE LOWER(Email) = LOWER(?)
+            """,
+            (email,),
+        ).fetchone()
+
+        if existing_user is not None:
+            return jsonify({
+                "error": "A user with this email address already exists"
+            }), 409
+
+        next_student = connection.execute(
+            """
+            SELECT COALESCE(MAX(UserID), 100) + 1 AS NextStudentID
+            FROM User
+            WHERE Role = ?
+            AND UserID BETWEEN 101 AND 199
+            """,
+            ("Student",),
+        ).fetchone()
+        student_id = next_student["NextStudentID"]
+
+        # New student accounts begin active with a zero balance.
+        connection.execute(
+            """
+            INSERT INTO User (
+                UserID,
+                FirstName,
+                LastName,
+                Email,
+                Password,
+                Role,
+                VendorID,
+                MealPlanBalance,
+                AccountStatus
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                student_id,
+                first_name,
+                last_name,
+                email,
+                "simulated",
+                "Student",
+                None,
+                0.00,
+                "Active",
+            ),
+        )
+
+        # Record the account creation in the transaction log.
+        connection.execute(
+            """
+            INSERT INTO TransactionLog (
+                UserID,
+                OrderID,
+                TransactionType,
+                Amount,
+                PreviousBalance,
+                PostBalance,
+                CreatedBy
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                student_id,
+                None,
+                "Adjustment",
+                0.00,
+                0.00,
+                0.00,
+                301,
+            ),
+        )
+
+        connection.commit()
+
+        return jsonify({
+            "message": "Student account created successfully",
+            "student": {
+                "id": student_id,
+                "firstName": first_name,
+                "lastName": last_name,
+                "email": email,
+                "balance": 0.00,
+                "accountStatus": "Active",
+                "isActive": True,
+            },
+        }), 201
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+
+# Admin-facing student status update endpoint
+@app.route(
+    "/api/admin/students/<int:student_id>/status",
+    methods=["PATCH"]
+)
+def update_admin_student_status(student_id):
+    """Activate or deactivate one student account in SQLite."""
+
+    status_data = request.get_json(silent=True)
+
+    if not isinstance(status_data, dict):
+        return jsonify({
+            "error": "A valid JSON request body is required"
+        }), 400
+
+    account_status = status_data.get("accountStatus")
+
+    if account_status not in ("Active", "Inactive"):
+        return jsonify({
+            "error": "Status must be Active or Inactive"
+        }), 400
+
+    connection = get_db_connection()
+
+    try:
+        # Confirm that the student exists before updating the account.
+        student = connection.execute(
+            """
+            SELECT
+                UserID,
+                FirstName,
+                LastName,
+                Email,
+                MealPlanBalance,
+                AccountStatus
+            FROM User
+            WHERE UserID = ?
+              AND Role = ?
+            """,
+            (student_id, "Student"),
+        ).fetchone()
+
+        if student is None:
+            return jsonify({
+                "error": "Student not found"
+            }), 404
+
+        # Avoid an unnecessary database write.
+        if student["AccountStatus"] == account_status:
+            return jsonify({
+                "message": "Student status was already up to date",
+                "student": {
+                    "id": student["UserID"],
+                    "firstName": student["FirstName"],
+                    "lastName": student["LastName"],
+                    "email": student["Email"],
+                    "balance": float(student["MealPlanBalance"]),
+                    "accountStatus": student["AccountStatus"],
+                    "isActive": (
+                        student["AccountStatus"] == "Active"
+                    ),
+                },
+            })
+
+        connection.execute(
+            """
+            UPDATE User
+            SET AccountStatus = ?
+            WHERE UserID = ?
+            """,
+            (account_status, student_id),
+        )
+
+        connection.commit()
+
+        return jsonify({
+            "message": "Student status updated successfully",
+            "student": {
+                "id": student["UserID"],
+                "firstName": student["FirstName"],
+                "lastName": student["LastName"],
+                "email": student["Email"],
+                "balance": float(student["MealPlanBalance"]),
+                "accountStatus": account_status,
+                "isActive": account_status == "Active",
+            },
+        })
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+# Vendor-facing menu retrieval endpoint
 @app.route("/api/vendors/<int:vendor_id>/menu")
 def get_vendor_menu(vendor_id):
     """Return menu items for one vendor."""
