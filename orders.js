@@ -26,18 +26,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // ========================================
-    // 2. UPDATE MEAL-PLAN BALANCE
-    // ========================================
-    const mealPlanBalanceElement =
-        document.getElementById('mealPlanBalance');
-
-    if (mealPlanBalanceElement) {
-        mealPlanBalanceElement.textContent =
-            `$${getMealPlanBalance().toFixed(2)}`;
-    }
-
-    // ========================================
-    // 3. UPDATE CART COUNT
+    // 2. UPDATE CART COUNT
     // ========================================
     const cartLink = document.getElementById('cartLink');
 
@@ -46,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // ========================================
-    // 4. LOAD ORDERS FROM FLASK / SQLITE
+    // 3. LOAD ORDERS FROM FLASK / SQLITE
     // ========================================
     const ordersContainer =
         document.getElementById('ordersContainer');
@@ -107,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 function renderOrders(orders, ordersContainer) {
 
     // ========================================
-    // 5. BUILD ORDER-HISTORY CARDS
+    // 4. BUILD ORDER-HISTORY CARDS
     // ========================================
     ordersContainer.innerHTML = orders.map(order => {
         const itemsHTML = Array.isArray(order.items)
