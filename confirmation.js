@@ -5,18 +5,47 @@
 document.addEventListener('DOMContentLoaded', async function () {
     const activeStudent = getActiveStudentSession();
 
-    const studentBadge = document.getElementById('studentHeaderBadge');
-    if (studentBadge) {
-        studentBadge.textContent =
-            `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
+    if (!activeStudent || !activeStudent.id) {
+        alert('Please log in as a student first.');
+        window.location.href = 'login.html?role=student';
+        return;
     }
 
-    const mealPlanBalanceElement =
-        document.getElementById('mealPlanBalance');
+    try {
+        const response = await fetch(`/api/students/${activeStudent.id}/profile`);
 
-    if (mealPlanBalanceElement) {
-        mealPlanBalanceElement.textContent =
-            `$${getMealPlanBalance().toFixed(2)}`;
+        const student = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                student.error ||
+                'Unable to load the student profile.'
+            );
+        }
+
+        const studentBadge = document.getElementById('studentHeaderBadge');
+
+        if (studentBadge) {
+            studentBadge.textContent = `🎓 ${student.firstName} ${student.lastName}`;
+        }
+
+        const mealPlanBalanceElement = document.getElementById('mealPlanBalance');
+
+        if (mealPlanBalanceElement) {
+            mealPlanBalanceElement.textContent = `$${Number(student.balance).toFixed(2)}`;
+        }
+
+        setActiveStudentSession(student);
+
+    } catch (error) {
+        console.error(
+            'Unable to load student profile:',
+            error
+        );
+
+        alert(error.message);
+        window.location.href = 'login.html?role=student';
+        return;
     }
 
     const urlParams = new URLSearchParams(window.location.search);

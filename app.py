@@ -217,6 +217,51 @@ def create_admin_vendor():
 
         vendor_id = cursor.lastrowid
 
+        next_vendor_user = connection.execute(
+            """
+            SELECT COALESCE(MAX(UserID), 200) + 1 AS NextVendorUserID
+            FROM User
+            WHERE Role = ?
+                AND UserID BETWEEN 201 AND 299
+            """,
+            ("Vendor",),
+        ).fetchone()
+
+        vendor_user_id = next_vendor_user["NextVendorUserID"]
+
+        if vendor_user_id > 299:
+            return jsonify({
+                "error": "No vendor user IDs are available"
+            }), 400
+
+        connection.execute(
+            """
+            INSERT INTO User (
+                UserID,
+                FirstName,
+                LastName,
+                Email,
+                Password,
+                Role,
+                VendorID,
+                MealPlanBalance,
+                AccountStatus
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                vendor_user_id,
+                vendor_name,
+                "Vendor",
+                f"vendor{vendor_id}@campusfoodlink.local",
+                "simulated",
+                "Vendor",
+                vendor_id,
+                0.00,
+                "Active",
+            ),
+        )
+
         connection.commit()
 
         return jsonify({
@@ -226,6 +271,12 @@ def create_admin_vendor():
                 "name": vendor_name,
                 "location": location,
                 "operatingHours": normalized_hours,
+                "isActive": True,
+            },
+            "vendorUser": {
+                "id": vendor_user_id,
+                "vendorId": vendor_id,
+                "email": f"vendor{vendor_id}@campusfoodlink.local",
                 "isActive": True,
             },
         }), 201
@@ -321,6 +372,7 @@ def update_admin_vendor_status(vendor_id):
 
     finally:
         connection.close()
+
 
 # Admin-facing student retrieval endpoint
 @app.route("/api/admin/students")
