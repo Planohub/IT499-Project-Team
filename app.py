@@ -510,10 +510,7 @@ def create_admin_student():
 
 
 # Admin-facing student status update endpoint
-@app.route(
-    "/api/admin/students/<int:student_id>/status",
-    methods=["PATCH"]
-)
+@app.route("/api/admin/students/<int:student_id>/status", methods=["PATCH"])
 def update_admin_student_status(student_id):
     """Activate or deactivate one student account in SQLite."""
 
@@ -594,6 +591,319 @@ def update_admin_student_status(student_id):
                 "balance": float(student["MealPlanBalance"]),
                 "accountStatus": account_status,
                 "isActive": account_status == "Active",
+            },
+        })
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+# Admin-facing student details endpoint
+@app.route("/api/admin/students/<int:student_id>")
+def get_admin_student_details(student_id):
+    """Return one student, their orders, and transaction history."""
+
+    connection = get_db_connection()
+
+    try:
+        # Retrieve the requested student account.
+        student = connection.execute(
+            """
+            SELECT
+                UserID,
+                FirstName,
+                LastName,
+                Email,
+                MealPlanBalance,
+                AccountStatus
+            FROM User
+            WHERE UserID = ?
+              AND Role = ?
+            """,
+            (student_id, "Student"),
+        ).fetchone()
+
+        if student is None:
+            return jsonify({
+                "error": "Student not found"
+            }), 404
+
+        # Retrieve all orders placed by this student.
+        orders = connection.execute(
+            """
+            SELECT
+                FoodOrder.OrderID,
+                FoodOrder.VendorID,
+                Vendor.VendorName,
+                FoodOrder.OrderDate,
+                FoodOrder.OrderTotal,
+                FoodOrder.CurrentStatus,
+                FoodOrder.CompletedTime
+            FROM FoodOrder
+            JOIN Vendor
+                ON Vendor.VendorID = FoodOrder.VendorID
+            WHERE FoodOrder.StudentID = ?
+            ORDER BY FoodOrder.OrderDate DESC,
+                     FoodOrder.OrderID DESC
+            """,
+            (student_id,),
+        ).fetchall()
+
+        order_results = []
+
+        for order in orders:
+            order_items = connection.execute(
+                """
+                SELECT
+                    MenuItem.ItemName,
+                    OrderItem.Quantity,
+                    OrderItem.UnitPrice,
+                    OrderItem.ItemTotal
+                FROM OrderItem
+                JOIN MenuItem
+                    ON MenuItem.MenuItemID = OrderItem.MenuItemID
+                WHERE OrderItem.OrderID = ?
+                ORDER BY OrderItem.OrderItemID
+                """,
+                (order["OrderID"],),
+            ).fetchall()
+
+            subtotal = round(
+                sum(
+                    float(item["ItemTotal"])
+                    for item in order_items
+                ),
+                2,
+            )
+
+            total = float(order["OrderTotal"])
+            tax = round(total - subtotal, 2)
+
+            order_results.append({
+                "orderId": order["OrderID"],
+                "vendorId": order["VendorID"],
+                "vendorName": order["VendorName"],
+                "orderDate": order["OrderDate"],
+                "subtotal": subtotal,
+                "tax": tax,
+                "total": total,
+                "currentStatus": order["CurrentStatus"],
+                "completedTime": order["CompletedTime"],
+                "items": [
+                    {
+                        "name": item["ItemName"],
+                        "quantity": item["Quantity"],
+                        "price": float(item["UnitPrice"]),
+                        "total": float(item["ItemTotal"]),
+                    }
+                    for item in order_items
+                ],
+            })
+
+        # Retrieve all balance transactions for this student.
+        transactions = connection.execute(
+            """
+            SELECT
+                TransactionLog.TransactionID,
+                TransactionLog.OrderID,
+                TransactionLog.TransactionType,
+                TransactionLog.Amount,
+                TransactionLog.PreviousBalance,
+                TransactionLog.PostBalance,
+                TransactionLog.CreatedAt,
+                TransactionLog.CreatedBy,
+                Creator.FirstName AS CreatorFirstName,
+                Creator.LastName AS CreatorLastName,
+                Creator.Role AS CreatorRole
+            FROM TransactionLog
+            JOIN User AS Creator
+                ON Creator.UserID = TransactionLog.CreatedBy
+            WHERE TransactionLog.UserID = ?
+            ORDER BY TransactionLog.CreatedAt DESC,
+                     TransactionLog.TransactionID DESC
+            """,
+            (student_id,),
+        ).fetchall()
+
+        return jsonify({
+            "student": {
+                "id": student["UserID"],
+                "firstName": student["FirstName"],
+                "lastName": student["LastName"],
+                "email": student["Email"],
+                "balance": float(student["MealPlanBalance"]),
+                "accountStatus": student["AccountStatus"],
+                "isActive": student["AccountStatus"] == "Active",
+                "totalOrders": len(order_results),
+            },
+            "orders": order_results,
+            "transactions": [
+                {
+                    "transactionId": transaction["TransactionID"],
+                    "orderId": transaction["OrderID"],
+                    "transactionType": (
+                        transaction["TransactionType"]
+                    ),
+                    "amount": float(transaction["Amount"]),
+                    "previousBalance": float(
+                        transaction["PreviousBalance"]
+                    ),
+                    "postBalance": float(
+                        transaction["PostBalance"]
+                    ),
+                    "createdAt": transaction["CreatedAt"],
+                    "createdBy": transaction["CreatedBy"],
+                    "createdByName": (
+                        f"{transaction['CreatorFirstName']} "
+                        f"{transaction['CreatorLastName']}"
+                    ),
+                    "createdByRole": transaction["CreatorRole"],
+                }
+                for transaction in transactions
+            ],
+        })
+
+    finally:
+        connection.close()
+
+# Admin-facing student balance adjustment endpoint
+@app.route(
+    "/api/admin/students/<int:student_id>/funds",
+    methods=["POST"]
+)
+def add_admin_student_funds(student_id):
+    """Add funds to one student's meal-plan balance."""
+
+    fund_data = request.get_json(silent=True)
+
+    if not isinstance(fund_data, dict):
+        return jsonify({
+            "error": "A valid JSON request body is required"
+        }), 400
+
+    amount = fund_data.get("amount")
+
+    if isinstance(amount, bool) or not isinstance(amount, (int, float)):
+        return jsonify({
+            "error": "A valid fund amount is required"
+        }), 400
+
+    amount = round(float(amount), 2)
+
+    if amount <= 0:
+        return jsonify({
+            "error": "The fund amount must be greater than zero"
+        }), 400
+
+    connection = get_db_connection()
+
+    try:
+        student = connection.execute(
+            """
+            SELECT
+                UserID,
+                FirstName,
+                LastName,
+                MealPlanBalance,
+                AccountStatus
+            FROM User
+            WHERE UserID = ?
+              AND Role = ?
+            """,
+            (student_id, "Student"),
+        ).fetchone()
+
+        if student is None:
+            return jsonify({
+                "error": "Student not found"
+            }), 404
+
+        admin_user = connection.execute(
+            """
+            SELECT
+                UserID,
+                FirstName,
+                LastName
+            FROM User
+            WHERE Role = ?
+              AND AccountStatus = ?
+            ORDER BY UserID
+            LIMIT 1
+            """,
+            (
+                "Dining Services Administrator",
+                "Active",
+            ),
+        ).fetchone()
+
+        if admin_user is None:
+            return jsonify({
+                "error": "No active administrator account was found"
+            }), 400
+
+        previous_balance = float(
+            student["MealPlanBalance"]
+        )
+
+        new_balance = round(
+            previous_balance + amount,
+            2,
+        )
+
+        connection.execute(
+            """
+            UPDATE User
+            SET MealPlanBalance = ?
+            WHERE UserID = ?
+            """,
+            (new_balance, student_id),
+        )
+
+        connection.execute(
+            """
+            INSERT INTO TransactionLog (
+                UserID,
+                OrderID,
+                TransactionType,
+                Amount,
+                PreviousBalance,
+                PostBalance,
+                CreatedBy
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                student_id,
+                None,
+                "Adjustment",
+                amount,
+                previous_balance,
+                new_balance,
+                admin_user["UserID"],
+            ),
+        )
+
+        connection.commit()
+
+        return jsonify({
+            "message": "Funds added successfully",
+            "student": {
+                "id": student_id,
+                "firstName": student["FirstName"],
+                "lastName": student["LastName"],
+                "previousBalance": previous_balance,
+                "amountAdded": amount,
+                "newBalance": new_balance,
+            },
+            "createdBy": {
+                "id": admin_user["UserID"],
+                "name": (
+                    f"{admin_user['FirstName']} "
+                    f"{admin_user['LastName']}"
+                ),
             },
         })
 

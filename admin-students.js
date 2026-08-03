@@ -273,271 +273,584 @@ async function renderStudentDirectory() {
     container.innerHTML = html;
 
     document.querySelectorAll('.student-row').forEach(row => {
-        row.addEventListener('click', function () {
+        row.addEventListener('click', async function () {
             selectedStudentId = Number(this.dataset.id);
-
-            /*
-             * Student details are still prototype-backed for now.
-             * They will be migrated after the directory is verified.
-             */
-            renderStudentDetails(selectedStudentId);
+            await renderStudentDetails(selectedStudentId);
         });
     });
 
     attachStudentActionListeners();
 
     if (selectedStudentId) {
-        renderStudentDetails(selectedStudentId);
+        await renderStudentDetails(selectedStudentId);
     }
 }
 
-function renderStudentDetails(studentId) {
+async function renderStudentDetails(studentId) {
     const container = document.getElementById('studentDetailContainer');
-    if (!container) return;
 
-    const students = getStudents();
-    const student = students.find(s => Number(s.userID) === Number(studentId));
-
-    if (!student) {
-        container.innerHTML = '<p style="color: var(--grey);">Student not found.</p>';
+    if (!container) {
         return;
     }
 
-    const balance = getStudentBalance(studentId);
-    const isActive = student.accountStatus === 'Active';
-
-    // Build complete transaction history
-    const orders = getOrdersHistory();
-    const studentOrders = orders.filter(o => Number(o.studentId) === Number(studentId));
-
-    const transactionLog = JSON.parse(localStorage.getItem('campusFoodLinkTransactionLog')) || [];
-    const studentAdminLogs = transactionLog.filter(t => Number(t.userID) === Number(studentId));
-
-    let combinedHistory = [];
-
-    studentOrders.forEach(order => {
-        const orderDate = order.orderDate || new Date(order.timestamp).toISOString();
-        const itemsSummary = order.items ? order.items.map(i => `${i.name} ×${i.quantity}`).join(', ') : 'No items';
-
-        combinedHistory.push({
-            timestamp: order.timestamp || new Date(orderDate).getTime(),
-            date: orderDate,
-            type: 'Purchase',
-            typeDisplay: '🛒 Purchase',
-            amount: order.total || 0,
-            balanceBefore: null,
-            balanceAfter: null,
-            orderId: order.orderId,
-            vendor: order.vendorName || 'Unknown Vendor',
-            items: itemsSummary,
-            subtotal: order.subtotal || 0,
-            tax: order.tax || 0,
-            total: order.total || 0,
-            status: order.currentStatus || 'Pending',
-            createdBy: 'Student',
-            createdByName: 'Student (self)',
-            notes: `Order #${order.orderId} from ${order.vendorName || 'Unknown Vendor'}`
-        });
-    });
-
-    studentAdminLogs.forEach(log => {
-        let typeDisplay = '🔧 Admin Action';
-        let notes = log.notes || '';
-
-        let adminName = 'System';
-        if (log.createdBy) {
-            const adminUser = getAdminById(log.createdBy);
-            if (adminUser) {
-                adminName = `${adminUser.firstName} ${adminUser.lastName}`;
-            } else {
-                adminName = `Admin ID: ${log.createdBy}`;
-            }
-        }
-
-        if (log.transactionType === 'Adjustment' && log.amount > 0) {
-            typeDisplay = '💰 Fund Added';
-        } else if (
-            log.transactionType === 'Adjustment' &&
-            log.amount === 0 &&
-            (
-                notes.toLowerCase().includes('inactive') ||
-                notes.toLowerCase().includes('deactiv')
-            )
-        ) {
-            typeDisplay = '🔴 Deactivated';
-        } else if (log.transactionType === 'Adjustment' && log.amount === 0 && notes.toLowerCase().includes('activ')) {
-            typeDisplay = '🟢 Activated';
-        } else if (log.transactionType === 'Adjustment' && log.amount === 0 && notes.toLowerCase().includes('created')) {
-            typeDisplay = '📝 Account Created';
-        }
-
-        combinedHistory.push({
-            timestamp: new Date(log.createdAt).getTime(),
-            date: log.createdAt,
-            type: log.transactionType || 'Adjustment',
-            typeDisplay: typeDisplay,
-            amount: log.amount || 0,
-            balanceBefore: log.previousBalance || null,
-            balanceAfter: log.postBalance || null,
-            orderId: log.orderID || null,
-            vendor: null,
-            items: null,
-            subtotal: null,
-            tax: null,
-            total: log.amount || 0,
-            status: null,
-            createdBy: log.createdBy ? 'Admin' : 'System',
-            createdByName: adminName,
-            notes: notes
-        });
-    });
-
-    combinedHistory.sort((a, b) => b.timestamp - a.timestamp);
-
-    let html = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-            <div style="border: 1px solid var(--lightGrey); border-radius: 8px; padding: 16px; background: var(--white);">
-                <h4 style="margin-bottom: 8px;">${student.firstName} ${student.lastName}</h4>
-                <p style="color: var(--grey); font-size: 0.9rem;">Email: ${student.email}</p>
-                <p style="color: var(--grey); font-size: 0.9rem;">Student ID: #${student.userID}</p>
-                <p style="font-weight: 700; font-size: 1.2rem; margin-top: 8px;">Balance: $${balance.toFixed(2)}</p>
-                <p style="color: var(--grey); font-size: 0.9rem;">Status: ${isActive ? '🟢 Active' : '🔴 Inactive'}</p>
-                <p style="color: var(--grey); font-size: 0.9rem;">Total Orders: ${studentOrders.length}</p>
-            </div>
-            <div style="border: 1px solid var(--lightGrey); border-radius: 8px; padding: 16px; background: var(--white);">
-                <h4 style="margin-bottom: 8px;">Add Funds</h4>
-                <div style="display: flex; gap: 10px;">
-                    <input type="number" id="fundAmount" placeholder="Amount" min="0.01" step="0.01" style="flex: 1; padding: 8px; border: 1px solid var(--lightGrey); border-radius: 4px;">
-                    <button id="addFundsBtn" class="defaultButton" style="width: auto; padding: 8px 20px;">Add Funds</button>
-                </div>
-                <p style="color: var(--grey); font-size: 0.8rem; margin-top: 8px;">This will add funds to the student's meal-plan balance and log the admin action.</p>
-            </div>
-        </div>
-        <div style="border: 1px solid var(--lightGrey); border-radius: 8px; padding: 16px; background: var(--white);">
-            <h4 style="margin-bottom: 8px;">Complete Transaction History</h4>
-            ${combinedHistory.length === 0 ? '<p style="color: var(--grey);">No transactions found.</p>' : `
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid var(--black);">
-                                <th style="padding: 8px;">Date/Time</th>
-                                <th style="padding: 8px;">Type</th>
-                                <th style="padding: 8px;">Details</th>
-                                <th style="padding: 8px;">Amount</th>
-                                <th style="padding: 8px;">Balance</th>
-                                <th style="padding: 8px;">Order #</th>
-                                <th style="padding: 8px;">Admin</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${combinedHistory.map(t => {
-        let color = '#333';
-        let amountDisplay = '';
-        let detailsDisplay = '';
-
-        if (t.type === 'Purchase') {
-            color = '#cc0000';
-            amountDisplay = `-$${t.amount.toFixed(2)}`;
-            detailsDisplay = `
-                            <strong>${t.vendor || 'Unknown'}</strong><br>
-                            <span style="font-size: 0.8rem; color: var(--grey);">${t.items || 'No items'}</span><br>
-                            <span style="font-size: 0.8rem; color: var(--grey);">Subtotal: $${(t.subtotal || 0).toFixed(2)} | Tax: $${(t.tax || 0).toFixed(2)}</span>
-                            `;
-        } else if (t.typeDisplay === '💰 Fund Added') {
-            color = '#007a5a';
-            amountDisplay = `+$${t.amount.toFixed(2)}`;
-            detailsDisplay = `<span style="color: var(--grey); font-size: 0.85rem;">${t.notes || 'Funds added'}</span>`;
-        } else if (t.typeDisplay === '🔴 Deactivated') {
-            color = '#cc0000';
-            amountDisplay = '—';
-            detailsDisplay = `<span style="color: #cc0000; font-size: 0.85rem;">${t.notes || 'Account deactivated'}</span>`;
-        } else if (t.typeDisplay === '🟢 Activated') {
-            color = '#007a5a';
-            amountDisplay = '—';
-            detailsDisplay = `<span style="color: #007a5a; font-size: 0.85rem;">${t.notes || 'Account activated'}</span>`;
-        } else if (t.typeDisplay === '📝 Account Created') {
-            color = '#0066cc';
-            amountDisplay = '—';
-            detailsDisplay = `<span style="color: #0066cc; font-size: 0.85rem;">${t.notes || 'Account created'}</span>`;
-        } else {
-            amountDisplay = `$${t.amount.toFixed(2)}`;
-            detailsDisplay = t.notes || 'Admin action';
-        }
-
-        const balanceDisplay = (t.balanceBefore !== null && t.balanceAfter !== null)
-            ? `$${t.balanceBefore.toFixed(2)} → $${t.balanceAfter.toFixed(2)}`
-            : '—';
-
-        let adminDisplay = '—';
-        if (t.createdBy === 'Admin' && t.createdByName) {
-            adminDisplay = t.createdByName;
-        } else if (t.createdBy === 'Student') {
-            adminDisplay = 'Student (self)';
-        }
-
-        return `
-                                    <tr style="border-bottom: 1px solid var(--lightGrey);">
-                                        <td style="padding: 8px; font-size: 0.8rem; white-space: nowrap;">${new Date(t.date).toLocaleString()}</td>
-                                        <td style="padding: 8px; font-weight: 600; color: ${color}; white-space: nowrap;">${t.typeDisplay}</td>
-                                        <td style="padding: 8px; max-width: 300px;">${detailsDisplay}</td>
-                                        <td style="padding: 8px; font-weight: 600; color: ${color}; white-space: nowrap;">${amountDisplay}</td>
-                                        <td style="padding: 8px; font-size: 0.85rem;">${balanceDisplay}</td>
-                                        <td style="padding: 8px; font-weight: 600;">${t.orderId || '—'}</td>
-                                        <td style="padding: 8px; font-size: 0.85rem; color: var(--grey);">${adminDisplay}</td>
-                                    </tr>
-                                `;
-    }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `}
+    container.innerHTML = `
+        <div class="vendorGridMessage">
+            <p>Loading student details...</p>
         </div>
     `;
 
-    container.innerHTML = html;
+    try {
+        const response = await fetch(`/api/admin/students/${studentId}`);
+        const result = await response.json();
 
-    const addFundsBtn = document.getElementById('addFundsBtn');
-    if (addFundsBtn) {
-        addFundsBtn.addEventListener('click', function () {
-            const amountInput = document.getElementById('fundAmount');
-            const amount = parseFloat(amountInput.value);
+        if (!response.ok) {
+            throw new Error(
+                result.error ||
+                'Unable to load student details.'
+            );
+        }
 
-            if (!amount || amount <= 0) {
-                alert('Please enter a valid positive amount.');
-                return;
+        const student = result.student;
+        const orders = Array.isArray(result.orders)
+            ? result.orders
+            : [];
+
+        const transactions = Array.isArray(result.transactions)
+            ? result.transactions
+            : [];
+
+        const combinedHistory = [];
+
+        // Convert database-backed orders into display records.
+        orders.forEach(order => {
+            const itemsSummary = Array.isArray(order.items)
+                ? order.items
+                    .map(item =>
+                        `${item.name} ×${item.quantity}`
+                    )
+                    .join(', ')
+                : 'No items';
+
+            combinedHistory.push({
+                timestamp: parseDatabaseDate(order.orderDate),
+                date: order.orderDate,
+                type: 'Purchase',
+                typeDisplay: '🛒 Purchase',
+                amount: Number(order.total || 0),
+                balanceBefore: null,
+                balanceAfter: null,
+                orderId: order.orderId,
+                vendor: order.vendorName || 'Unknown Vendor',
+                items: itemsSummary,
+                subtotal: Number(order.subtotal || 0),
+                tax: Number(order.tax || 0),
+                status: order.currentStatus || 'Pending',
+                createdByRole: 'Student',
+                createdByName: 'Student (self)'
+            });
+        });
+
+        // Convert SQLite transaction records into display records.
+        transactions.forEach(transaction => {
+            let typeDisplay = '🔧 Adjustment';
+
+            if (transaction.transactionType === 'Deduction') {
+                typeDisplay = '💳 Balance Deduction';
+            } else if (
+                transaction.transactionType === 'Refund'
+            ) {
+                typeDisplay = '↩️ Refund';
+            } else if (
+                transaction.transactionType === 'Adjustment' &&
+                Number(transaction.amount) > 0
+            ) {
+                typeDisplay = '💰 Balance Adjustment';
+            } else if (
+                transaction.transactionType === 'Adjustment'
+            ) {
+                typeDisplay = '📝 Account Adjustment';
             }
 
-            const currentBalance = getStudentBalance(studentId);
-            const newBalance = currentBalance + amount;
+            combinedHistory.push({
+                timestamp: parseDatabaseDate(
+                    transaction.createdAt
+                ),
+                date: transaction.createdAt,
+                type: transaction.transactionType,
+                typeDisplay: typeDisplay,
+                amount: Number(transaction.amount || 0),
+                balanceBefore: Number(
+                    transaction.previousBalance || 0
+                ),
+                balanceAfter: Number(
+                    transaction.postBalance || 0
+                ),
+                orderId: transaction.orderId,
+                vendor: null,
+                items: null,
+                subtotal: null,
+                tax: null,
+                status: null,
+                createdByRole: transaction.createdByRole,
+                createdByName:
+                    transaction.createdByRole === 'Student'
+                        ? 'Student (self)'
+                        : transaction.createdByName || 'System'
+            });
+        });
 
-            saveStudentBalance(studentId, newBalance);
+        combinedHistory.sort(
+            (first, second) =>
+                second.timestamp - first.timestamp
+        );
 
-            const admin = getActiveAdminSession();
-            const adminName = admin ? `${admin.firstName} ${admin.lastName}` : 'System Admin';
+        const statusText = student.isActive
+            ? '🟢 Active'
+            : '🔴 Inactive';
 
-            const transactionLog = JSON.parse(localStorage.getItem('campusFoodLinkTransactionLog')) || [];
+        let html = `
+            <div style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:20px;
+                margin-bottom:20px;
+            ">
+                <div style="
+                    border:1px solid var(--lightGrey);
+                    border-radius:8px;
+                    padding:16px;
+                    background:var(--white);
+                ">
+                    <h4 style="margin-bottom:8px;">
+                        ${escapeHtml(student.firstName)}
+                        ${escapeHtml(student.lastName)}
+                    </h4>
 
-            transactionLog.push({
-                transactionID: Date.now(),
-                userID: studentId,
-                orderID: null,
-                transactionType: 'Adjustment',
-                amount: amount,
-                previousBalance: currentBalance,
-                postBalance: newBalance,
-                createdAt: new Date().toISOString(),
-                createdBy: admin ? admin.userID : 301,
-                notes: `Funds added by ${adminName}`
+                    <p style="
+                        color:var(--grey);
+                        font-size:0.9rem;
+                    ">
+                        Email:
+                        ${escapeHtml(student.email)}
+                    </p>
+
+                    <p style="
+                        color:var(--grey);
+                        font-size:0.9rem;
+                    ">
+                        Student ID: #${student.id}
+                    </p>
+
+                    <p style="
+                        font-weight:700;
+                        font-size:1.2rem;
+                        margin-top:8px;
+                    ">
+                        Balance:
+                        $${Number(student.balance).toFixed(2)}
+                    </p>
+
+                    <p style="
+                        color:var(--grey);
+                        font-size:0.9rem;
+                    ">
+                        Status: ${statusText}
+                    </p>
+
+                    <p style="
+                        color:var(--grey);
+                        font-size:0.9rem;
+                    ">
+                        Total Orders: ${student.totalOrders}
+                    </p>
+                </div>
+
+                <div style="
+                    border:1px solid var(--lightGrey);
+                    border-radius:8px;
+                    padding:16px;
+                    background:var(--white);
+                ">
+                    <h4 style="margin-bottom:8px;">
+                        Add Funds
+                    </h4>
+
+                    <div style="
+                        display:flex;
+                        gap:10px;
+                    ">
+                        <input
+                            type="number"
+                            id="fundAmount"
+                            placeholder="Amount"
+                            min="0.01"
+                            step="0.01"
+                            style="
+                                flex:1;
+                                padding:8px;
+                                border:1px solid var(--lightGrey);
+                                border-radius:4px;
+                            "
+                        >
+
+                        <button
+                            id="addFundsBtn"
+                            class="defaultButton"
+                            style="
+                                width:auto;
+                                padding:8px 20px;
+                            "
+                        >
+                            Add Funds
+                        </button>
+                    </div>
+
+                    <p style="
+                        color:var(--grey);
+                        font-size:0.8rem;
+                        margin-top:8px;
+                    ">
+                        Balance adjustments will be stored in
+                        SQLite and recorded in the transaction log.
+                    </p>
+                </div>
+            </div>
+
+            <div style="
+                border:1px solid var(--lightGrey);
+                border-radius:8px;
+                padding:16px;
+                background:var(--white);
+            ">
+                <h4 style="margin-bottom:8px;">
+                    Complete Transaction History
+                </h4>
+        `;
+
+        if (combinedHistory.length === 0) {
+            html += `
+                <p style="color:var(--grey);">
+                    No transactions or orders were found.
+                </p>
+            `;
+        } else {
+            html += `
+                <div style="overflow-x:auto;">
+                    <table style="
+                        width:100%;
+                        border-collapse:collapse;
+                        text-align:left;
+                        font-size:0.9rem;
+                    ">
+                        <thead>
+                            <tr style="
+                                border-bottom:2px solid var(--black);
+                            ">
+                                <th style="padding:8px;">
+                                    Date/Time
+                                </th>
+
+                                <th style="padding:8px;">
+                                    Type
+                                </th>
+
+                                <th style="padding:8px;">
+                                    Details
+                                </th>
+
+                                <th style="padding:8px;">
+                                    Amount
+                                </th>
+
+                                <th style="padding:8px;">
+                                    Balance
+                                </th>
+
+                                <th style="padding:8px;">
+                                    Order #
+                                </th>
+
+                                <th style="padding:8px;">
+                                    Created By
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+            `;
+
+            combinedHistory.forEach(entry => {
+                let color = '#333';
+                let amountDisplay = '—';
+                let detailsDisplay = '';
+
+                if (entry.type === 'Purchase') {
+                    color = '#cc0000';
+
+                    amountDisplay =
+                        `-$${entry.amount.toFixed(2)}`;
+
+                    detailsDisplay = `
+                        <strong>
+                            ${escapeHtml(entry.vendor)}
+                        </strong>
+                        <br>
+
+                        <span style="
+                            font-size:0.8rem;
+                            color:var(--grey);
+                        ">
+                            ${escapeHtml(entry.items)}
+                        </span>
+                        <br>
+
+                        <span style="
+                            font-size:0.8rem;
+                            color:var(--grey);
+                        ">
+                            Subtotal:
+                            $${entry.subtotal.toFixed(2)}
+                            |
+                            Tax:
+                            $${entry.tax.toFixed(2)}
+                            |
+                            Status:
+                            ${escapeHtml(entry.status)}
+                        </span>
+                    `;
+                } else if (entry.type === 'Deduction') {
+                    color = '#cc0000';
+
+                    amountDisplay =
+                        `-$${entry.amount.toFixed(2)}`;
+
+                    detailsDisplay =
+                        'Meal-plan balance deducted';
+                } else if (entry.type === 'Refund') {
+                    color = '#007a5a';
+
+                    amountDisplay =
+                        `+$${entry.amount.toFixed(2)}`;
+
+                    detailsDisplay =
+                        'Order payment refunded';
+                } else if (
+                    entry.type === 'Adjustment' &&
+                    entry.amount > 0
+                ) {
+                    color = '#007a5a';
+
+                    amountDisplay =
+                        `+$${entry.amount.toFixed(2)}`;
+
+                    detailsDisplay =
+                        'Meal-plan balance adjusted';
+                } else {
+                    color = '#0066cc';
+                    amountDisplay = '—';
+                    detailsDisplay =
+                        'Student account adjustment';
+                }
+
+                const balanceDisplay =
+                    entry.balanceBefore !== null &&
+                        entry.balanceAfter !== null
+                        ? (
+                            `$${entry.balanceBefore.toFixed(2)}` +
+                            ` → ` +
+                            `$${entry.balanceAfter.toFixed(2)}`
+                        )
+                        : '—';
+
+                html += `
+                    <tr style="
+                        border-bottom:1px solid var(--lightGrey);
+                    ">
+                        <td style="
+                            padding:8px;
+                            font-size:0.8rem;
+                            white-space:nowrap;
+                        ">
+                            ${formatDatabaseDate(entry.date)}
+                        </td>
+
+                        <td style="
+                            padding:8px;
+                            font-weight:600;
+                            color:${color};
+                            white-space:nowrap;
+                        ">
+                            ${entry.typeDisplay}
+                        </td>
+
+                        <td style="
+                            padding:8px;
+                            max-width:300px;
+                        ">
+                            ${detailsDisplay}
+                        </td>
+
+                        <td style="
+                            padding:8px;
+                            font-weight:600;
+                            color:${color};
+                            white-space:nowrap;
+                        ">
+                            ${amountDisplay}
+                        </td>
+
+                        <td style="
+                            padding:8px;
+                            font-size:0.85rem;
+                            white-space:nowrap;
+                        ">
+                            ${balanceDisplay}
+                        </td>
+
+                        <td style="
+                            padding:8px;
+                            font-weight:600;
+                        ">
+                            ${entry.orderId || '—'}
+                        </td>
+
+                        <td style="
+                            padding:8px;
+                            font-size:0.85rem;
+                            color:var(--grey);
+                        ">
+                            ${escapeHtml(entry.createdByName)}
+                        </td>
+                    </tr>
+                `;
             });
 
-            localStorage.setItem('campusFoodLinkTransactionLog', JSON.stringify(transactionLog));
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
 
-            alert(`✅ Added $${amount.toFixed(2)} to ${student.firstName}'s balance.\nNew balance: $${newBalance.toFixed(2)}`);
+        html += `
+            </div>
+        `;
 
-            renderStudentDirectory();
-            renderStudentDetails(studentId);
-        });
+        container.innerHTML = html;
+
+        /*
+         * The detail panel is now database-backed.
+         * The Add Funds action will be connected to Flask next.
+         */
+        const addFundsBtn =
+            document.getElementById('addFundsBtn');
+
+        if (addFundsBtn) {
+            addFundsBtn.addEventListener(
+                'click',
+                async function () {
+                    const amountInput = document.getElementById('fundAmount');
+                    const amount = Number.parseFloat(amountInput.value);
+
+                    if (Number.isNaN(amount) || amount <= 0) {
+                        alert(
+                            'Please enter a valid positive amount.'
+                        );
+                        return;
+                    }
+
+                    this.disabled = true;
+                    this.textContent = 'Adding...';
+
+                    try {
+                        const response = await fetch(
+                            `/api/admin/students/${studentId}/funds`,
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    amount: amount
+                                })
+                            }
+                        );
+
+                        const result = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(
+                                result.error ||
+                                'Unable to add funds.'
+                            );
+                        }
+
+                        alert(
+                            `✅ Added $${Number(
+                                result.student.amountAdded
+                            ).toFixed(2)} to ` +
+                            `${result.student.firstName}'s balance.\n` +
+                            `New balance: $${Number(
+                                result.student.newBalance
+                            ).toFixed(2)}`
+                        );
+
+                        await renderStudentDirectory();
+                        await renderStudentDetails(studentId);
+
+                    } catch (error) {
+                        console.error(
+                            'Unable to add student funds:',
+                            error
+                        );
+
+                        alert(error.message);
+
+                        this.disabled = false;
+                        this.textContent = 'Add Funds';
+                    }
+                }
+            );
+        }
+    } catch (error) {
+        console.error(
+            'Unable to load student details:',
+            error
+        );
+
+        container.innerHTML = `
+            <div class="vendorGridMessage vendorGridError">
+                <p>Unable to load student details.</p>
+                <p>Please try again or refresh the page.</p>
+            </div>
+        `;
     }
+}
+
+function parseDatabaseDate(dateValue) {
+    if (!dateValue) {
+        return 0;
+    }
+
+    const parsedDate = new Date(String(dateValue).replace(' ', 'T') + 'Z');
+
+    return Number.isNaN(parsedDate.getTime())
+        ? 0
+        : parsedDate.getTime();
+}
+
+function formatDatabaseDate(dateValue) {
+    if (!dateValue) {
+        return 'Date unavailable';
+    }
+
+    const parsedDate = new Date(String(dateValue).replace(' ', 'T') + 'Z');
+
+    if (Number.isNaN(parsedDate.getTime())) {
+        return escapeHtml(dateValue);
+    }
+
+    return parsedDate.toLocaleString();
 }
 
 function attachStudentActionListeners() {
@@ -642,7 +955,7 @@ async function submitStudentStatusChange(
         await renderStudentDirectory();
 
         if (selectedStudentId === studentId) {
-            renderStudentDetails(studentId);
+            await renderStudentDetails(studentId);
         }
 
     } catch (error) {
