@@ -43,35 +43,57 @@ document.addEventListener('DOMContentLoaded', async function () {
     // -------------------------------------------------
     // Student accounts
     // -------------------------------------------------
-    const studentSelect =
-        document.getElementById('studentSelectDropdown');
+    const studentSelect = document.getElementById('studentSelectDropdown');
+    const studentLoginBtn = document.getElementById('studentLoginBtn');
 
-    const studentLoginBtn =
-        document.getElementById('studentLoginBtn');
+    let students = [];
 
-    const students = getStudents();
+    try {
+        const response = await fetch('/api/login/students');
+        const result = await response.json();
 
-    if (students.length > 0) {
-        studentSelect.innerHTML = students.map(student => {
-            const balance = getStudentBalance(student.userID);
+        if (!response.ok) {
+            throw new Error(
+                result.error ||
+                'Unable to load student accounts.'
+            );
+        }
 
-            return `
-                        <option value="${student.userID}">
-                            ${student.firstName} ${student.lastName}
-                            — $${balance.toFixed(2)}
-                        </option>
-                    `;
-        }).join('');
-    } else {
+        students = Array.isArray(result)
+            ? result
+            : [];
+
+        if (students.length > 0) {
+            studentSelect.innerHTML = students.map(student => `
+            <option value="${student.id}">
+                ${student.firstName} ${student.lastName}
+                — $${Number(student.balance).toFixed(2)}
+            </option>
+        `).join('');
+        } else {
+            studentSelect.innerHTML =
+                '<option value="">No students available</option>';
+
+            studentLoginBtn.disabled = true;
+        }
+
+    } catch (error) {
+        console.error(
+            'Unable to load student accounts:',
+            error
+        );
+
         studentSelect.innerHTML =
-            '<option value="">No students available</option>';
+            '<option value="">Unable to load students</option>';
+
+        studentLoginBtn.disabled = true;
     }
 
     studentLoginBtn.addEventListener('click', function () {
         const selectedId = Number(studentSelect.value);
 
         const selectedStudent = students.find(student =>
-            Number(student.userID) === selectedId
+            Number(student.id) === selectedId
         );
 
         if (!selectedStudent) {
@@ -82,7 +104,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         setActiveStudentSession(selectedStudent);
         window.location.href = 'student-dashboard.html';
     });
-
     // -------------------------------------------------
     // Vendor accounts
     // -------------------------------------------------
@@ -147,30 +168,56 @@ document.addEventListener('DOMContentLoaded', async function () {
     // -------------------------------------------------
     // Administrator accounts
     // -------------------------------------------------
-    const adminSelect =
-        document.getElementById('adminSelectDropdown');
+    const adminSelect = document.getElementById('adminSelectDropdown');
+    const adminLoginBtn = document.getElementById('adminLoginBtn');
 
-    const adminLoginBtn =
-        document.getElementById('adminLoginBtn');
+    let admins = [];
 
-    const admins = getAdmins();
+    try {
+        const response = await fetch('/api/login/admins');
+        const result = await response.json();
 
-    if (admins.length > 0) {
-        adminSelect.innerHTML = admins.map(admin => `
-                    <option value="${admin.userID}">
-                        ${admin.firstName} ${admin.lastName}
-                    </option>
-                `).join('');
-    } else {
+        if (!response.ok) {
+            throw new Error(
+                result.error ||
+                'Unable to load administrator accounts.'
+            );
+        }
+
+        admins = Array.isArray(result)
+            ? result
+            : [];
+
+        if (admins.length > 0) {
+            adminSelect.innerHTML = admins.map(admin => `
+            <option value="${admin.id}">
+                ${admin.firstName} ${admin.lastName}
+            </option>
+        `).join('');
+        } else {
+            adminSelect.innerHTML =
+                '<option value="">No administrators available</option>';
+
+            adminLoginBtn.disabled = true;
+        }
+
+    } catch (error) {
+        console.error(
+            'Unable to load administrator accounts:',
+            error
+        );
+
         adminSelect.innerHTML =
-            '<option value="">No administrators available</option>';
+            '<option value="">Unable to load administrators</option>';
+
+        adminLoginBtn.disabled = true;
     }
 
     adminLoginBtn.addEventListener('click', function () {
         const selectedId = Number(adminSelect.value);
 
         const selectedAdmin = admins.find(admin =>
-            Number(admin.userID) === selectedId
+            Number(admin.id) === selectedId
         );
 
         if (!selectedAdmin) {
@@ -181,21 +228,4 @@ document.addEventListener('DOMContentLoaded', async function () {
         setActiveAdminSession(selectedAdmin);
         window.location.href = 'admin-dashboard.html';
     });
-
-    // Enter submits whichever role is visible.
-    const activeSelect = document.querySelector(
-        '.roleLoginSection:not([hidden]) select'
-    );
-
-    const activeButton = document.querySelector(
-        '.roleLoginSection:not([hidden]) button'
-    );
-
-    if (activeSelect && activeButton) {
-        activeSelect.addEventListener('keydown', function (event) {
-            if (event.key === 'Enter') {
-                activeButton.click();
-            }
-        });
-    }
 });

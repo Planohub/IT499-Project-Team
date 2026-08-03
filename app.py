@@ -1509,6 +1509,141 @@ def update_vendor_hours(vendor_id):
         connection.close()
 
 
+# Simulated student login accounts
+@app.route("/api/login/students")
+def get_student_login_accounts():
+    """Return active student accounts for simulated login."""
+
+    connection = get_db_connection()
+
+    try:
+        students = connection.execute(
+            """
+            SELECT
+                UserID,
+                FirstName,
+                LastName,
+                Email,
+                MealPlanBalance,
+                AccountStatus
+            FROM User
+            WHERE Role = ?
+              AND AccountStatus = ?
+            ORDER BY LastName, FirstName, UserID
+            """,
+            (
+                "Student",
+                "Active",
+            ),
+        ).fetchall()
+
+        return jsonify([
+            {
+                "id": student["UserID"],
+                "firstName": student["FirstName"],
+                "lastName": student["LastName"],
+                "email": student["Email"],
+                "balance": float(
+                    student["MealPlanBalance"]
+                ),
+                "accountStatus": student["AccountStatus"],
+                "isActive": True,
+            }
+            for student in students
+        ])
+
+    finally:
+        connection.close()
+
+# Simulated administrator login accounts
+@app.route("/api/login/admins")
+def get_admin_login_accounts():
+    """Return active administrator accounts for simulated login."""
+
+    connection = get_db_connection()
+
+    try:
+        admins = connection.execute(
+            """
+            SELECT
+                UserID,
+                FirstName,
+                LastName,
+                Email,
+                AccountStatus
+            FROM User
+            WHERE Role = ?
+              AND AccountStatus = ?
+            ORDER BY LastName, FirstName, UserID
+            """,
+            (
+                "Dining Services Administrator",
+                "Active",
+            ),
+        ).fetchall()
+
+        return jsonify([
+            {
+                "id": admin["UserID"],
+                "firstName": admin["FirstName"],
+                "lastName": admin["LastName"],
+                "email": admin["Email"],
+                "accountStatus": admin["AccountStatus"],
+                "isActive": True,
+            }
+            for admin in admins
+        ])
+
+    finally:
+        connection.close()
+
+# Student-facing profile endpoint
+@app.route("/api/students/<int:student_id>/profile")
+def get_student_profile(student_id):
+    """Return one active student's current profile and balance."""
+
+    connection = get_db_connection()
+
+    try:
+        student = connection.execute(
+            """
+            SELECT
+                UserID,
+                FirstName,
+                LastName,
+                Email,
+                MealPlanBalance,
+                AccountStatus
+            FROM User
+            WHERE UserID = ?
+              AND Role = ?
+            """,
+            (student_id, "Student"),
+        ).fetchone()
+
+        if student is None:
+            return jsonify({
+                "error": "Student not found"
+            }), 404
+
+        if student["AccountStatus"] != "Active":
+            return jsonify({
+                "error": "Student account is inactive"
+            }), 403
+
+        return jsonify({
+            "id": student["UserID"],
+            "firstName": student["FirstName"],
+            "lastName": student["LastName"],
+            "email": student["Email"],
+            "balance": float(student["MealPlanBalance"]),
+            "accountStatus": student["AccountStatus"],
+            "isActive": True,
+        })
+
+    finally:
+        connection.close()
+
 # Student order creation endpoint
 @app.route("/api/orders", methods=["POST"])
 def create_order():
@@ -1776,6 +1911,7 @@ def create_order():
     finally:
         connection.close()
 
+# Fetch single order by ID and return details/line items
 @app.route("/api/orders/<int:order_id>")
 def get_order(order_id):
     """Return one order and its line items from SQLite."""
@@ -1855,6 +1991,8 @@ def get_order(order_id):
     finally:
         connection.close()
 
+
+# Fetch all orders for a specific student by ID
 @app.route("/api/students/<int:student_id>/orders")
 def get_student_orders(student_id):
     """Return all orders and line items for one student."""
@@ -1951,6 +2089,8 @@ def get_student_orders(student_id):
     finally:
         connection.close()
 
+
+# Fetch all orders for a specific vendor by ID
 @app.route("/api/vendors/<int:vendor_id>/orders")
 def get_vendor_orders(vendor_id):
     """Return one vendor profile and its orders from SQLite."""

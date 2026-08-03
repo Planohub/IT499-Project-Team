@@ -1,29 +1,63 @@
-// ========================================
+// ===============================================
 // STUDENT-DASHBOARD.JS — Student Vendor Selection
-// ========================================
+// ===============================================
 
 document.addEventListener('DOMContentLoaded', async function () {
 
     // ========================================
-    // 1. GET ACTIVE STUDENT
+    // 1. GET ACTIVE STUDENT SESSION
     // ========================================
     const activeStudent = getActiveStudentSession();
 
-    const studentBadge = document.getElementById('studentHeaderBadge');
-    if (studentBadge) {
-        studentBadge.textContent =
-            `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
+    if (!activeStudent || !activeStudent.id) {
+        alert('No active student session was found.');
+        window.location.href = 'login.html?role=student';
+        return;
     }
 
     // ========================================
-    // 2. UPDATE MEAL-PLAN BALANCE
+    // 2. LOAD CURRENT STUDENT DATA FROM SQLITE
     // ========================================
-    const mealPlanBalanceElement =
-        document.getElementById('mealPlanBalance');
+    const studentBadge = document.getElementById('studentHeaderBadge');
 
-    if (mealPlanBalanceElement) {
-        mealPlanBalanceElement.textContent =
-            `$${getMealPlanBalance().toFixed(2)}`;
+    const mealPlanBalanceElement = document.getElementById('mealPlanBalance');
+
+    try {
+        const response = await fetch(
+            `/api/students/${activeStudent.id}/profile`
+        );
+
+        const student = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                student.error ||
+                'Unable to load the student profile.'
+            );
+        }
+
+        if (studentBadge) {
+            studentBadge.textContent =
+                `🎓 ${student.firstName} ${student.lastName}`;
+        }
+
+        if (mealPlanBalanceElement) {
+            mealPlanBalanceElement.textContent =
+                `$${Number(student.balance).toFixed(2)}`;
+        }
+
+        // Refresh browser session with current student data
+        setActiveStudentSession(student);
+
+    } catch (error) {
+        console.error(
+            'Unable to load student profile:',
+            error
+        );
+
+        alert(error.message);
+        window.location.href = 'login.html?role=student';
+        return;
     }
 
     // ========================================
@@ -116,8 +150,8 @@ function renderVendors(vendors, vendorGrid) {
 
                 <p>
                     ${escapeHtml(
-                        vendor.location || 'Location not specified'
-                    )}
+            vendor.location || 'Location not specified'
+        )}
                 </p>
 
                 <p class="vendorStatus ${statusClass}">
