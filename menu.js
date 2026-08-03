@@ -6,8 +6,20 @@ document.addEventListener('DOMContentLoaded', async function () {
     const activeStudent = getActiveStudentSession();
     const selectedVendor = getSelectedVendor();
 
-    updateStudentHeader(activeStudent);
-    updateBalance();
+    if (!activeStudent || !activeStudent.id) {
+        alert('Please log in as a student first.');
+        window.location.href = 'login.html?role=student';
+        return;
+    }
+
+    const studentLoaded = await loadStudentProfile(
+        activeStudent.id
+    );
+
+    if (!studentLoaded) {
+        return;
+    }
+
     updateCartCount();
 
     if (!selectedVendor || !selectedVendor.vendorId) {
@@ -106,26 +118,45 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 });
 
+async function loadStudentProfile(studentId) {
+    try {
+        const response = await fetch(`/api/students/${studentId}/profile`);
+        const student = await response.json();
 
-function updateStudentHeader(activeStudent) {
-    const studentBadge = document.getElementById('studentHeaderBadge');
+        if (!response.ok) {
+            throw new Error(
+                student.error ||
+                'Unable to load the student profile.'
+            );
+        }
 
-    if (studentBadge) {
-        studentBadge.textContent =
-            `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
+        const studentBadge = document.getElementById('studentHeaderBadge');
+        const balanceElement = document.getElementById('mealPlanBalance');
+
+        if (studentBadge) {
+            studentBadge.textContent = `🎓 ${student.firstName} ${student.lastName}`;
+        }
+
+        if (balanceElement) {
+            balanceElement.textContent = `$${Number(student.balance).toFixed(2)}`;
+        }
+
+        setActiveStudentSession(student);
+
+        return true;
+
+    } catch (error) {
+        console.error(
+            'Unable to load student profile:',
+            error
+        );
+
+        alert(error.message);
+        window.location.href = 'login.html?role=student';
+
+        return false;
     }
 }
-
-
-function updateBalance() {
-    const balanceElement = document.getElementById('mealPlanBalance');
-
-    if (balanceElement) {
-        balanceElement.textContent =
-            `$${getMealPlanBalance().toFixed(2)}`;
-    }
-}
-
 
 function updateCartCount() {
     const cartLink = document.getElementById('cartLink');
@@ -280,15 +311,14 @@ function renderMenuItems(items, menuGrid) {
                     </span>
                 </div>
 
-                ${
-                    item.description
-                        ? `
+                ${item.description
+            ? `
                             <p class="menuItemDescription">
                                 ${escapeHtml(item.description)}
                             </p>
                         `
-                        : ''
-                }
+            : ''
+        }
             </div>
         </div>
     `).join('');

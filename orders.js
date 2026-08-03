@@ -9,13 +9,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     // ========================================
     const activeStudent = getActiveStudentSession();
 
-    if (!activeStudent || !activeStudent.userID) {
+    if (!activeStudent || !activeStudent.id) {
         alert('Please log in as a student first.');
-        window.location.href = 'index.html';
+        window.location.href = 'login.html?role=student';
         return;
     }
 
-    const studentId = Number(activeStudent.userID);
+    const studentId = Number(activeStudent.id);
 
     // Update header badge with the active student
     const studentBadge = document.getElementById('studentHeaderBadge');

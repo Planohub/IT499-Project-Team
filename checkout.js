@@ -11,7 +11,7 @@
  * Open confirmation page
  */
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     // Load current cart from localStorage
     const cart = getCart();
 
@@ -25,20 +25,52 @@ document.addEventListener('DOMContentLoaded', function () {
     const clearCartButton = document.getElementById('clearCartButton');
     const mealPlanBalanceElement = document.getElementById('mealPlanBalance');
 
-    // Get the active student
+    // Get the active student session
     const activeStudent = getActiveStudentSession();
-    const studentId = activeStudent ? activeStudent.userID : 101;
 
-    // Update header badge
-    const studentBadge = document.getElementById('studentHeaderBadge');
-    if (studentBadge && activeStudent) {
-        studentBadge.textContent = `🎓 ${activeStudent.firstName} ${activeStudent.lastName}`;
+    if (!activeStudent || !activeStudent.id) {
+        alert('Please log in as a student first.');
+        window.location.href = 'login.html?role=student';
+        return;
     }
 
-    // Display meal plan balance if available
-    const mealPlanBalance = getMealPlanBalance();
-    if (mealPlanBalanceElement) {
-        mealPlanBalanceElement.textContent = `$${mealPlanBalance.toFixed(2)}`;
+    const studentId = Number(activeStudent.id);
+
+    // Load the current student profile and balance from SQLite
+    try {
+        const response = await fetch(`/api/students/${studentId}/profile`);
+
+        const student = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                student.error ||
+                'Unable to load the student profile.'
+            );
+        }
+
+        const studentBadge =
+            document.getElementById('studentHeaderBadge');
+
+        if (studentBadge) {
+            studentBadge.textContent = `🎓 ${student.firstName} ${student.lastName}`;
+        }
+
+        if (mealPlanBalanceElement) {
+            mealPlanBalanceElement.textContent = `$${Number(student.balance).toFixed(2)}`;
+        }
+
+        setActiveStudentSession(student);
+
+    } catch (error) {
+        console.error(
+            'Unable to load student profile:',
+            error
+        );
+
+        alert(error.message);
+        window.location.href = 'login.html?role=student';
+        return;
     }
 
     // Add total quantity of cart items
@@ -219,14 +251,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         result.error || 'Unable to place the order.'
                     );
                 }
-
-                /*
-                 * Temporary compatibility:
-                 * confirmation.js still reads orders from localStorage.
-                 * We will replace that with a database GET endpoint next.
-                 */
-                saveOrder(result.order);
-                saveMealPlanBalance(Number(result.newBalance));
 
                 clearCart();
 
