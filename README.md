@@ -28,15 +28,10 @@ CampusFoodLink+ now uses Flask and SQLite, so it must be run through the Flask d
 ### Clone the Repository
 
 ```bash
-
 git clone https://github.com/Planohub/IT499-Project-Team.git
-
 cd IT499-Project-Team
-
 git switch main
-
 git pull
-
 ```
 
 ### macOS / Linux Setup
