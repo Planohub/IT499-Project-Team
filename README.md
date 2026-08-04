@@ -25,31 +25,59 @@ Flask serves the frontend and the API. SQLite is authoritative for users, vendor
 
 CampusFoodLink+ now uses Flask and SQLite, so it must be run through the Flask development server rather than GitHub Pages or by opening the HTML files directly.
 
-### macOS / Linux
+### Clone the Repository
 
 ```bash
+
 git clone https://github.com/Planohub/IT499-Project-Team.git
+
 cd IT499-Project-Team
+
 git switch main
+
 git pull
 
+```
+
+### macOS / Linux Setup
+
+```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-python app.py
+python3 app.py
 ```
 
-### Windows PowerShell
+### Windows PowerShell Setup
 
-git clone https://github.com/Planohub/IT499-Project-Team.git
-cd IT499-Project-Team
-git switch main
-git pull
-
+```powershell
 py -m venv venv
 venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 py app.py
+```
+
+### Open the Application
+
+Once Flask starts successfully, open the application in your browser:
+
+```text
+http://127.0.0.1:5000
+```
+
+Flask serves all frontend pages and API endpoints, while SQLite provides the shared application data used by students, vendors, and administrators.
+
+### Development Database
+
+The repository includes a populated `campus_food_link.db` development database containing sample users, vendors, menu items, orders, and reports. Team members who pull the latest `main` branch should have access to the same development data immediately after starting the application.
+
+If the database ever needs to be recreated, run `schema.sql` to rebuild the database structure and then execute `seed.py` to repopulate the development data.
+
+### Important Notes
+
+- Do **not** open the HTML files directly in your browser.
+- GitHub Pages cannot run the Flask backend or SQLite database and is no longer used for testing this project.
+- All development and testing should be performed through the local Flask development server.
 
 ## Main capabilities
 
