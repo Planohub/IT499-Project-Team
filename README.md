@@ -128,6 +128,7 @@ Run CampusFoodLink+ through the Flask development server rather than Live Server
 3. **Initialize the SQLite database** (no Python script does this yet, so use the `sqlite3` CLI):
    ```bash
    sqlite3 campus_food_link.db < schema.sql
+   sqlite3 campus_food_link.db ".read schema.sql" #Windows Only
    ```
    This creates/recreates `campus_food_link.db` in the repository root. It's listed in `.gitignore` and stays local to each contributor.
 4. **Load development seed data:**
