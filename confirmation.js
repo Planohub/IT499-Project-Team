@@ -1,142 +1,193 @@
 // ========================================
-// CONFIRMATION.JS — Order Confirmation Logic
+// CONFIRMATION.JS — Database-Backed Confirmation
 // ========================================
 
-document.addEventListener('DOMContentLoaded', function () {
-    // Get order ID from URL
+document.addEventListener('DOMContentLoaded', async function () {
+    const activeStudent = getActiveStudentSession();
+
+    if (!activeStudent || !activeStudent.id) {
+        alert('Please log in as a student first.');
+        window.location.href = 'login.html?role=student';
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/students/${activeStudent.id}/profile`);
+
+        const student = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                student.error ||
+                'Unable to load the student profile.'
+            );
+        }
+
+        const studentBadge = document.getElementById('studentHeaderBadge');
+
+        if (studentBadge) {
+            studentBadge.textContent = `🎓 ${student.firstName} ${student.lastName}`;
+        }
+
+        const mealPlanBalanceElement = document.getElementById('mealPlanBalance');
+
+        if (mealPlanBalanceElement) {
+            mealPlanBalanceElement.textContent = `$${Number(student.balance).toFixed(2)}`;
+        }
+
+        setActiveStudentSession(student);
+
+    } catch (error) {
+        console.error(
+            'Unable to load student profile:',
+            error
+        );
+
+        alert(error.message);
+        window.location.href = 'login.html?role=student';
+        return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('orderId');
 
-    // Elements
-    const orderNumberElement = document.getElementById('orderNumber');
-    const orderVendorElement = document.getElementById('orderVendor');
-    const orderTotalElement = document.getElementById('orderTotal');
-    const orderStatusElement = document.getElementById('orderStatus');
-    const orderDateElement = document.getElementById('orderDate');
-    const orderItemsContainer = document.getElementById('orderItems');
-    const orderSubtotalElement = document.getElementById('orderSubtotal');
-    const orderTaxElement = document.getElementById('orderTax');
-    const orderGrandTotalElement = document.getElementById('orderGrandTotal');
+    if (!orderId) {
+        showOrderError('No order number was provided.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/orders/${orderId}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Unable to load the order.');
+        }
+
+        renderOrder(result);
+
+        console.log(
+            `✅ Order ${result.orderId} loaded from SQLite`
+        );
+
+    } catch (error) {
+        console.error('Unable to load order:', error);
+        showOrderError(error.message);
+    }
+
+    attachNavigationListeners();
+});
+
+
+function renderOrder(order) {
+    setText('orderNumber', `#${order.orderId}`);
+    setText('orderVendor', order.vendorName);
+    setText('orderTotal', `$${Number(order.total).toFixed(2)}`);
+    setText('orderStatus', order.currentStatus);
+    setText('orderDate', formatOrderDate(order.orderDate));
+
+    setText(
+        'orderSubtotal',
+        `$${Number(order.subtotal).toFixed(2)}`
+    );
+
+    setText(
+        'orderTax',
+        `$${Number(order.tax).toFixed(2)}`
+    );
+
+    setText(
+        'orderGrandTotal',
+        `$${Number(order.total).toFixed(2)}`
+    );
+
+    const orderItemsContainer =
+        document.getElementById('orderItems');
+
+    if (orderItemsContainer) {
+        orderItemsContainer.innerHTML = order.items.map(item => `
+            <div class="order-item-row">
+                <span class="order-item-name">
+                    ${escapeHtml(item.name)} ×${item.quantity}
+                </span>
+
+                <span class="order-item-price">
+                    $${Number(item.total).toFixed(2)}
+                </span>
+            </div>
+        `).join('');
+    }
+}
+
+
+function showOrderError(message) {
     const errorMessage = document.getElementById('error-message');
 
-    const mealPlanBalanceElement =
-        document.getElementById('mealPlanBalance');
-
-    if (mealPlanBalanceElement) {
-        mealPlanBalanceElement.textContent =
-            `$${getMealPlanBalance().toFixed(2)}`;
+    if (errorMessage) {
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = `⚠️ ${message}`;
     }
 
-    // ========================================
-    // 1. LOAD ORDER
-    // ========================================
-    function loadOrder() {
-        // Try to get orders from localStorage
-        let orders = [];
+    const confirmationBox =
+        document.querySelector('.confirmationBox');
 
-        // Method 1: Try the saved order-history array
-        const ordersData = localStorage.getItem('orders');
-
-        if (ordersData) {
-            try {
-                const parsedOrders = JSON.parse(ordersData);
-
-                if (Array.isArray(parsedOrders)) {
-                    orders = parsedOrders;
-                }
-            } catch (e) {
-                console.error('Unable to read order history', e);
-            }
-        }
-
-        // Method 2: Try 'latestOrder' key (from storage.js)
-        if (orders.length === 0) {
-            const latestOrder = getLatestOrder();
-            if (latestOrder) {
-                orders = [latestOrder];
-            }
-        }
-
-        // Find the order
-        let order = null;
-
-        if (orderId) {
-            order = orders.find(o => String(o.orderId) === String(orderId));
-        }
-
-        // If no order found, get the most recent order
-        if (!order && orders.length > 0) {
-            order = orders[orders.length - 1];
-            console.log('📦 Using most recent order:', order.orderId);
-        }
-
-        // Handle missing order error
-        if (!order) {
-            if (errorMessage) {
-                errorMessage.style.display = 'block';
-                errorMessage.textContent = '⚠️ Order not found. Please place an order first.';
-            }
-            document.querySelector('.confirmationBox')?.classList.add('order-not-found');
-            console.warn('❌ No order found');
-            return;
-        }
-
-        // Display order details
-        if (orderNumberElement) orderNumberElement.textContent = `#${order.orderId}`;
-        if (orderVendorElement) orderVendorElement.textContent = order.vendorName || 'Campus Grill';
-        if (orderTotalElement) orderTotalElement.textContent = `$${order.total.toFixed(2)}`;
-        if (orderStatusElement) orderStatusElement.textContent = order.currentStatus || 'Confirmed';
-        if (orderDateElement) orderDateElement.textContent = order.orderDate || new Date().toLocaleString();
-
-        // Display items
-        if (orderItemsContainer && order.items) {
-            let itemsHTML = '';
-            order.items.forEach(item => {
-                itemsHTML += `
-                    <div class="order-item-row">
-                        <span class="order-item-name">${item.name} ×${item.quantity}</span>
-                        <span class="order-item-price">$${item.total.toFixed(2)}</span>
-                    </div>
-                `;
-            });
-            orderItemsContainer.innerHTML = itemsHTML;
-        }
-
-        // Display totals
-        if (orderSubtotalElement) orderSubtotalElement.textContent = `$${order.subtotal.toFixed(2)}`;
-        if (orderTaxElement) orderTaxElement.textContent = `$${order.tax.toFixed(2)}`;
-        if (orderGrandTotalElement) orderGrandTotalElement.textContent = `$${order.total.toFixed(2)}`;
-
-        console.log(`✅ Order ${order.orderId} loaded successfully`);
+    if (confirmationBox) {
+        confirmationBox.classList.add('order-not-found');
     }
+}
 
-    // ========================================
-    // 2. EVENT LISTENERS
-    // ========================================
 
-    // "Order Another" button
-    const orderAnotherBtn = document.getElementById('orderAnotherBtn');
+function attachNavigationListeners() {
+    const orderAnotherBtn =
+        document.getElementById('orderAnotherBtn');
+
     if (orderAnotherBtn) {
-        orderAnotherBtn.addEventListener('click', function (e) {
-            e.preventDefault();
+        orderAnotherBtn.addEventListener('click', function (event) {
+            event.preventDefault();
             clearCart();
-            window.location.href = 'vendors.html';
+            window.location.href = 'student-dashboard.html';
         });
     }
 
-    // "Continue Shopping" button
-    const continueShoppingBtn = document.getElementById('continueShoppingBtn');
+    const continueShoppingBtn =
+        document.getElementById('continueShoppingBtn');
+
     if (continueShoppingBtn) {
-        continueShoppingBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            window.location.href = 'vendors.html';
+        continueShoppingBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            window.location.href = 'student-dashboard.html';
         });
     }
+}
 
-    // ========================================
-    // 3. INITIALIZE
-    // ========================================
-    loadOrder();
 
-    console.log('✅ Confirmation page loaded');
-});
+function setText(elementId, value) {
+    const element = document.getElementById(elementId);
+
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+
+function formatOrderDate(orderDate) {
+    const parsedDate = new Date(
+        String(orderDate).replace(' ', 'T') + 'Z'
+    );
+
+    if (Number.isNaN(parsedDate.getTime())) {
+        return orderDate;
+    }
+
+    return parsedDate.toLocaleString();
+}
+
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}

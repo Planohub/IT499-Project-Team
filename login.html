@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFoodLink+ — Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <main class="loginBox">
+        <header class="loginHeader">
+            <a href="index.html" aria-label="Return to role selection">
+                <img src="CFL-Logo.png" alt="CampusFoodLink+ Logo" class="loginLogo">
+            </a>
+
+            <h1>CampusFoodLink+</h1>
+            <p class="loginSubtitle">Smart Campus Dining Platform</p>
+        </header>
+
+        <section class="loginCredentials">
+            <div class="loginRoleIcon" id="loginRoleIcon">🔐</div>
+            <h2 id="loginRoleTitle">Simulated Login</h2>
+            <p class="loginRoleDescription" id="loginRoleDescription">
+                Select an account to continue.
+            </p>
+
+            <!-- Student login -->
+            <div class="roleLoginSection" id="studentLoginSection" hidden>
+                <label for="studentSelectDropdown">Student account</label>
+
+                <select id="studentSelectDropdown">
+                    <option value="">Loading students...</option>
+                </select>
+
+                <button id="studentLoginBtn" class="defaultButton" type="button">
+                    Continue as Student
+                </button>
+            </div>
+
+            <!-- Vendor login -->
+            <div class="roleLoginSection" id="vendorLoginSection" hidden>
+                <label for="vendorSelectDropdown">Vendor account</label>
+
+                <select id="vendorSelectDropdown">
+                    <option value="">Loading vendors...</option>
+                </select>
+
+                <button id="vendorLoginBtn" class="defaultButton" type="button">
+                    Continue as Vendor
+                </button>
+            </div>
+
+            <!-- Administrator login -->
+            <div class="roleLoginSection" id="adminLoginSection" hidden>
+                <label for="adminSelectDropdown">Administrator account</label>
+
+                <select id="adminSelectDropdown">
+                    <option value="">Loading administrators...</option>
+                </select>
+
+                <button id="adminLoginBtn" class="defaultButton" type="button">
+                    Continue as Administrator
+                </button>
+            </div>
+
+            <p class="simulatedLoginNotice">
+                This prototype uses simulated accounts and does not require a
+                password.
+            </p>
+
+            <a href="index.html" class="backToRoleSelection">
+                ← Choose a different role
+            </a>
+        </section>
+    </main>
+
+    <footer class="siteFooter">
+        <span>
+            🍔 &copy; 2026 CampusFoodLink+. All rights reserved. |
+            Version 1.0.3
+        </span>
+    </footer>
+
+    <script src="storage.js"></script>
+    <script src="login.js"></script>
+</body>
+
+</html>

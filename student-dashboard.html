@@ -4,12 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CampusFoodLink+ — Menu</title>
+    <title>CampusFoodLink+ — Student Dashboard</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <!-- Navigation Bar -->
     <nav class="navigationBar">
         <div class="navigationContainer">
             <div class="navigationBrand">
@@ -19,8 +18,8 @@
                 </a>
             </div>
             <div class="navigationLinks">
-                <a href="student-dashboard.html">Vendors</a>
-                <a href="checkout.html" id="cartLink">Cart (0)</a>
+                <a href="student-dashboard.html" class="active">Vendors</a>
+                <a id="cartLink" href="checkout.html">Cart (0)</a>
                 <a href="orders.html">Orders</a>
                 <a href="index.html">Logout</a>
             </div>
@@ -30,27 +29,16 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="vendorSelectionContainer">
-        <!-- Back Button & Vendor Name -->
-        <div class="menuPageHeader">
-            <a href="student-dashboard.html" class="goBackLink">← Back to Vendors</a>
-            <h2 id="vendor-name">Loading...</h2>
-            <p id="vendorLocation" class="vendorLocation">Loading vendor location...</p>
+        <div class="pageHeader">
+            <h2>Select a Vendor</h2>
+            <p>Choose a vendor to browse their menu</p>
         </div>
 
-        <!-- Menu Items Grid -->
-        <div class="menuItemGrid" id="menuItemGrid">
-            <!-- Items will be dynamically rendered by JavaScript -->
-            <div style="text-align:center; padding:40px; grid-column: 1 / -1; color: var(--grey);">
-                Loading menu items...
-            </div>
+        <!-- Vendor Grid - Dynamically populated by JavaScript -->
+        <div class="vendorGrid" id="vendorGrid">
+            <!-- Vendors will be rendered here -->
         </div>
-    </div>
-
-    <!-- View Cart Button -->
-    <div class="menuActions">
-        <a href="checkout.html" class="defaultButton">View Cart</a>
     </div>
 
     <footer>
@@ -60,7 +48,7 @@
     </footer>
 
     <script src="storage.js"></script>
-    <script src="menu.js"></script>
+    <script src="student-dashboard.js"></script>
 
     <footer style="background-color:#f1f1f1; text-align:center; padding:10px; font-size:14px; color:#555; border-top:1px solid #ccc;">
     <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 1.0.3</span>

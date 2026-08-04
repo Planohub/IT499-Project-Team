@@ -1,6 +1,6 @@
-/* ----------------------
-   Root and global styles
-   ---------------------- */
+/* -------------------------------------------------------------------------
+   CampusFoodLink+ — Cozy Sage Green & Warm Gold Theme (styles.css)
+   ------------------------------------------------------------------------- */
 
 * {
     margin: 0;
@@ -9,18 +9,88 @@
 }
 
 :root {
-    --white: #fafafa;
-    --black: #000000;
-    --grey: #555555;
-    --lightGrey: #cccccc;
+    /* Brand palette */
+    --sage-background: #e4ede2;
+    --forest-green: #1b3a28;
+    --leaf-green: #3d5c47;
+    --warm-gold: #c5922e;
+    --card-background: #f4f8f3;
+    --logo-blue: #1f478d;
 
+    /* Supporting colors */
+    --white: #ffffff;
+    --danger: #c62828;
+    --danger-background: #ffebee;
+    --success: #2e7d32;
+    --success-background: #e8f5e9;
+    --border-soft: #b8c9bb;
+
+    /*
+       Compatibility aliases.
+       These keep existing teammate code working while the stylesheet
+       gradually moves toward clearer variable names.
+    */
+    --black: var(--forest-green);
+    --grey: var(--leaf-green);
+    --lightGrey: var(--warm-gold);
+    --cardWhite: var(--card-background);
+    --blue: var(--logo-blue);
 }
 
 body {
     font-family: Verdana, sans-serif;
-    background: var(--white);
+    /* Soft Sage base + Warm Gold glow top-right + Forest Green glow bottom-left */
+    background:
+        radial-gradient(circle at 90% 10%, rgba(197, 146, 46, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 10% 85%, rgba(27, 58, 40, 0.08) 0%, transparent 40%),
+        var(--white);
+    background-attachment: fixed;
     color: var(--black);
     min-height: 100vh;
+    padding-bottom: 90px;
+
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    /* Ultra-faint inline SVG pattern */
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 10v10M13 10v6M17 10v6M15 20v10M40 10c2 0 4 2 4 6v4h-8v-4c0-4 2-6 4-6zm0 10v10' stroke='%231b3a28' stroke-width='1.2' fill='none' stroke-linecap='round' opacity='0.10'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    pointer-events: none;
+    /* Allows clicks to pass through */
+    z-index: -1;
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    bottom: -50px;
+    right: -50px;
+    width: 350px;
+    height: 350px;
+    background-image: url('CFL-Logo.png');
+    /* or CFL+Logo.png */
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.08;
+    /* Very faint so text stays clear */
+    pointer-events: none;
+    z-index: -1;
+}
+
+@media (max-width: 600px) {
+    body::after {
+        width: 200px;
+        height: 200px;
+        bottom: 40px;
+        right: 10px;
+        opacity: 0.03;
+    }
 }
 
 .pageHeader {
@@ -29,7 +99,8 @@ body {
 
 .pageHeader h2 {
     font-size: 1.8rem;
-    font-weight: 600;
+    font-weight: 700;
+    color: var(--black);
 }
 
 .pageHeader p {
@@ -43,9 +114,10 @@ body {
    --------------------- */
 
 .navigationBar {
-    border-bottom: 2px solid var(--grey);
+    border-bottom: 3px solid var(--black);
     padding: 15px 30px;
-    background: var(--white);
+    background: var(--cardWhite);
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.08);
 }
 
 .navigationContainer {
@@ -67,7 +139,6 @@ body {
     text-decoration: underline;
 }
 
-
 .navigationLinks {
     display: flex;
     gap: 25px;
@@ -75,7 +146,7 @@ body {
 
 .navigationLinks a {
     color: var(--black);
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
     padding: 5px 0;
     border-bottom: 2px solid transparent;
@@ -83,7 +154,8 @@ body {
 
 .navigationLinks a:hover,
 .navigationLinks a.active {
-    border-bottom-color: var(--black);
+    border-bottom-color: var(--lightGrey);
+    color: var(--lightGrey);
 }
 
 .navigationUser {
@@ -94,10 +166,12 @@ body {
 }
 
 .userBadge {
-    border: 1px solid var(--grey);
+    border: 2px solid var(--lightGrey);
+    background: #fbf7ee;
+    color: var(--black);
     padding: 4px 14px;
-    border-radius: 4px;
-    font-weight: 500;
+    border-radius: 20px;
+    font-weight: 600;
 }
 
 .balanceBadge {
@@ -105,14 +179,16 @@ body {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--white);
-    border: 2px solid var(--black);
-    border-radius: 8px;
+    background: var(--cardWhite);
+    border: 2px solid var(--lightGrey);
+    color: var(--black);
+    border-radius: 25px;
     padding: 10px 24px;
     font-size: 1.1rem;
-    font-weight: 600;
-    z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+    z-index: 9999;
+    box-shadow: 0 4px 14px rgba(27, 58, 40, 0.18);
+    white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -141,10 +217,9 @@ body {
 
     .userBadge,
     .balanceBadge {
-        padding: 2px 10px;
+        padding: 4px 12px;
     }
 }
-
 
 /* --------
    Buttons
@@ -152,39 +227,50 @@ body {
 
 .defaultButton {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     background: var(--black);
-    color: var(--white);
+    color: #ffffff;
     border: 2px solid var(--black);
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     margin-top: 5px;
+    transition: background 0.2s, border-color 0.2s;
 }
 
 .defaultButton:hover {
-    background: var(--white);
-    color: var(--black);
+    background: var(--logo-blue);
+    border-color: var(--logo-blue);
+    color: var(--white);
+}
+
+.defaultButton:focus-visible,
+.secondaryButton:focus-visible,
+.roleLoginSection select:focus-visible {
+    outline: 3px solid rgba(31, 71, 141, 0.3);
+    outline-offset: 3px;
 }
 
 .secondaryButton {
     display: inline-block;
     padding: 8px 24px;
-    border: 2px solid var(--black);
-    border-radius: 4px;
+    border: 2px solid var(--lightGrey);
+    border-radius: 6px;
     font-weight: 600;
     font-size: 0.9rem;
     color: var(--black);
-    background: var(--white);
+    background: var(--cardWhite);
     cursor: pointer;
     text-decoration: none;
+    transition: background 0.2s, color 0.2s;
 }
 
 .secondaryButton:hover {
-    background: var(--black);
-    color: var(--white);
+    background: var(--lightGrey);
+    color: #ffffff;
 }
+
 
 /* ========================================
    CHECKOUT REMOVE BUTTON
@@ -195,7 +281,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--grey);
 }
 
 .checkout-item:last-child {
@@ -211,7 +297,7 @@ body {
 .remove-item-btn {
     background: none;
     border: none;
-    color: #cc0000;
+    color: #c62828;
     font-size: 1.2rem;
     cursor: pointer;
     padding: 4px 8px;
@@ -223,9 +309,6 @@ body {
     background: #ffebeb;
 }
 
-.dark-mode .remove-item-btn:hover {
-    background: #3a1a1a;
-}
 
 /* ========================================
    CONFIRMATION ORDER ITEMS
@@ -235,7 +318,7 @@ body {
     display: flex;
     justify-content: space-between;
     padding: 6px 0;
-    border-bottom: 1px solid #eeeeee;
+    border-bottom: 1px solid var(--grey);
 }
 
 .order-item-row:last-child {
@@ -243,27 +326,27 @@ body {
 }
 
 .order-item-name {
-    font-weight: 500;
-    color: var(--text-primary);
+    font-weight: 600;
+    color: var(--black);
 }
 
 .order-item-price {
-    font-weight: 600;
-    color: var(--text-primary);
+    font-weight: 700;
+    color: var(--lightGrey);
 }
 
 /* Empty cart message */
 #empty-cart-message {
     text-align: center;
     padding: 40px;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
     margin-bottom: 20px;
-    background: var(--bg-card);
+    background: var(--cardWhite);
 }
 
 #empty-cart-message p {
-    color: var(--text-secondary);
+    color: var(--grey);
 }
 
 #empty-cart-message .secondaryButton {
@@ -276,56 +359,184 @@ body {
 }
 
 .confirmationBox.order-not-found h2 {
-    color: #cc0000;
+    color: #c62828;
 }
 
-/* ----------
-   Login Page
-   ---------- */
 
-.loginBox {
+/* -------------------------
+ * ROLE SELECTION AND LOGIN 
+ * ------------------------- */
+
+.loginBox,
+.roleLandingPage {
+    min-height: calc(100vh - 52px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    padding: 20px;
+    padding: 32px 20px;
 }
 
 .loginHeader {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
 }
 
-.loginHeader h1 {
-    font-size: 2.5rem;
-    color: var(--black);
-    font-weight: 700;
-    letter-spacing: 1px;
-}
-
-.loginHeader .loginSubtitle {
-    color: var(--grey);
-    font-size: 1rem;
-    margin-top: 5px;
-    font-weight: 300;
-}
-
-.loginCredentials {
-    border: 2px solid var(--grey);
+.loginLogo,
+.roleLandingLogo {
+    display: block;
+    width: 180px;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto 18px;
     border-radius: 8px;
-    padding: 35px 35px 30px;
-    max-width: 350px;
-    width: 100%;
-    background: var(--white);
 }
 
-.loginCredentials h2 {
-    font-size: 1.3rem;
-    color: var(--black);
+.loginHeader h1,
+.roleLandingCard h1 {
+    color: var(--forest-green);
+    font-size: clamp(2rem, 5vw, 2.7rem);
+    line-height: 1.1;
+    letter-spacing: 0.5px;
+}
+
+.loginSubtitle {
+    color: var(--leaf-green);
+    margin-top: 7px;
+    font-size: 1rem;
+}
+
+.loginCredentials,
+.roleLandingCard {
+    width: 100%;
+    max-width: 440px;
+    padding: 34px;
     text-align: center;
-    font-weight: 600;
-    margin-bottom: 20px;
+    background: rgba(244, 248, 243, 0.96);
+    border: 2px solid var(--forest-green);
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(27, 58, 40, 0.14);
+}
+
+.roleLandingIntro {
+    margin: 26px 0 22px;
+}
+
+.roleLandingIntro h2,
+.loginCredentials h2 {
+    color: var(--forest-green);
+    margin-bottom: 7px;
+    font-size: 1.35rem;
+}
+
+.roleLandingIntro p,
+.loginRoleDescription {
+    color: var(--leaf-green);
+    line-height: 1.5;
+}
+
+.roleButtonGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.roleLoginButton {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    box-sizing: border-box;
+    text-decoration: none;
+}
+
+.loginRoleIcon {
+    margin-bottom: 8px;
+    font-size: 2.25rem;
+}
+
+.roleLoginSection {
+    margin-top: 24px;
+    text-align: left;
+}
+
+.roleLoginSection label {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--forest-green);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.roleLoginSection select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--border-soft);
+    border-radius: 7px;
+    background: var(--white);
+    color: var(--forest-green);
+    font: inherit;
+}
+
+.roleLoginSection select:focus {
+    outline: 3px solid rgba(31, 71, 141, 0.16);
+    border-color: var(--logo-blue);
+}
+
+.roleLoginSection .defaultButton {
+    margin-top: 14px;
+}
+
+.simulatedLoginNotice {
+    margin-top: 22px;
+    padding: 11px 12px;
+    border: 1px solid rgba(197, 146, 46, 0.55);
+    border-radius: 7px;
+    background: rgba(197, 146, 46, 0.08);
+    color: var(--leaf-green);
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.backToRoleSelection {
+    display: inline-block;
+    margin-top: 18px;
+    color: var(--logo-blue);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.backToRoleSelection:hover {
+    text-decoration: underline;
+}
+
+.siteFooter {
+    position: relative;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-soft);
+    background: rgba(244, 248, 243, 0.95);
+    color: var(--leaf-green);
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 600px) {
+
+    .loginBox,
+    .roleLandingPage {
+        justify-content: flex-start;
+        padding-top: 40px;
+    }
+
+    .loginCredentials,
+    .roleLandingCard {
+        padding: 26px 20px;
+    }
+
+    .loginLogo,
+    .roleLandingLogo {
+        width: 150px;
+    }
 }
 
 
@@ -345,19 +556,21 @@ body {
     margin-bottom: 4px;
 }
 
-.credentialForm input {
+.credentialForm input,
+.credentialForm select {
     width: 100%;
-    padding: 8px 12px;
-    border: 2px solid var(--lightGrey);
-    border-radius: 4px;
+    padding: 10px 12px;
+    border: 2px solid var(--grey);
+    border-radius: 6px;
     font-size: 1rem;
-    background: var(--white);
+    background: #ffffff;
     color: var(--black);
 }
 
-.credentialForm input:focus {
+.credentialForm input:focus,
+.credentialForm select:focus {
     outline: none;
-    border-color: var(--grey);
+    border-color: var(--lightGrey);
 }
 
 @media (max-width: 480px) {
@@ -388,11 +601,11 @@ body {
 }
 
 .vendorBox {
-    border: 2px solid var(--lightGrey);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
     padding: 30px 20px;
-    background: var(--white);
-    transition: border-color 0.2s;
+    background: var(--cardWhite);
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
     text-decoration: none;
     color: var(--black);
     display: flex;
@@ -401,21 +614,66 @@ body {
     justify-content: center;
     gap: 1rem;
     min-height: 180px;
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.06);
 }
 
 .vendorBox:hover {
-    border-color: var(--grey);
+    border-color: var(--lightGrey);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(197, 146, 46, 0.2);
 }
 
 .vendorBox h4 {
     font-size: 1.2rem;
-    font-weight: 600;
+    font-weight: 700;
     text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
+    color: var(--black);
 }
 
 .vendorBox p {
     text-align: center;
+    color: var(--grey);
+}
+
+.vendorGridMessage {
+    grid-column: 1 / -1;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--grey);
+}
+
+.vendorGridMessage p:first-child {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.vendorGridMessage p+p {
+    margin-top: 8px;
+}
+
+.vendorGridError {
+    color: var(--danger);
+}
+
+.vendorStatus {
+    margin-top: 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.vendorStatusOpen {
+    color: var(--success);
+}
+
+.vendorStatusClosed {
+    color: var(--danger);
+}
+
+.vendorHours {
+    margin-top: 2px;
+    color: var(--grey);
+    font-size: 0.75rem;
 }
 
 @media (max-width: 768px) {
@@ -437,7 +695,7 @@ body {
 
 
 /* --------------
-   Temp Menu Page
+   Menu Catalog Page
    -------------- */
 
 .menuPageHeader {
@@ -446,8 +704,9 @@ body {
 
 .menuPageHeader h2 {
     font-size: 1.8rem;
-    font-weight: 600;
+    font-weight: 700;
     margin-top: 10px;
+    color: var(--black);
 }
 
 .menuPageHeader .vendorLocation {
@@ -457,7 +716,7 @@ body {
 
 .goBackLink {
     color: var(--black);
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
     display: inline-block;
     padding: 5px 0;
@@ -465,7 +724,8 @@ body {
 }
 
 .goBackLink:hover {
-    border-bottom-color: var(--black);
+    border-bottom-color: var(--lightGrey);
+    color: var(--lightGrey);
 }
 
 .menuItemGrid {
@@ -484,36 +744,38 @@ body {
 }
 
 .itemNameAbove {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
     color: var(--black);
     margin-bottom: 8px;
 }
 
 .menuItemBox {
-    border: 2px solid var(--lightGrey);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
     overflow: hidden;
-    background: var(--white);
-    transition: border-color 0.2s, transform 0.2s;
+    background: var(--cardWhite);
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
     cursor: pointer;
     text-align: center;
     width: 100%;
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.06);
 }
 
 .menuItemBox.added {
-    border-color: var(--black);
+    border-color: var(--lightGrey);
 }
 
 .menuItemBox:hover {
-    border-color: var(--grey);
-    transform: scale(1.05);
+    border-color: var(--lightGrey);
+    transform: scale(1.04);
+    box-shadow: 0 6px 16px rgba(197, 146, 46, 0.2);
 }
 
-/* Menu Item Picture/Price Areas */
 .menuItemPicture {
     position: relative;
-    background: var(--lightGrey);
+    background: #d0e0d2;
+    /* Soft Sage Green Picture Frame */
     padding: 40px 20px;
     display: flex;
     flex-direction: column;
@@ -524,7 +786,7 @@ body {
 }
 
 .menuItemBox:hover .menuItemPicture {
-    background: var(--grey);
+    background: #bd3a;
 }
 
 .menuItemPictureOverlay {
@@ -532,12 +794,12 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    color: var(--white);
-    background: rgba(0, 0, 0, 0.75);
-    padding: 10px 24px;
-    border-radius: 4px;
+    color: #ffffff;
+    background: var(--black);
+    padding: 8px 20px;
+    border-radius: 20px;
     opacity: 0;
     transition: opacity 0.3s;
     pointer-events: none;
@@ -548,18 +810,25 @@ body {
     opacity: 1;
 }
 
+.menuItemDescription {
+    padding: 0 14px 14px;
+    color: var(--grey);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
 .menuItemPriceArea {
     padding: 10px 16px 14px 16px;
-    border-top: 1px solid var(--grey);
+    border-top: 2px solid var(--black);
+    background: var(--cardWhite);
 }
 
 .menuItemPrice {
     font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--black);
+    font-size: 1.15rem;
+    color: var(--lightGrey);
 }
 
-/* Menu Page - Actions */
 .menuActions {
     display: flex;
     justify-content: center;
@@ -569,9 +838,10 @@ body {
 .menuActions .defaultButton {
     width: auto;
     margin-top: 2rem;
-    padding: .5rem 1.7rem;
+    padding: 10px 30px;
     text-decoration: none;
 }
+
 
 /* -------------------
    Mobile menu queries
@@ -593,8 +863,8 @@ body {
     }
 
     .menuItemPictureOverlay {
-        font-size: 1rem;
-        padding: 8px 18px;
+        font-size: 0.95rem;
+        padding: 6px 14px;
     }
 
     .menuItemPrice {
@@ -628,10 +898,9 @@ body {
 
     .menuItemPictureOverlay {
         font-size: 0.85rem;
-        padding: 6px 14px;
+        padding: 6px 12px;
     }
 }
-
 
 
 /* ----------------
@@ -639,14 +908,16 @@ body {
    ---------------- */
 
 .checkoutItems {
-    border: 2px solid var(--grey);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
     padding: 20px;
-    background: var(--white);
+    background: var(--cardWhite);
     margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.06);
 }
 
-.checkoutItem {
+.checkoutItem,
+.checkout-item {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 140px 40px;
     align-items: center;
@@ -655,7 +926,8 @@ body {
     border-bottom: 1px solid var(--grey);
 }
 
-.checkoutItem:last-child {
+.checkoutItem:last-child,
+.checkout-item:last-child {
     border-bottom: none;
 }
 
@@ -667,7 +939,7 @@ body {
 }
 
 .itemName {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
     color: var(--black);
 }
@@ -681,17 +953,18 @@ body {
 }
 
 .itemPrice {
-    font-weight: 600;
-    color: var(--black);
+    font-weight: 700;
+    color: var(--lightGrey);
 }
 
 .quantityControls {
     display: inline-flex;
     width: fit-content;
     align-items: center;
-    border: 1px solid var(--grey);
+    border: 2px solid var(--black);
     border-radius: 6px;
     overflow: hidden;
+    background: #ffffff;
 }
 
 .quantityControls button {
@@ -700,14 +973,17 @@ body {
     padding: .35rem .6rem;
     cursor: pointer;
     font-size: 1rem;
+    color: var(--black);
+    font-weight: 700;
 }
 
 .orderSummary {
-    border: 2px solid var(--grey);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
     padding: 20px;
-    background: var(--white);
+    background: var(--cardWhite);
     margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.06);
 }
 
 .summaryRow {
@@ -720,7 +996,7 @@ body {
 .summaryRow.total {
     font-weight: 700;
     font-size: 1.2rem;
-    border-top: 2px solid var(--black);
+    border-top: 2px solid var(--lightGrey);
     padding-top: 12px;
     margin-top: 8px;
     color: var(--black);
@@ -750,12 +1026,89 @@ body {
     font-size: 1.3rem;
 }
 
+.studentOrderCard {
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 2px solid var(--black);
+    border-radius: 10px;
+    background: var(--cardWhite);
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.08);
+}
+
+.studentOrderHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--lightGrey);
+    flex-wrap: wrap;
+}
+
+.studentOrderHeader h3 {
+    margin: 0;
+    color: var(--black);
+}
+
+.studentOrderDate {
+    margin-top: 3px;
+    color: var(--grey);
+    font-size: 0.85rem;
+}
+
+.studentOrderDetails {
+    padding: 12px;
+    border: 1px solid var(--lightGrey);
+    border-radius: 6px;
+    background: var(--white);
+}
+
+.studentOrderDetails ul {
+    padding-left: 20px;
+    margin-bottom: 8px;
+    color: var(--black);
+    font-size: 0.9rem;
+}
+
+.studentOrderItem {
+    margin-bottom: 4px;
+}
+
+.studentOrderTotal {
+    margin: 0;
+    padding-top: 7px;
+    border-top: 1px solid var(--border-soft);
+    color: var(--black);
+    font-weight: 700;
+}
+
+.studentOrderViewButton {
+    margin-top: 14px;
+}
+
 @media (max-width: 600px) {
+    body {
+        padding-bottom: 120px;
+    }
+
     .itemSummary {
         grid-template-columns: 1fr;
         gap: .5rem;
     }
+
+    .menuActions,
+    .checkoutOptions,
+    .confirmationButtons {
+        margin-bottom: 45px;
+    }
+
+    .studentOrderHeader {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 }
+
 
 /* -------------------
    Confirmation Page
@@ -765,10 +1118,11 @@ body {
     max-width: 500px;
     margin: 40px auto;
     text-align: center;
-    border: 2px solid var(--grey);
-    border-radius: 8px;
+    border: 2px solid var(--black);
+    border-radius: 12px;
     padding: 40px 30px;
-    background: var(--white);
+    background: var(--cardWhite);
+    box-shadow: 0 4px 18px rgba(27, 58, 40, 0.12);
 }
 
 .confirmationIcon {
@@ -792,11 +1146,11 @@ body {
 
 .orderDetailsBox {
     text-align: left;
-    border: 1px solid var(--grey);
-    border-radius: 6px;
+    border: 2px solid var(--black);
+    border-radius: 8px;
     padding: 16px 20px;
     margin-bottom: 20px;
-    background: var(--white);
+    background: var(--cardWhite);
 }
 
 .orderDetailRow {
@@ -811,12 +1165,12 @@ body {
 }
 
 .orderDetailLabel {
-    font-weight: 500;
+    font-weight: 600;
     color: var(--grey);
 }
 
 .detailsOfOrder {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--black);
 }
 
@@ -841,4 +1195,72 @@ body {
 
 .confirmationButtons .secondaryButton {
     padding: 10px 20px;
+}
+
+/* =========================================================================
+   VENDOR DASHBOARD — MOBILE ORDER STATUS FIX & KITCHEN CARDS
+   ========================================================================= */
+
+.vendorOrderCard {
+    border: 2px solid var(--black);
+    border-radius: 10px;
+    padding: 20px;
+    background: var(--cardWhite);
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(27, 58, 40, 0.08);
+}
+
+.vendorOrderHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--grey);
+    margin-bottom: 12px;
+}
+
+.orderStatusBadge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    /* PREVENTS TEXT WRAPPING ON MOBILE */
+    color: #ffffff;
+}
+
+/* Mobile Layout Adjustment: Stack header elements cleanly */
+@media (max-width: 600px) {
+    .vendorOrderHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .orderStatusBadge {
+        align-self: flex-start;
+    }
+
+    .vendorActionGroup {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .vendorActionGroup select,
+    .vendorActionGroup button {
+        width: 100% !important;
+    }
+}
+
+/* Mobile Vendor Order Card Guard */
+@media (max-width: 600px) {
+    .vendorOrderCard button {
+        width: 100% !important;
+        margin-top: 4px;
+    }
 }

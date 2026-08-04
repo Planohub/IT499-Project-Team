@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFoodLink+ — Manage Students</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navigationBar">
+        <div class="navigationContainer">
+            <div class="navigationBrand">
+                <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="CFL-Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
+                    <span>CampusFoodLink+</span>
+                </a>
+            </div>
+            <div class="navigationLinks">
+                <a href="admin-dashboard.html">Dashboard</a>
+                <a href="admin-reports.html">Reports</a>
+                <a href="admin-vendors.html">Vendors</a>
+                <a href="admin-students.html" class="active">Students</a>
+                <a href="index.html">Logout</a>
+            </div>
+            <div class="navigationUser">
+                <span class="userBadge">📊 Admin</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="vendorSelectionContainer">
+        <div class="pageHeader">
+            <h2>Student Account Management</h2>
+            <p>Manage student accounts, balances, and transaction history</p>
+        </div>
+
+        <!-- ======================================== -->
+        <!-- ADD NEW STUDENT -->
+        <!-- ======================================== -->
+        <div class="orderDetailsBox" style="margin-bottom: 25px;">
+            <h3>Add New Student Account</h3>
+            <p style="color: var(--grey); font-size: 0.9rem; margin-top: 4px; margin-bottom: 10px;">
+                New students are automatically set to <strong>Active</strong> with a starting balance of <strong>$0.00</strong>.
+            </p>
+            <form id="addStudentForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div class="credentialForm">
+                    <label for="studentFirstName">First Name</label>
+                    <input type="text" id="studentFirstName" placeholder="e.g., Sarah" required>
+                </div>
+                <div class="credentialForm">
+                    <label for="studentLastName">Last Name</label>
+                    <input type="text" id="studentLastName" placeholder="e.g., Johnson" required>
+                </div>
+                <div class="credentialForm">
+                    <label for="studentEmail">Email</label>
+                    <input type="email" id="studentEmail" placeholder="e.g., sarah@student.edu" required>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <button type="submit" class="defaultButton" style="width: auto; padding: 10px 30px;">➕ Add Student Account</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ======================================== -->
+        <!-- STUDENT DIRECTORY -->
+        <!-- ======================================== -->
+        <div class="orderDetailsBox">
+            <h3>Registered Student Accounts</h3>
+            <div id="studentDirectoryContainer" style="margin-top: 15px; overflow-x: auto;">
+                <!-- Students will be rendered here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- ======================================== -->
+        <!-- STUDENT DETAILS / TRANSACTION HISTORY -->
+        <!-- ======================================== -->
+        <div class="orderDetailsBox" style="margin-top: 25px;" id="studentDetailSection">
+            <h3>Student Details &amp; Transaction History</h3>
+            <p style="color: var(--grey); font-size: 0.9rem; margin-top: 4px; margin-bottom: 10px;">
+                Click on a student in the table above to view their details and transaction history.
+            </p>
+            <div id="studentDetailContainer" style="margin-top: 15px; padding: 20px; text-align: center; color: var(--grey);">
+                Select a student to view their details.
+            </div>
+        </div>
+    </div>
+
+    <script src="storage.js"></script>
+    <script src="admin-students.js"></script>
+
+    <footer style="background-color:#f1f1f1; text-align:center; padding:10px; font-size:14px; color:#555; border-top:1px solid #ccc;">
+    <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 1.0.3</span>
+    </footer>
+</body>
+
+</html>
