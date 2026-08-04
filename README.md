@@ -116,6 +116,7 @@ Run CampusFoodLink+ through the Flask development server rather than Live Server
 1. **Create and activate a virtual environment** from the repository root:
    ```bash
    python3 -m venv venv
+   python -m venv venv # Windows only
    source venv/bin/activate   # macOS / Linux
    venv\Scripts\Activate.ps1  # Windows PowerShell
    ```
