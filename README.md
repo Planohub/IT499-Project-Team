@@ -21,6 +21,36 @@ Flask serves the frontend and the API. SQLite is authoritative for users, vendor
 - [Git and collaboration notes](#git-and-collaboration-notes)
 - [Future enhancements](#future-enhancements)
 
+## Running the Project Locally with SQLite DB
+
+CampusFoodLink+ now uses Flask and SQLite, so it must be run through the Flask development server rather than GitHub Pages or by opening the HTML files directly.
+
+### macOS / Linux
+
+```bash
+git clone https://github.com/Planohub/IT499-Project-Team.git
+cd IT499-Project-Team
+git switch main
+git pull
+
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python app.py
+```
+
+### Windows PowerShell
+
+git clone https://github.com/Planohub/IT499-Project-Team.git
+cd IT499-Project-Team
+git switch main
+git pull
+
+py -m venv venv
+venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+py app.py
+
 ## Main capabilities
 
 - Landing page with role selection (Student, Vendor, Administrator), and simulated login for all three, with account lists loaded from SQLite.
