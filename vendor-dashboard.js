@@ -976,6 +976,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                     `;
                 }
 
+                // 🔥 Build the thumbnail if a picture exists
+                const imageThumbnail = item.imageUrl 
+                    ? `<img src="${escapeHtml(item.imageUrl)}" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid #ccc; flex-shrink: 0;">` 
+                    : `<div style="width: 40px; height: 40px; border-radius: 6px; background: #eee; display: flex; align-items:center; justify-content:center; font-size:10px; color:#999; border: 1px solid #ccc; flex-shrink: 0;">No Pic</div>`;
+
                 html += `
                 <tr style="
                     border-bottom:1px solid var(--lightGrey);
@@ -983,7 +988,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                     <td style="
                         padding:12px 10px;
                         font-weight:600;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
                     ">
+                        ${imageThumbnail}
                         ${escapeHtml(item.name)}
                     </td>
 
@@ -1213,13 +1222,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             // Read and validate the submitted form values.
             const name = document.getElementById('newItemName').value.trim();
-
-            const price =
-                Number.parseFloat(
-                    document.getElementById('newItemPrice').value
-                );
-
+            const price = Number.parseFloat(document.getElementById('newItemPrice').value);
             const description = document.getElementById('newItemDesc').value.trim();
+            
+            // 🔥 Grab the file!
+            const imageFile = document.getElementById('newItemImage').files[0]; 
 
             if (!name || Number.isNaN(price) || price <= 0) {
                 alert(
@@ -1236,19 +1243,21 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
             try {
+                // 🔥 Use FormData to package the text AND the file together
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('price', price);
+                formData.append('description', description);
+                if (imageFile) {
+                    formData.append('image', imageFile);
+                }
+
                 // Send the new menu item to Flask for SQLite storage.
                 const response = await fetch(
                     `/api/vendors/${ACTIVE_VENDOR_ID}/menu`,
                     {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            name: name,
-                            price: price,
-                            description: description
-                        })
+                        body: formData // No headers needed, fetch sets boundary automatically
                     }
                 );
 

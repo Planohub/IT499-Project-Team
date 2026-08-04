@@ -45,7 +45,8 @@ CREATE TABLE MenuItem (
     Description TEXT,
     Price NUMERIC NOT NULL
         CHECK (Price >= 0),
-    IsAvailable INTEGER NOT NULL DEFAULT 1
+    ImageURL TEXT,             /* <--- ADDed this so that the vendor can upload images */
+    IsAvailable INTEGER NOT NULL DEFAULT 0
         CHECK (IsAvailable IN (0, 1)),
     IsActive INTEGER NOT NULL DEFAULT 1
         CHECK (IsActive IN (0, 1)),

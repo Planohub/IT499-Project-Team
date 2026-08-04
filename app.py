@@ -1,11 +1,16 @@
 # Require the existing 24-hour format used throughout the prototype.
+import os
 import re
 
+from werkzeug.utils import secure_filename   # <--- NEW image upload security
 from flask import Flask, abort, jsonify, request, send_from_directory
 from database import get_db_connection
 
-
 app = Flask(__name__)
+
+# --- NEW UPLOAD CONFIGURATION ---
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # Limits uploads to 5MB max
 
 # Existing frontend files that Flask is allowed to serve.
 ALLOWED_FRONTEND_FILES = {
@@ -1129,7 +1134,7 @@ def get_admin_reports():
 
 
 # Vendor-facing menu retrieval endpoint
-@app.route("/api/vendors/<int:vendor_id>/menu")
+@app.route("/api/vendors/<int:vendor_id>/menu", methods=["GET"])
 def get_vendor_menu(vendor_id):
     """Return menu items for one vendor."""
 
@@ -1158,6 +1163,7 @@ def get_vendor_menu(vendor_id):
         if vendor is None:
             return jsonify({"error": "Vendor not found"}), 404
 
+        # 🟢 Added ImageURL to the SELECT statement
         # Vendor management includes active and deactivated items.
         if include_inactive:
             menu_items = connection.execute(
@@ -1169,7 +1175,8 @@ def get_vendor_menu(vendor_id):
                     Description,
                     Price,
                     IsAvailable,
-                    IsActive
+                    IsActive,
+                    ImageURL
                 FROM MenuItem
                 WHERE VendorID = ?
                 ORDER BY ItemName
@@ -1177,6 +1184,7 @@ def get_vendor_menu(vendor_id):
                 (vendor_id,),
             ).fetchall()
 
+        # 🟢 Added ImageURL to the SELECT statement
         # Student-facing menus only include active items.
         else:
             menu_items = connection.execute(
@@ -1188,7 +1196,8 @@ def get_vendor_menu(vendor_id):
                     Description,
                     Price,
                     IsAvailable,
-                    IsActive
+                    IsActive,
+                    ImageURL
                 FROM MenuItem
                 WHERE VendorID = ?
                   AND IsActive = 1
@@ -1214,6 +1223,7 @@ def get_vendor_menu(vendor_id):
                     "price": float(item["Price"]),
                     "isAvailable": bool(item["IsAvailable"]),
                     "isActive": bool(item["IsActive"]),
+                    "imageUrl": item["ImageURL"] # 🟢 Tells the server to send the picture URL!
                 }
                 for item in menu_items
             ],
@@ -1225,114 +1235,65 @@ def get_vendor_menu(vendor_id):
 
 # Vendor menu item creation endpoint
 @app.route("/api/vendors/<int:vendor_id>/menu", methods=["POST"])
-def create_vendor_menu_item(vendor_id):
-    """Create a new menu item for one vendor in SQLite."""
-
-    # Read the JSON object sent by vendor-dashboard.js.
-    menu_data = request.get_json(silent=True)
-
-    if not isinstance(menu_data, dict):
-        return jsonify({
-            "error": "A valid JSON request body is required"
-        }), 400
-
-    # Retrieve and normalize the submitted form values.
-    item_name = str(menu_data.get("name", "")).strip()
-    description = str(menu_data.get("description", "")).strip()
-    price = menu_data.get("price")
-
-    # Validate the required item name.
-    if not item_name:
-        return jsonify({
-            "error": "An item name is required"
-        }), 400
-
-    # Reject Boolean values because Python treats them as integers.
-    if isinstance(price, bool) or not isinstance(price, (int, float)):
-        return jsonify({
-            "error": "A valid menu-item price is required"
-        }), 400
-
-    price = round(float(price), 2)
-
-    if price <= 0:
-        return jsonify({
-            "error": "The menu-item price must be greater than zero"
-        }), 400
-
+def add_menu_item(vendor_id):
     connection = get_db_connection()
-
     try:
-        # Confirm that the target vendor exists.
-        vendor = connection.execute(
+        # 1. Get the text data from the form
+        name = request.form.get("name")
+        raw_price = request.form.get("price")
+        description = request.form.get("description")
+        
+        # Validate inputs
+        if not name or not raw_price:
+            return jsonify({"error": "Name and price are required"}), 400
+            
+        try:
+            price = float(raw_price)  # <-- This converts the price safely
+        except ValueError:
+            return jsonify({"error": "Invalid price format"}), 400
+
+        # 2. Handle the Image File
+        image_url = None
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename != '':
+                # Clean the filename to prevent security issues
+                filename = secure_filename(file.filename)
+                # Build the save path: static/uploads/filename.jpg
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                # Save the physical file
+                file.save(filepath)
+                # Create the URL we will save in the database
+                image_url = f"/static/uploads/{filename}"
+
+        # 3. Insert into the database (including the new ImageURL)
+        cursor = connection.cursor()
+        cursor.execute(
             """
-            SELECT
-                VendorID,
-                VendorName,
-                OperatingStatus
-            FROM Vendor
-            WHERE VendorID = ?
+            INSERT INTO MenuItem (VendorID, ItemName, Price, Description, ImageURL)
+            VALUES (?, ?, ?, ?, ?)
             """,
-            (vendor_id,),
-        ).fetchone()
-
-        if vendor is None:
-            return jsonify({
-                "error": "Vendor not found"
-            }), 404
-
-        # Prevent an inactive vendor from creating new menu items.
-        if vendor["OperatingStatus"] != "Active":
-            return jsonify({
-                "error": "Inactive vendors cannot add menu items"
-            }), 403
-
-        # Insert the menu item as active and available by default.
-        cursor = connection.execute(
-            """
-            INSERT INTO MenuItem (
-                VendorID,
-                ItemName,
-                Description,
-                Price,
-                IsAvailable,
-                IsActive
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                vendor_id,
-                item_name,
-                description or None,
-                price,
-                1,
-                1,
-            ),
+            (vendor_id, name, price, description, image_url),
         )
-
-        menu_item_id = cursor.lastrowid
-
+        
+        new_item_id = cursor.lastrowid
         connection.commit()
 
-        # Return the new record in the same format used by the GET route.
         return jsonify({
-            "message": "Menu item created successfully",
+            "message": "Menu item added successfully",
             "menuItem": {
-                "id": menu_item_id,
-                "vendorId": vendor_id,
-                "name": item_name,
-                "description": description or None,
+                "id": new_item_id,
+                "name": name,
                 "price": price,
-                "isAvailable": True,
-                "isActive": True,
-            },
+                "description": description,
+                "imageUrl": image_url
+            }
         }), 201
 
-    except Exception:
-        # Undo the insert if any database operation fails.
+    except Exception as e:
         connection.rollback()
-        raise
-
+        print(f"Error adding menu item: {e}")
+        return jsonify({"error": "An internal server error occurred"}), 500
     finally:
         connection.close()
 
