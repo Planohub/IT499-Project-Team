@@ -46,10 +46,10 @@ python3 app.py
 ### Windows PowerShell Setup
 
 ```powershell
-py -m venv venv
+python -m venv venv
 venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-py app.py
+python app.py
 ```
 
 ### Open the Application
@@ -118,6 +118,9 @@ Selected from [index.html](index.html) via [login.html](login.html); [login.js](
 ├── admin-reports.html          # Administrator reporting interface
 ├── admin-students.html         # Administrator student-management interface
 ├── admin-vendors.html          # Administrator vendor-management interface
+│
+├── /static                 # Directory for static web assets
+│   ├── /uploads            # User-generated image files (Vendor menu pictures)
 │
 ├── *.js                         # One script per HTML page above, calling the matching Flask API routes
 ├── storage.js                   # Temporary cart, selected-vendor, and simulated session state only
@@ -203,7 +206,7 @@ Run CampusFoodLink+ through the Flask development server rather than Live Server
 |---|---|
 | **Vendor** | Campus dining vendors: name, location, operating hours, active/inactive status. |
 | **User** | Accounts for all three roles, including meal-plan balance and account status. `VendorID` links vendor-role users to their vendor. |
-| **MenuItem** | Vendor-specific menu items with price, availability, and active/inactive state. |
+| **MenuItem** | Vendor-specific menu items with price, availability, ImageURL, and active/inactive state. |
 | **FoodOrder** | An order placed by a student at a vendor, with total and current status. |
 | **OrderItem** | Line items (menu item, quantity, price) making up a `FoodOrder`. |
 | **OrderStatus** | History log of status changes — who, when, and any notes. |
