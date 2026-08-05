@@ -58,23 +58,31 @@
         <div id="menuSection" style="display: none;">
             <div class="orderDetailsBox" style="margin-bottom: 25px;">
                 <h3>Add New Menu Item</h3>
-                <form id="addMenuItemForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-                    <div class="credentialForm">
-                        <label for="newItemName">Item Name</label>
-                        <input type="text" id="newItemName" placeholder="e.g., Bacon Cheeseburger" required>
-                    </div>
+                <form id="addMenuItemForm" enctype="multipart/form-data">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div class="credentialForm">
+                    <label for="newItemName">Item Name</label>
+                    <input type="text" id="newItemName" placeholder="e.g., Breakfast Sandwich" required>
+                </div>
                     <div class="credentialForm">
                         <label for="newItemPrice">Price ($)</label>
-                        <input type="number" step="0.01" id="newItemPrice" placeholder="e.g., 9.50" required>
+                        <input type="number" id="newItemPrice" placeholder="e.g., 5.99" step="0.01" required>
                     </div>
                     <div class="credentialForm" style="grid-column: 1 / -1;">
                         <label for="newItemDesc">Description</label>
-                        <input type="text" id="newItemDesc" placeholder="e.g., Served with fresh lettuce and house sauce">
+                        <textarea id="newItemDesc" placeholder="e.g., Egg, cheese, and bacon on a toasted English muffin."></textarea>
                     </div>
+        
+                    <div class="credentialForm" style="grid-column: 1 / -1;">
+                        <label for="newItemImage">Food Picture (Optional)</label>
+                        <input type="file" id="newItemImage" name="image" accept="image/png, image/jpeg" style="padding: 10px; border: 1px dashed var(--grey); border-radius: 4px; width: 100%; background: #fff;">
+                    </div>
+        
                     <div style="grid-column: 1 / -1;">
-                        <button type="submit" class="defaultButton" style="width: auto; padding: 10px 30px;">Add Menu Item</button>
+                        <button type="submit" class="defaultButton" style="width: auto; padding: 10px 30px;">➕ Add Menu Item</button>
                     </div>
-                </form>
+                </div>
+            </form>
             </div>
 
             <div class="orderDetailsBox">
@@ -103,7 +111,7 @@
     <script src="vendor-dashboard.js"></script>
 
     <footer style="background-color:#f1f1f1; text-align:center; padding:10px; font-size:14px; color:#555; border-top:1px solid #ccc;">
-    <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 1.0.3</span>
+    <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 1.0.4</span>
     </footer>
 </body>
 

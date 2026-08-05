@@ -299,7 +299,23 @@ function renderMenuItems(items, menuGrid) {
                 data-item-name="${escapeHtml(item.name)}"
                 data-item-price="${item.price}"
             >
-                <div class="menuItemPicture">
+                <div
+                    class="menuItemPicture"
+                    ${item.imageUrl
+            ? `style="
+                                background-image:
+                                    linear-gradient(
+                                        rgba(0, 0, 0, 0.15),
+                                        rgba(0, 0, 0, 0.15)
+                                    ),
+                                    url('${escapeHtml(item.imageUrl)}');
+                                background-size: cover;
+                                background-position: center;
+                                background-repeat: no-repeat;
+                            "`
+            : ''
+        }
+                >
                     <span class="menuItemPictureOverlay">
                         Add
                     </span>

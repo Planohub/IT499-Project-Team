@@ -1,11 +1,34 @@
 # Require the existing 24-hour format used throughout the prototype.
 import re
+import os
+import uuid
 
 from flask import Flask, abort, jsonify, request, send_from_directory
 from database import get_db_connection
-
+from werkzeug.utils import secure_filename 
 
 app = Flask(__name__)
+
+
+# img upload configuration
+app.config["UPLOAD_FOLDER"] = os.path.join(
+    app.root_path,
+    "static",
+    "uploads",
+)
+
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+
+ALLOWED_IMAGE_EXTENSIONS = {
+    "png",
+    "jpg",
+    "jpeg",
+}
+
+os.makedirs(
+    app.config["UPLOAD_FOLDER"],
+    exist_ok=True,
+)
 
 # Existing frontend files that Flask is allowed to serve.
 ALLOWED_FRONTEND_FILES = {
@@ -1161,21 +1184,22 @@ def get_vendor_menu(vendor_id):
         # Vendor management includes active and deactivated items.
         if include_inactive:
             menu_items = connection.execute(
-                """
-                SELECT
-                    MenuItemID,
-                    VendorID,
-                    ItemName,
-                    Description,
-                    Price,
-                    IsAvailable,
-                    IsActive
-                FROM MenuItem
-                WHERE VendorID = ?
-                ORDER BY ItemName
-                """,
-                (vendor_id,),
-            ).fetchall()
+            """
+            SELECT
+                MenuItemID,
+                VendorID,
+                ItemName,
+                Description,
+                ImageURL,
+                Price,
+                IsAvailable,
+                IsActive
+            FROM MenuItem
+            WHERE VendorID = ?
+            ORDER BY ItemName
+            """,
+            (vendor_id,),
+        ).fetchall()
 
         # Student-facing menus only include active items.
         else:
@@ -1186,12 +1210,13 @@ def get_vendor_menu(vendor_id):
                     VendorID,
                     ItemName,
                     Description,
+                    ImageURL,
                     Price,
                     IsAvailable,
                     IsActive
                 FROM MenuItem
                 WHERE VendorID = ?
-                  AND IsActive = 1
+                AND IsActive = 1
                 ORDER BY ItemName
                 """,
                 (vendor_id,),
@@ -1212,6 +1237,7 @@ def get_vendor_menu(vendor_id):
                     "name": item["ItemName"],
                     "description": item["Description"],
                     "price": float(item["Price"]),
+                    "imageUrl": item["ImageURL"],
                     "isAvailable": bool(item["IsAvailable"]),
                     "isActive": bool(item["IsActive"]),
                 }
@@ -1222,43 +1248,226 @@ def get_vendor_menu(vendor_id):
     finally:
         connection.close()
 
+# Vendor menu mgmt PACTH - edit images
+@app.route(
+    "/api/menu-items/<int:menu_item_id>/image",
+    methods=["PATCH"],
+)
+def update_menu_item_image(menu_item_id):
+    """Upload or replace an image owned by the active vendor."""
+
+    raw_vendor_id = request.form.get("vendorId", "").strip()
+    image_file = request.files.get("image")
+
+    try:
+        vendor_id = int(raw_vendor_id)
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "A valid vendor ID is required"
+        }), 400
+
+    if not image_file or not image_file.filename:
+        return jsonify({
+            "error": "An image file is required"
+        }), 400
+
+    if not allowed_image_file(image_file.filename):
+        return jsonify({
+            "error": "Menu-item images must be PNG or JPEG files"
+        }), 400
+
+    connection = get_db_connection()
+    saved_image_path = None
+
+    try:
+        menu_item = connection.execute(
+            """
+            SELECT
+                MenuItem.MenuItemID,
+                MenuItem.VendorID,
+                MenuItem.ImageURL,
+                Vendor.OperatingStatus
+            FROM MenuItem
+            INNER JOIN Vendor
+                ON Vendor.VendorID = MenuItem.VendorID
+            WHERE MenuItem.MenuItemID = ?
+            """,
+            (menu_item_id,),
+        ).fetchone()
+
+        if menu_item is None:
+            return jsonify({
+                "error": "Menu item not found"
+            }), 404
+
+        if menu_item["VendorID"] != vendor_id:
+            return jsonify({
+                "error": (
+                    "This menu item does not belong "
+                    "to the active vendor"
+                )
+            }), 403
+
+        if menu_item["OperatingStatus"] != "Active":
+            return jsonify({
+                "error": (
+                    "Inactive vendors cannot update "
+                    "menu-item images"
+                )
+            }), 403
+
+        original_filename = secure_filename(
+            image_file.filename
+        )
+
+        _, extension = os.path.splitext(
+            original_filename
+        )
+
+        unique_filename = (
+            f"menu_{menu_item_id}_"
+            f"{uuid.uuid4().hex}"
+            f"{extension.lower()}"
+        )
+
+        saved_image_path = os.path.join(
+            app.config["UPLOAD_FOLDER"],
+            unique_filename,
+        )
+
+        image_file.save(saved_image_path)
+
+        image_url = (
+            f"/static/uploads/{unique_filename}"
+        )
+
+        connection.execute(
+            """
+            UPDATE MenuItem
+            SET ImageURL = ?
+            WHERE MenuItemID = ?
+              AND VendorID = ?
+            """,
+            (
+                image_url,
+                menu_item_id,
+                vendor_id,
+            ),
+        )
+
+        connection.commit()
+
+        old_image_url = menu_item["ImageURL"]
+
+        if old_image_url:
+            old_filename = os.path.basename(
+                old_image_url
+            )
+
+            old_image_path = os.path.join(
+                app.config["UPLOAD_FOLDER"],
+                old_filename,
+            )
+
+            if (
+                os.path.exists(old_image_path)
+                and old_image_path != saved_image_path
+            ):
+                os.remove(old_image_path)
+
+        return jsonify({
+            "message": (
+                "Menu-item image updated successfully"
+            ),
+            "imageUrl": image_url,
+        })
+
+    except Exception:
+        connection.rollback()
+
+        if (
+            saved_image_path
+            and os.path.exists(saved_image_path)
+        ):
+            os.remove(saved_image_path)
+
+        raise
+
+    finally:
+        connection.close()
+
+
 
 # Vendor menu item creation endpoint
 @app.route("/api/vendors/<int:vendor_id>/menu", methods=["POST"])
 def create_vendor_menu_item(vendor_id):
     """Create a new menu item for one vendor in SQLite."""
 
-    # Read the JSON object sent by vendor-dashboard.js.
-    menu_data = request.get_json(silent=True)
+    # Read multipart form fields sent by vendor-dashboard.js.
+    item_name = str(
+        request.form.get("name", "")
+    ).strip()
 
-    if not isinstance(menu_data, dict):
-        return jsonify({
-            "error": "A valid JSON request body is required"
-        }), 400
+    description = str(
+        request.form.get("description", "")
+    ).strip()
 
-    # Retrieve and normalize the submitted form values.
-    item_name = str(menu_data.get("name", "")).strip()
-    description = str(menu_data.get("description", "")).strip()
-    price = menu_data.get("price")
+    raw_price = str(
+        request.form.get("price", "")
+    ).strip()
 
-    # Validate the required item name.
     if not item_name:
         return jsonify({
             "error": "An item name is required"
         }), 400
 
-    # Reject Boolean values because Python treats them as integers.
-    if isinstance(price, bool) or not isinstance(price, (int, float)):
+    try:
+        price = round(float(raw_price), 2)
+    except (TypeError, ValueError):
         return jsonify({
             "error": "A valid menu-item price is required"
         }), 400
-
-    price = round(float(price), 2)
 
     if price <= 0:
         return jsonify({
             "error": "The menu-item price must be greater than zero"
         }), 400
+
+    image_file = request.files.get("image")
+    image_url = None
+    saved_image_path = None
+
+    if image_file and image_file.filename:
+        if not allowed_image_file(image_file.filename):
+            return jsonify({
+                "error": "Menu-item images must be PNG or JPEG files"
+            }), 400
+
+        original_filename = secure_filename(
+            image_file.filename
+        )
+
+        filename_root, filename_extension = os.path.splitext(
+            original_filename
+        )
+
+        unique_filename = (
+            f"{vendor_id}_"
+            f"{uuid.uuid4().hex}_"
+            f"{filename_root}"
+            f"{filename_extension.lower()}"
+        )
+
+        saved_image_path = os.path.join(
+            app.config["UPLOAD_FOLDER"],
+            unique_filename,
+        )
+
+        image_file.save(saved_image_path)
+
+        image_url = (
+            f"/static/uploads/{unique_filename}"
+        )
 
     connection = get_db_connection()
 
@@ -1277,33 +1486,40 @@ def create_vendor_menu_item(vendor_id):
         ).fetchone()
 
         if vendor is None:
+            if saved_image_path and os.path.exists(saved_image_path):
+                os.remove(saved_image_path)
+
             return jsonify({
                 "error": "Vendor not found"
             }), 404
 
         # Prevent an inactive vendor from creating new menu items.
         if vendor["OperatingStatus"] != "Active":
+            if saved_image_path and os.path.exists(saved_image_path):
+                os.remove(saved_image_path)
+
             return jsonify({
                 "error": "Inactive vendors cannot add menu items"
             }), 403
 
-        # Insert the menu item as active and available by default.
         cursor = connection.execute(
             """
             INSERT INTO MenuItem (
                 VendorID,
                 ItemName,
                 Description,
+                ImageURL,
                 Price,
                 IsAvailable,
                 IsActive
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 vendor_id,
                 item_name,
                 description or None,
+                image_url,
                 price,
                 1,
                 1,
@@ -1314,7 +1530,6 @@ def create_vendor_menu_item(vendor_id):
 
         connection.commit()
 
-        # Return the new record in the same format used by the GET route.
         return jsonify({
             "message": "Menu item created successfully",
             "menuItem": {
@@ -1322,6 +1537,7 @@ def create_vendor_menu_item(vendor_id):
                 "vendorId": vendor_id,
                 "name": item_name,
                 "description": description or None,
+                "imageUrl": image_url,
                 "price": price,
                 "isAvailable": True,
                 "isActive": True,
@@ -1329,13 +1545,15 @@ def create_vendor_menu_item(vendor_id):
         }), 201
 
     except Exception:
-        # Undo the insert if any database operation fails.
         connection.rollback()
+
+        if saved_image_path and os.path.exists(saved_image_path):
+            os.remove(saved_image_path)
+
         raise
 
     finally:
         connection.close()
-
 
 # Menu item update endpoint
 @app.route("/api/menu-items/<int:menu_item_id>", methods=["PATCH"])
@@ -2460,6 +2678,18 @@ def update_order_status(order_id):
     finally:
         connection.close()
 
+
+# Image upload handling
+def allowed_image_file(filename):
+    """Return whether an uploaded image uses an allowed extension."""
+
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower()
+        in ALLOWED_IMAGE_EXTENSIONS
+    )
+
+# Serve frontend files
 @app.route("/<path:filename>")
 def frontend_file(filename):
     """Serve only approved frontend pages and assets."""

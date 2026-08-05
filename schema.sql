@@ -43,6 +43,7 @@ CREATE TABLE MenuItem (
     VendorID INTEGER NOT NULL,
     ItemName TEXT NOT NULL,
     Description TEXT,
+    ImageURL TEXT,
     Price NUMERIC NOT NULL
         CHECK (Price >= 0),
     IsAvailable INTEGER NOT NULL DEFAULT 1

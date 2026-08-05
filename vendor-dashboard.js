@@ -976,15 +976,76 @@ document.addEventListener('DOMContentLoaded', async function () {
                     `;
                 }
 
+                // 🔥 Build the thumbnail if a picture exists
+                const imageThumbnail = item.imageUrl
+                    ? `<img src="${escapeHtml(item.imageUrl)}" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid #ccc; flex-shrink: 0;">`
+                    : `<div style="width: 40px; height: 40px; border-radius: 6px; background: #eee; display: flex; align-items:center; justify-content:center; font-size:10px; color:#999; border: 1px solid #ccc; flex-shrink: 0;">No Pic</div>`;
+
                 html += `
                 <tr style="
                     border-bottom:1px solid var(--lightGrey);
                 ">
                     <td style="
                         padding:12px 10px;
-                        font-weight:600;
+                        vertical-align:top;
                     ">
-                        ${escapeHtml(item.name)}
+                        <div style="
+                            display:flex;
+                            align-items:flex-start;
+                            gap:12px;
+                        ">
+                            <div style="
+                                display:flex;
+                                flex-direction:column;
+                                align-items:flex-start;
+                                gap:8px;
+                                min-width:170px;
+                            ">
+                                ${imageThumbnail}
+
+                                <input
+                                    type="file"
+                                    id="menuItemImage-${item.id}"
+                                    class="menuItemImageInput"
+                                    data-id="${item.id}"
+                                    accept="image/png, image/jpeg"
+                                    hidden
+                                >
+
+                                <label
+                                    for="menuItemImage-${item.id}"
+                                    class="secondaryButton"
+                                    style="
+                                        padding:4px 10px;
+                                        font-size:0.8rem;
+                                        width:auto;
+                                        cursor:pointer;
+                                        display:inline-block;
+                                    "
+                                >
+                                    ${item.imageUrl ? 'Replace Image' : 'Choose Image'}
+                                </label>
+
+                                <span
+                                    class="menuItemImageStatus"
+                                    data-id="${item.id}"
+                                    style="
+                                        display:none;
+                                        color:var(--grey);
+                                        font-size:0.75rem;
+                                    "
+                                >
+                                    Uploading...
+                                </span>
+                            </div>
+
+                            <span style="
+                                font-weight:600;
+                                padding-top:4px;
+                            ">
+                                ${escapeHtml(item.name)}
+                            </span>
+                        </div>
                     </td>
 
                     <td style="padding:12px 10px;">
@@ -1041,17 +1102,87 @@ document.addEventListener('DOMContentLoaded', async function () {
     function attachMenuActionListeners() {
 
         // ========================================
+        // ADD OR REPLACE MENU-ITEM IMAGE
+        // ========================================
+        document.querySelectorAll('.menuItemImageInput').forEach(input => {
+            input.addEventListener('change', async function () {
+                const itemId = Number(this.dataset.id);
+                const imageFile = this.files?.[0];
+
+                if (!imageFile) {
+                    return;
+                }
+
+                const statusMessage = document.querySelector(
+                    `.menuItemImageStatus[data-id="${itemId}"]`
+                );
+
+                const formData = new FormData();
+
+                formData.append(
+                    'vendorId',
+                    String(ACTIVE_VENDOR_ID)
+                );
+
+                formData.append('image', imageFile);
+
+                this.disabled = true;
+
+                if (statusMessage) {
+                    statusMessage.style.display = 'inline';
+                    statusMessage.textContent = 'Uploading...';
+                }
+
+                try {
+                    const response = await fetch(
+                        `/api/menu-items/${itemId}/image`,
+                        {
+                            method: 'PATCH',
+                            body: formData
+                        }
+                    );
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(
+                            result.error ||
+                            'Unable to update the menu-item image.'
+                        );
+                    }
+
+                    await renderVendorMenu();
+
+                } catch (error) {
+                    console.error(
+                        'Unable to update menu-item image:',
+                        error
+                    );
+
+                    alert(error.message);
+
+                    this.disabled = false;
+                    this.value = '';
+
+                    if (statusMessage) {
+                        statusMessage.style.display = 'none';
+                    }
+                }
+            });
+        });
+
+        // ========================================
         // TOGGLE MENU-ITEM AVAILABILITY
         // ========================================
         document.querySelectorAll('.toggleAvailBtn').forEach(button => {
             button.addEventListener('click', async function () {
                 const itemId = Number(this.dataset.id);
-                const newAvailability = this.dataset.avail === 'true';
+                const newAvailability =
+                    this.dataset.avail === 'true';
 
                 this.disabled = true;
 
                 try {
-                    // Persist the availability change through Flask.
                     const response = await fetch(
                         `/api/menu-items/${itemId}`,
                         {
@@ -1075,7 +1206,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                         );
                     }
 
-                    // Reload the SQLite-backed menu and warning banner.
                     await renderVendorMenu();
                     await checkForActiveMenuItems();
 
@@ -1110,7 +1240,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 this.disabled = true;
 
                 try {
-                    // Soft-delete the item through Flask and SQLite.
                     const response = await fetch(
                         `/api/menu-items/${itemId}`,
                         {
@@ -1135,7 +1264,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                         );
                     }
 
-                    // Reload the menu table and active-item warning.
                     await renderVendorMenu();
                     await checkForActiveMenuItems();
 
@@ -1161,7 +1289,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 this.disabled = true;
 
                 try {
-                    // Restore the item as active but unavailable by default.
                     const response = await fetch(
                         `/api/menu-items/${itemId}`,
                         {
@@ -1211,24 +1338,33 @@ document.addEventListener('DOMContentLoaded', async function () {
         addForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
-            // Read and validate the submitted form values.
-            const name = document.getElementById('newItemName').value.trim();
+            const name =
+                document.getElementById('newItemName').value.trim();
 
-            const price =
-                Number.parseFloat(
-                    document.getElementById('newItemPrice').value
-                );
+            const price = Number.parseFloat(
+                document.getElementById('newItemPrice').value
+            );
 
-            const description = document.getElementById('newItemDesc').value.trim();
+            const description =
+                document.getElementById('newItemDesc').value.trim();
+
+            const imageInput =
+                document.getElementById('newItemImage');
+
+            const imageFile =
+                imageInput?.files?.[0];
 
             if (!name || Number.isNaN(price) || price <= 0) {
                 alert(
                     'Please enter a valid item name and positive price.'
                 );
+
                 return;
             }
 
-            const submitButton = addForm.querySelector('button[type="submit"]');
+            const submitButton = addForm.querySelector(
+                'button[type="submit"]'
+            );
 
             if (submitButton) {
                 submitButton.disabled = true;
@@ -1236,19 +1372,21 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
             try {
-                // Send the new menu item to Flask for SQLite storage.
+                const formData = new FormData();
+
+                formData.append('name', name);
+                formData.append('price', String(price));
+                formData.append('description', description);
+
+                if (imageFile) {
+                    formData.append('image', imageFile);
+                }
+
                 const response = await fetch(
                     `/api/vendors/${ACTIVE_VENDOR_ID}/menu`,
                     {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            name: name,
-                            price: price,
-                            description: description
-                        })
+                        body: formData
                     }
                 );
 
@@ -1267,7 +1405,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 addForm.reset();
 
-                // Refresh the SQLite-backed menu table and warning banner.
                 await renderVendorMenu();
                 await checkForActiveMenuItems();
 
@@ -1292,98 +1429,114 @@ document.addEventListener('DOMContentLoaded', async function () {
     // 11. DATABASE-BACKED OPERATING HOURS
     // ========================================
     function renderOperatingHours() {
-        const hoursContainer = document.getElementById('operatingHoursContainer');
+        const hoursContainer =
+            document.getElementById('operatingHoursContainer');
 
         if (!hoursContainer) {
             return;
         }
 
-        const currentHours = vendorProfile.operatingHours || '08:00 - 20:00';
-        const openStatus = getVendorOpenStatus(currentHours);
-        const statusText = openStatus.isOpen ? '🟢 Open' : '🔴 Closed';
-        const statusColor = openStatus.isOpen ? '#2e7d32' : '#c62828';
+        const currentHours =
+            vendorProfile.operatingHours || '08:00 - 20:00';
+
+        const openStatus =
+            getVendorOpenStatus(currentHours);
+
+        const statusText =
+            openStatus.isOpen ? '🟢 Open' : '🔴 Closed';
+
+        const statusColor =
+            openStatus.isOpen ? '#2e7d32' : '#c62828';
 
         hoursContainer.innerHTML = `
+        <div style="
+            display:flex;
+            align-items:center;
+            gap:15px;
+            flex-wrap:wrap;
+            padding:15px 0;
+        ">
             <div style="
                 display:flex;
                 align-items:center;
-                gap:15px;
+                gap:10px;
                 flex-wrap:wrap;
-                padding:15px 0;
             ">
-                <div style="
-                    display:flex;
-                    align-items:center;
-                    gap:10px;
-                    flex-wrap:wrap;
-                ">
-                    <label
-                        for="vendorHoursInput"
-                        style="font-weight:600;"
-                    >
-                        Operating Hours:
-                    </label>
+                <label
+                    for="vendorHoursInput"
+                    style="font-weight:600;"
+                >
+                    Operating Hours:
+                </label>
 
-                    <input
-                        type="text"
-                        id="vendorHoursInput"
-                        value="${escapeHtml(currentHours)}"
-                        placeholder="e.g., 07:00 - 20:00"
-                        style="
-                            padding:8px 12px;
-                            border:1px solid var(--lightGrey);
-                            border-radius:4px;
-                            width:180px;
-                        "
-                    >
+                <input
+                    type="text"
+                    id="vendorHoursInput"
+                    value="${escapeHtml(currentHours)}"
+                    placeholder="e.g., 07:00 - 20:00"
+                    style="
+                        padding:8px 12px;
+                        border:1px solid var(--lightGrey);
+                        border-radius:4px;
+                        width:180px;
+                    "
+                >
 
-                    <button
-                        id="updateHoursBtn"
-                        class="secondaryButton"
-                        style="padding:8px 20px;"
-                    >
-                        Update Hours
-                    </button>
-                </div>
-
-                <div style="
-                    font-size:1.1rem;
-                    font-weight:600;
-                ">
-                    Current Status:
-                    <span style="color:${statusColor};">
-                        ${statusText}
-                    </span>
-                </div>
+                <button
+                    id="updateHoursBtn"
+                    class="secondaryButton"
+                    style="padding:8px 20px;"
+                >
+                    Update Hours
+                </button>
             </div>
 
             <div style="
-                font-size:0.85rem;
-                color:var(--grey);
-                margin-top:5px;
+                font-size:1.1rem;
+                font-weight:600;
             ">
-                💡 Use 24-hour format:
-                <strong>HH:MM - HH:MM</strong>,
-                such as 07:00 - 20:00.
+                Current Status:
+
+                <span style="color:${statusColor};">
+                    ${statusText}
+                </span>
             </div>
+        </div>
+
+        <div style="
+            font-size:0.85rem;
+            color:var(--grey);
+            margin-top:5px;
+        ">
+            💡 Use 24-hour format:
+            <strong>HH:MM - HH:MM</strong>,
+            such as 07:00 - 20:00.
+        </div>
     `;
 
-        const updateButton = document.getElementById('updateHoursBtn');
+        const updateButton =
+            document.getElementById('updateHoursBtn');
 
         if (!updateButton) {
             return;
         }
 
         updateButton.addEventListener('click', async function () {
-            const input = document.getElementById('vendorHoursInput');
-            const newHours = input.value.trim();
-            const hoursPattern = /^([01]\d|2[0-3]):[0-5]\d\s*-\s*([01]\d|2[0-3]):[0-5]\d$/;
+            const input =
+                document.getElementById('vendorHoursInput');
+
+            const newHours =
+                input.value.trim();
+
+            const hoursPattern =
+                /^([01]\d|2[0-3]):[0-5]\d\s*-\s*([01]\d|2[0-3]):[0-5]\d$/;
 
             if (!hoursPattern.test(newHours)) {
                 alert(
                     'Please enter operating hours in the format ' +
                     'HH:MM - HH:MM.'
                 );
+
                 return;
             }
 
@@ -1391,7 +1544,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             updateButton.textContent = 'Updating...';
 
             try {
-                // Persist the new operating hours through Flask.
                 const response = await fetch(
                     `/api/vendors/${ACTIVE_VENDOR_ID}/hours`,
                     {
@@ -1414,11 +1566,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                     );
                 }
 
-                // Keep the in-memory vendor profile synchronized with SQLite.
                 vendorProfile.operatingHours =
                     result.vendor.operatingHours;
 
-                alert('✅ Operating hours updated successfully.');
+                alert(
+                    '✅ Operating hours updated successfully.'
+                );
 
                 renderOperatingHours();
                 renderStatusBanner();
@@ -1442,10 +1595,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     // ========================================
     await renderVendorOrders();
     await checkForActiveMenuItems();
+
     renderStatusBanner();
     renderOperatingHours();
 
     console.log('✅ Vendor dashboard loaded');
-    console.log(`🏬 Vendor: ${activeVendor.name} (ID: ${ACTIVE_VENDOR_ID})`);
-    console.log(`📊 Status: ${vendorProfile.isActive ? 'Active' : 'Inactive'}`);
+    console.log(
+        `🏬 Vendor: ${activeVendor.name} ` +
+        `(ID: ${ACTIVE_VENDOR_ID})`
+    );
+    console.log(
+        `📊 Status: ` +
+        `${vendorProfile.isActive ? 'Active' : 'Inactive'}`
+    );
+
 });
