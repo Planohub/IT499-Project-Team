@@ -46,10 +46,10 @@ python3 app.py
 ### Windows PowerShell Setup
 
 ```powershell
-py -m venv venv
+python -m venv venv
 venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-py app.py
+python app.py
 ```
 
 ### Open the Application
