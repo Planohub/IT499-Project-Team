@@ -43,6 +43,7 @@ CREATE TABLE MenuItem (
     VendorID INTEGER NOT NULL,
     ItemName TEXT NOT NULL,
     Description TEXT,
+    ImageURL TEXT,
     Price NUMERIC NOT NULL
         CHECK (Price >= 0),
     ImageURL TEXT,             /* <--- ADDed this so that the vendor can upload images */
