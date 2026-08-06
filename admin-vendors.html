@@ -30,7 +30,7 @@
         </div>
     </nav>
 
-    <div class="vendorSelectionContainer">
+    <main class="vendorSelectionContainer">
         <div class="pageHeader">
             <h2>Vendor Account Management</h2>
             <p>Add new campus food vendors or deactivate existing accounts</p>
@@ -42,9 +42,11 @@
         <div class="orderDetailsBox" style="margin-bottom: 25px;">
             <h3>Add New Campus Vendor</h3>
             <p style="color: var(--grey); font-size: 0.9rem; margin-top: 4px; margin-bottom: 10px;">
-                New vendors are automatically set to <strong>Active</strong> and will appear on the student dashboard immediately.
+                New vendors are automatically set to <strong>Active</strong> and will appear on the student dashboard
+                immediately.
             </p>
-            <form id="addVendorForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px;">
+            <form id="addVendorForm"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px;">
                 <div class="credentialForm">
                     <label for="vendorNameInput">Vendor Name</label>
                     <input type="text" id="vendorNameInput" placeholder="e.g., Union Coffee Shop" required>
@@ -58,7 +60,8 @@
                     <input type="text" id="vendorHoursInput" placeholder="e.g., 07:00 - 18:00" required>
                 </div>
                 <div style="grid-column: 1 / -1;">
-                    <button type="submit" class="defaultButton" style="width: auto; padding: 10px 30px;">➕ Add Vendor Account</button>
+                    <button type="submit" class="defaultButton" style="width: auto; padding: 10px 30px;">➕ Add Vendor
+                        Account</button>
                 </div>
             </form>
         </div>
@@ -72,13 +75,14 @@
                 <!-- Vendors will be rendered here by JavaScript -->
             </div>
         </div>
-    </div>
+    </main>
 
     <script src="storage.js"></script>
     <script src="admin-vendors.js"></script>
 
-    <footer style="background-color:#f1f1f1; text-align:center; padding:10px; font-size:14px; color:#555; border-top:1px solid #ccc;">
-    <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 1.0.5</span>
+    <footer
+        style="background-color:#f1f1f1; text-align:center; padding:10px; font-size:14px; color:#555; border-top:1px solid #ccc;">
+        <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 1.0.3</span>
     </footer>
 </body>
 

@@ -13,11 +13,11 @@
     <nav class="navigationBar">
         <div class="navigationContainer">
             <div class="navigationBrand">
-            <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
-            <img src="CFL-Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
-            <span>CampusFoodLink+</span>
-            </a>
-        </div>
+                <a href="index.html" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="CFL-Logo.png" alt="CampusFoodLink+ Logo" style="height: 32px; width: auto;">
+                    <span>CampusFoodLink+</span>
+                </a>
+            </div>
             <div class="navigationLinks">
                 <a href="student-dashboard.html">Vendors</a>
                 <a href="#">Cart (0)</a>
@@ -31,7 +31,7 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="vendorSelectionContainer">
+    <main class="vendorSelectionContainer">
         <div class="confirmationBox">
             <!-- Error Message -->
             <div id="error-message"
@@ -91,23 +91,24 @@
             <p class="orderNote">You will receive an update when your order is ready.</p>
 
             <div class="confirmationButtons">
-                <a href="student-dashboard.html" id="continueShoppingBtn" class="secondaryButton">← Continue Shopping</a>
-                
+                <a href="student-dashboard.html" id="continueShoppingBtn" class="secondaryButton">← Continue
+                    Shopping</a>
+                <a href="student-dashboard.html" id="orderAnotherBtn" class="defaultButton">Order Another</a>
             </div>
         </div>
-    </div>
-    <footer>
-        <span class="balanceBadge">
-            Meal-Plan Balance:&nbsp;<span id="mealPlanBalance">$250.00</span>
-        </span>
+    </main>
+
+    <span class="balanceBadge">
+        Meal-Plan Balance:&nbsp;<span id="mealPlanBalance">$250.00</span>
+    </span>
+
+    <footer class="siteFooter">
+
+        <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 1.0.3</span>
     </footer>
 
     <script src="storage.js"></script>
     <script src="confirmation.js"></script>
-
-    <footer style="background-color:#f1f1f1; text-align:center; padding:10px; font-size:14px; color:#555; border-top:1px solid #ccc;">
-    <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 1.0.5</span>
-    </footer>
 </body>
 
 </html>
