@@ -2008,97 +2008,77 @@ def get_order(order_id):
 # Fetch all orders for a specific student by ID
 @app.route("/api/students/<int:student_id>/orders")
 def get_student_orders(student_id):
-    """Return all orders and line items for one student."""
     connection = get_db_connection()
-
     try:
-        student = connection.execute(
-            """
-            SELECT
-                UserID,
-                FirstName,
-                LastName,
-                Role
-            FROM User
-            WHERE UserID = ?
-            """,
-            (student_id,),
-        ).fetchone()
-
-        if student is None or student["Role"] != "Student":
-            return jsonify({"error": "Student not found"}), 404
-
+        # 🟢 o.* safely grabs your order columns, no matter what you named them!
         orders = connection.execute(
             """
             SELECT
-                FoodOrder.OrderID,
-                FoodOrder.StudentID,
-                FoodOrder.VendorID,
-                FoodOrder.OrderDate,
-                FoodOrder.OrderTotal,
-                FoodOrder.CurrentStatus,
-                FoodOrder.CompletedTime,
-                Vendor.VendorName
-            FROM FoodOrder
-            JOIN Vendor
-                ON Vendor.VendorID = FoodOrder.VendorID
-            WHERE FoodOrder.StudentID = ?
-            ORDER BY FoodOrder.OrderDate DESC,
-                     FoodOrder.OrderID DESC
+                o.*,
+                v.VendorName,
+                (SELECT Status FROM OrderStatus WHERE OrderID = o.OrderID ORDER BY OrderStatusID DESC LIMIT 1) AS CurrentStatus,
+                (SELECT Notes FROM OrderStatus WHERE OrderID = o.OrderID ORDER BY OrderStatusID DESC LIMIT 1) AS LatestStatusNote
+            FROM FoodOrder o
+            JOIN Vendor v ON o.VendorID = v.VendorID
+            WHERE o.StudentID = ?
+            ORDER BY o.OrderID DESC
             """,
             (student_id,),
         ).fetchall()
 
-        order_results = []
-
+        order_list = []
         for order in orders:
+            # 🟢 Dynamically figure out what your Total column is called
+            keys = order.keys()
+            total_val = 0.0
+            if "Total" in keys: total_val = order["Total"]
+            elif "TotalAmount" in keys: total_val = order["TotalAmount"]
+            elif "Amount" in keys: total_val = order["Amount"]
+
+            # 🟢 Dynamically figure out what your Date column is called
+            date_val = "Unknown Date"
+            if "OrderDate" in keys: date_val = order["OrderDate"]
+            elif "CreatedAt" in keys: date_val = order["CreatedAt"]
+            elif "Date" in keys: date_val = order["Date"]
+
+            # Safely get the items
             items = connection.execute(
                 """
                 SELECT
-                    OrderItem.MenuItemID,
-                    MenuItem.ItemName,
-                    OrderItem.Quantity,
-                    OrderItem.UnitPrice,
-                    OrderItem.ItemTotal
-                FROM OrderItem
-                JOIN MenuItem
-                    ON MenuItem.MenuItemID = OrderItem.MenuItemID
-                WHERE OrderItem.OrderID = ?
-                ORDER BY OrderItem.OrderItemID
+                    mi.ItemName,
+                    oi.Quantity,
+                    (oi.Quantity * mi.Price) AS Total
+                FROM OrderItem oi
+                JOIN MenuItem mi ON oi.MenuItemID = mi.MenuItemID
+                WHERE oi.OrderID = ?
                 """,
                 (order["OrderID"],),
             ).fetchall()
 
-            order_results.append({
+            order_list.append({
                 "orderId": order["OrderID"],
-                "studentId": order["StudentID"],
                 "vendorId": order["VendorID"],
                 "vendorName": order["VendorName"],
-                "orderDate": order["OrderDate"],
-                "total": float(order["OrderTotal"]),
+                "orderDate": date_val,
+                "total": float(total_val),
                 "currentStatus": order["CurrentStatus"],
-                "completedTime": order["CompletedTime"],
+                "latestStatusNote": order["LatestStatusNote"],  # 🟢 The missing ETA Note!
                 "items": [
                     {
-                        "itemId": item["MenuItemID"],
                         "name": item["ItemName"],
                         "quantity": item["Quantity"],
-                        "price": float(item["UnitPrice"]),
-                        "total": float(item["ItemTotal"]),
+                        "total": float(item["Total"])
                     }
                     for item in items
-                ],
+                ]
             })
 
-        return jsonify({
-            "student": {
-                "id": student["UserID"],
-                "firstName": student["FirstName"],
-                "lastName": student["LastName"],
-            },
-            "orders": order_results,
-        })
-
+        return jsonify({"orders": order_list})
+        
+    except Exception as e:
+        # 🟢 If anything goes wrong, this prints the EXACT error to your terminal to make it easy to see!
+        print(f"Error fetching student orders: {e}")
+        return jsonify({"error": f"Database Error: {str(e)}"}), 500
     finally:
         connection.close()
 

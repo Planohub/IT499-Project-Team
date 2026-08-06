@@ -32,17 +32,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     const mealPlanBalanceElement = document.getElementById('mealPlanBalance');
 
     try {
-        const profileResponse = await fetch(
-            `/api/students/${studentId}/profile`
-        );
-
+        // --- LOAD STUDENT PROFILE ---
+        const profileResponse = await fetch(`/api/students/${studentId}/profile`);
         const student = await profileResponse.json();
 
         if (!profileResponse.ok) {
-            throw new Error(
-                student.error ||
-                'Unable to load the student profile.'
-            );
+            throw new Error(student.error || 'Unable to load the student profile.');
         }
 
         if (studentBadge) {
@@ -53,153 +48,116 @@ document.addEventListener('DOMContentLoaded', async function () {
             mealPlanBalanceElement.textContent = `$${Number(student.balance).toFixed(2)}`;
         }
 
-        setActiveStudentSession(student);
+        // --- LOAD ORDERS ---
+        const ordersResponse = await fetch(`/api/students/${studentId}/orders`);
+        const result = await ordersResponse.json();
 
-    } catch (error) {
-        console.error(
-            'Unable to load student profile:',
-            error
-        );
-
-        alert(error.message);
-        window.location.href = 'login.html?role=student';
-        return;
-    }
-
-    // ========================================
-    // 3. LOAD ORDERS FROM FLASK / SQLITE
-    // ========================================
-    const ordersContainer =
-        document.getElementById('ordersContainer');
-
-    if (!ordersContainer) {
-        console.error('Orders container was not found.');
-        return;
-    }
-
-    ordersContainer.innerHTML = `
-        <div class="vendorGridMessage">
-            <p>Loading order history...</p>
-        </div>
-    `;
-
-    try {
-        const response = await fetch(
-            `/api/students/${studentId}/orders`
-        );
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(
-                result.error || 'Unable to load order history.'
-            );
+        if (!ordersResponse.ok) {
+            throw new Error(result.error || 'Unable to load your orders.');
         }
 
-        if (!Array.isArray(result.orders) || result.orders.length === 0) {
+        const orders = Array.isArray(result.orders) ? result.orders : [];
+        const ordersContainer = document.getElementById('ordersContainer');
+
+        if (!ordersContainer) return;
+
+        if (orders.length === 0) {
             ordersContainer.innerHTML = `
-                <div class="vendorGridMessage">
-                    <p>No past orders found.</p>
-                    <p>Your completed and active orders will appear here.</p>
+                <div style="text-align: center; padding: 40px; color: var(--grey); background: var(--cardWhite); border: 2px solid var(--black); border-radius: 10px;">
+                    <p style="font-size: 1.1rem;">You have not placed any orders yet.</p>
+                    <a href="student-dashboard.html" class="defaultButton" style="margin-top: 15px; display: inline-block; text-decoration: none; width: auto;">Start Browsing Vendors</a>
                 </div>
             `;
             return;
         }
 
-        renderOrders(result.orders, ordersContainer);
+        // --- 🟢 THE FIX IS RIGHT HERE IN THIS LOOP ---
+        ordersContainer.innerHTML = orders.map(order => {
+            const status = order.currentStatus || 'Pending';
+            const statusColor = getStatusColor(status);
 
-        console.log(
-            `✅ Loaded ${result.orders.length} SQLite orders for student ${studentId}`
-        );
+            const itemsHTML = Array.isArray(order.items)
+                ? order.items.map(item => `
+                    <li style="margin-bottom: 5px;">
+                        ${item.quantity}× ${escapeHtml(item.name)}
+                    </li>
+                `).join('')
+                : '<li>No items available.</li>';
 
-    } catch (error) {
-        console.error('Unable to load student orders:', error);
+            // 🔥 Here we check if the vendor wrote a note/ETA, and format it nicely!
+            const statusNoteHTML = order.latestStatusNote
+                ? `
+                    <div style="margin-top: 12px; margin-bottom: 12px; padding: 10px 12px; background-color: #e8f5e9; border-left: 4px solid #2e7d32; border-radius: 4px;">
+                        <span style="font-weight: 700; color: #1b3a28; font-size: 0.9rem;">
+                            🔔 Note from Vendor: <span style="font-weight: 400;">${escapeHtml(order.latestStatusNote)}</span>
+                        </span>
+                    </div>
+                `
+                : '';
 
-        ordersContainer.innerHTML = `
-            <div class="vendorGridMessage vendorGridError">
-                <p>Unable to load order history.</p>
-                <p>Please refresh the page or try again later.</p>
-            </div>
-        `;
-    }
-});
+            return `
+                <article class="vendorOrderCard" style="padding: 20px; border: 2px solid var(--black); border-radius: 10px; margin-bottom: 15px; background: var(--cardWhite);">
+                    <div class="vendorOrderHeader" style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--grey); padding-bottom: 12px;">
+                        <div>
+                            <h4 style="font-size:1.2rem; color:var(--black); font-weight:700; margin:0;">
+                                ${escapeHtml(order.vendorName || 'Vendor')}
+                            </h4>
+                            <p style="font-size:0.85rem; color:var(--grey); margin-top:4px;">
+                                ${formatOrderDate(order.orderDate)}
+                            </p>
+                        </div>
+                        <span class="orderStatusBadge" style="background-color:${statusColor}; color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
+                            ${escapeHtml(status)}
+                        </span>
+                    </div>
 
+                    ${statusNoteHTML}
 
-function renderOrders(orders, ordersContainer) {
+                    <div class="studentOrderDetails" style="margin-top: 15px; background: white; padding: 15px; border-radius: 6px; border: 1px solid #ddd;">
+                        <ul style="padding-left: 20px; margin-bottom: 10px; color: var(--black);">
+                            ${itemsHTML}
+                        </ul>
 
-    // ========================================
-    // 4. BUILD ORDER-HISTORY CARDS
-    // ========================================
-    ordersContainer.innerHTML = orders.map(order => {
-        const itemsHTML = Array.isArray(order.items)
-            ? order.items.map(item => `
-                <li class="studentOrderItem">
-                    ${item.quantity}× ${escapeHtml(item.name)}
-                    ($${Number(item.total).toFixed(2)})
-                </li>
-            `).join('')
-            : '<li>No item details available.</li>';
-
-        return `
-            <article class="studentOrderCard">
-                <div class="studentOrderHeader">
-                    <div>
-                        <h3>
-                            Order #${order.orderId}
-                            — ${escapeHtml(order.vendorName || 'Vendor')}
-                        </h3>
-
-                        <p class="studentOrderDate">
-                            ${formatOrderDate(order.orderDate)}
+                        <p class="studentOrderTotal" style="font-weight: 700; font-size: 1.05rem; color: var(--black); border-top: 1px solid #eee; padding-top: 10px; margin: 0;">
+                            Total: $${Number(order.total || 0).toFixed(2)}
                         </p>
                     </div>
 
-                    <span
-                        class="orderStatusBadge"
-                        style="background-color: ${getStatusColor(order.currentStatus)};"
+                    <a
+                        href="confirmation.html?orderId=${order.orderId}"
+                        class="secondaryButton studentOrderViewButton"
+                        style="display: block; text-align: center; text-decoration: none; margin-top: 15px;"
                     >
-                        ${escapeHtml(order.currentStatus || 'Pending')}
-                    </span>
+                        View Full Order Details
+                    </a>
+                </article>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error('Unable to load orders page:', error);
+        const container = document.getElementById('ordersContainer');
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #c62828; background: #ffebee; border: 2px solid #c62828; border-radius: 10px;">
+                    <p>Unable to load your orders.</p>
+                    <p>${error.message}</p>
                 </div>
-
-                <div class="studentOrderDetails">
-                    <ul>
-                        ${itemsHTML}
-                    </ul>
-
-                    <p class="studentOrderTotal">
-                        Total: $${Number(order.total || 0).toFixed(2)}
-                    </p>
-                </div>
-
-                <a
-                    href="confirmation.html?orderId=${order.orderId}"
-                    class="secondaryButton studentOrderViewButton"
-                >
-                    View Order
-                </a>
-            </article>
-        `;
-    }).join('');
-}
-
+            `;
+        }
+    }
+});
 
 function formatOrderDate(orderDate) {
     if (!orderDate) {
         return 'Date unavailable';
     }
-
-    const parsedDate = new Date(
-        String(orderDate).replace(' ', 'T') + 'Z'
-    );
-
+    const parsedDate = new Date(String(orderDate).replace(' ', 'T') + 'Z');
     if (Number.isNaN(parsedDate.getTime())) {
         return orderDate;
     }
-
     return parsedDate.toLocaleString();
 }
-
 
 function getStatusColor(status) {
     const colors = {
@@ -210,10 +168,8 @@ function getStatusColor(status) {
         Complete: '#3d5c47',
         Rejected: '#c62828'
     };
-
     return colors[status] || '#3d5c47';
 }
-
 
 function escapeHtml(value) {
     return String(value ?? '')

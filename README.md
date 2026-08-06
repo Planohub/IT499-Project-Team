@@ -1,4 +1,4 @@
-# CampusFoodLink+
+# CampusFoodLink+ v.1.0.5
 
 CampusFoodLink+ is a smart campus dining platform built for IT499, bringing students, vendors, and dining services administrators onto one shared platform instead of disconnected tools (paper menus, siloed campus apps, spreadsheets). The project began as a browser-only HTML/CSS/JavaScript prototype using `localStorage` and has since been migrated into an integrated Flask + SQLite application.
 

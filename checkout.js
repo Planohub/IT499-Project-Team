@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         checkoutItem.innerHTML = `
             <div class="itemSummary">
-                <span class="itemName">${item.item}</span>
+                <span class="itemName">${item.name}</span> 
                 <div class="quantityControls">
                     <button class="decreaseQuantityButton">-</button>
                     <span class="itemQty">${item.quantity}</span>
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (decreaseQuantityButton) {
             decreaseQuantityButton.addEventListener('click', function () {
                 const updatedCart = cart.map(cartItem => {
-                    if (cartItem.item === item.item) {
+                    if (cartItem.itemId === item.itemId) { // 🔥 FIXED: Match by ID
                         return {
                             ...cartItem,
                             quantity: cartItem.quantity - 1
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (increaseQuantityButton) {
             increaseQuantityButton.addEventListener('click', function () {
                 const updatedCart = cart.map(cartItem => {
-                    if (cartItem.item === item.item) {
+                    if (cartItem.itemId === item.itemId) { // 🔥 FIXED: Match by ID
                         return {
                             ...cartItem,
                             quantity: cartItem.quantity + 1
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (removeItemButton) {
             removeItemButton.addEventListener('click', function () {
                 const updatedCart = cart.filter(cartItem => {
-                    return cartItem.item !== item.item;
+                    return cartItem.itemId !== item.itemId; // 🔥 FIXED: Match by ID
                 });
 
                 saveCart(updatedCart);
