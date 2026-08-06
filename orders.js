@@ -203,15 +203,15 @@ function formatOrderDate(orderDate) {
 
 function getStatusColor(status) {
     const colors = {
-        Pending: '#c5922e',
-        Accepted: '#1f478d',
-        Preparing: '#1b3a28',
-        Ready: '#2c4c38',
-        Complete: '#3d5c47',
-        Rejected: '#c62828'
+        Pending: 'var(--brand-gold)',
+        Accepted: 'var(--brand-blue)',
+        Preparing: 'var(--brand-purple)',
+        Ready: 'var(--brand-green-light)',
+        Complete: 'var(--brand-green)',
+        Rejected: 'var(--brand-red)'
     };
 
-    return colors[status] || '#3d5c47';
+    return colors[status] || 'var(--brand-black)';
 }
 
 

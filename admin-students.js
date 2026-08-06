@@ -173,9 +173,9 @@ async function renderStudentDirectory() {
                 <span
                     class="userBadge"
                     style="
-                        background:#e6fffa;
-                        color:#007a5a;
-                        border-color:#007a5a;
+                        background:var(--brand-white);
+                        color:var(--brand-green);
+                        border-color:var(--brand-green);
                     "
                 >
                     🟢 Active
@@ -185,9 +185,9 @@ async function renderStudentDirectory() {
                 <span
                     class="userBadge"
                     style="
-                        background:#ffe6e6;
-                        color:#cc0000;
-                        border-color:#cc0000;
+                        background:var(--brand-white);
+                        color:var(--brand-red);
+                        border-color:var(--brand-red);
                     "
                 >
                     🔴 Inactive
@@ -204,8 +204,6 @@ async function renderStudentDirectory() {
             )}"
                     style="
                         padding:4px 12px;
-                        color:#cc0000;
-                        border-color:#cc0000;
                         font-size:0.85rem;
                     "
                 >
@@ -580,12 +578,12 @@ async function renderStudentDetails(studentId) {
             `;
 
             combinedHistory.forEach(entry => {
-                let color = '#333';
+                let color = 'var(--brand-dark-grey)';
                 let amountDisplay = '—';
                 let detailsDisplay = '';
 
                 if (entry.type === 'Purchase') {
-                    color = '#cc0000';
+                    color = 'var(--brand-red)';
 
                     amountDisplay =
                         `-$${entry.amount.toFixed(2)}`;
@@ -619,7 +617,7 @@ async function renderStudentDetails(studentId) {
                         </span>
                     `;
                 } else if (entry.type === 'Deduction') {
-                    color = '#cc0000';
+                    color = 'var(--brand-red)';
 
                     amountDisplay =
                         `-$${entry.amount.toFixed(2)}`;
@@ -627,7 +625,7 @@ async function renderStudentDetails(studentId) {
                     detailsDisplay =
                         'Meal-plan balance deducted';
                 } else if (entry.type === 'Refund') {
-                    color = '#007a5a';
+                    color = 'var(--brand-green)';
 
                     amountDisplay =
                         `+$${entry.amount.toFixed(2)}`;
@@ -638,7 +636,7 @@ async function renderStudentDetails(studentId) {
                     entry.type === 'Adjustment' &&
                     entry.amount > 0
                 ) {
-                    color = '#007a5a';
+                    color = 'var(--brand-green)';
 
                     amountDisplay =
                         `+$${entry.amount.toFixed(2)}`;
@@ -646,7 +644,7 @@ async function renderStudentDetails(studentId) {
                     detailsDisplay =
                         'Meal-plan balance adjusted';
                 } else {
-                    color = '#0066cc';
+                    color = 'var(--brand-blue)';
                     amountDisplay = '—';
                     detailsDisplay =
                         'Student account adjustment';

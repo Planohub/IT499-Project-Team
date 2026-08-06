@@ -11,10 +11,16 @@
 :root {
     /* CAMPUSFOODLINK+ BRAND COLORS */
     --brand-blue: #1F478D;
+    --brand-blue-light: #94bbff;
     --brand-green: #007326;
+    --brand-green-light: #eeffe2;
     --brand-red: #94231E;
-    --brand-gold: #C2A800;
+    --brand-red-light: #ffeceb;
+    --brand-gold: #cbad00;
     --brand-white: #FAFAFA;
+    --brand-purple: #3e0094;
+    --brand-black: #1D2733;
+    --brand-dark-grey: #333;
 
     /* BACKGROUNDS */
     --background: #F2F6FB;
@@ -37,7 +43,7 @@
     --warning-light: #FFF9D8;
 
     /* TEXT */
-    --text-primary: #1D2733;
+    --text-primary: var(--brand-black);
     --text-secondary: #56616D;
     --text-muted: #7A8792;
     --text-light: #FAFAFA;
@@ -214,8 +220,8 @@ body::after {
 }
 
 .navigationBrand a {
-    color: var(--text-primary);
-    text-decoration: underline;
+    color: var(--brand-blue);
+    text-decoration: none;
 }
 
 .navigationLinks {
@@ -224,7 +230,7 @@ body::after {
 }
 
 .navigationLinks a {
-    color: var(--text-primary);
+    color: var(--brand-blue);
     font-weight: 600;
     text-decoration: none;
     padding: 5px 0;
@@ -233,8 +239,10 @@ body::after {
 
 .navigationLinks a:hover,
 .navigationLinks a.active {
-    border-bottom-color: var(--border);
-    color: var(--border);
+    border-bottom-color: var(--brand-green);
+    color: var(--brand-green);
+    text-decoration: none;
+    font-weight: 700;
 }
 
 .navigationUser {
@@ -245,8 +253,8 @@ body::after {
 }
 
 .userBadge {
-    border: 2px solid var(--border);
-    background: #fbf7ee;
+    border: 2px solid var(--brand-gold);
+    background: var(--brand-white);
     color: var(--text-primary);
     padding: 4px 14px;
     border-radius: 20px;
@@ -306,8 +314,8 @@ body::after {
 }
 
 .defaultButton:hover {
-    background: var(--primary-hover);
-    border-color: var(--primary-hover);
+    background: var(--brand-green);
+    border-color: var(--brand-green);
     color: var(--text-light);
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
@@ -336,16 +344,52 @@ body::after {
 }
 
 .secondaryButton:hover {
-    background: var(--primary-light);
-    border-color: var(--primary-hover);
-    color: var(--primary-hover);
+    background: var(--brand-blue);
+    border-color: var(--brand-blue);
+    color: var(--brand-white);
     transform: translateY(-1px);
+}
+
+.secondaryButton.softDeleteBtn {
+    color: var(--danger);
+    border-color: var(--danger);
+     transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
+}
+
+.secondaryButton.softDeleteBtn:hover {
+    background: var(--danger);
+    color: var(--brand-white);
+}
+
+.secondaryButton.deactivateVendorBtn {
+    color: var(--brand-red);
+    border-color: var(--brand-red);
+}
+
+.secondaryButton.deactivateVendorBtn:hover {
+    background: var(--brand-red);
+    color: var(--brand-white);
+}
+
+.secondaryButton.suspendStudentBtn {
+    color: var(--brand-red);
+    border-color: var(--brand-red);
+}
+
+.secondaryButton.suspendStudentBtn:hover {
+    background: var(--brand-red);
+    color: var(--brand-white);
 }
 
 .defaultButton:focus-visible,
 .secondaryButton:focus-visible,
+.secondaryButton.softDeleteBtn:focus-visible
 .roleLoginSection select:focus-visible {
-    outline: 3px solid rgba(31, 71, 141, 0.3);
+    outline: 3px solid var(--brand-blue);
     outline-offset: 3px;
 }
 
@@ -373,7 +417,7 @@ body::after {
 
 .order-item-price {
     font-weight: 700;
-    color: var(--border);
+    color: var(--brand-black);
 }
 
 /* Empty cart message */
@@ -400,7 +444,7 @@ body::after {
 }
 
 .confirmationBox.order-not-found h2 {
-    color: #c62828;
+    color: var(--brand-red);
 }
 
 
@@ -530,9 +574,9 @@ body::after {
 .simulatedLoginNotice {
     margin-top: 22px;
     padding: 11px 12px;
-    border: 1px solid rgba(197, 146, 46, 0.55);
+    border: 1px solid var(--brand-gold);
     border-radius: 7px;
-    background: rgba(197, 146, 46, 0.08);
+    background: var(--brand-gold-light);
     color: var(--text-secondary);
     font-size: var(--text-xs);
     line-height: 1.45;
@@ -569,9 +613,9 @@ body::after {
     display: block;
     width: fit-content;
     margin: 1rem auto;
-    border: 2px solid var(--border);
-    background: var(--surface);
-    color: var(--text-primary);
+    border: 4px solid var(--brand-blue-light);
+    background: var(--brand-blue);
+    color: var(--brand-white);
     border-radius: 20px;
     padding: 10px 24px;
     font-weight: 700;
@@ -1019,7 +1063,7 @@ body::after {
 
 .itemPrice {
     font-weight: 700;
-    color: var(--border);
+    color: var(--brand-black);
 }
 
 .quantityControls {
@@ -1256,6 +1300,7 @@ body::after {
     width: auto;
     padding: 10px 25px;
     margin-top: 0;
+    text-decoration: none;
 }
 
 .confirmationButtons .secondaryButton {

@@ -204,7 +204,7 @@ function addVendorStatusBanner(vendor, isOpen) {
 
     if (isOpen) {
         banner.style.cssText = `
-            background-color: var(--success-background);
+            background-color: var(--brand-green-light);
             border: 2px solid var(--success);
             color: var(--success);
             padding: 12px 16px;
@@ -229,7 +229,7 @@ function addVendorStatusBanner(vendor, isOpen) {
         `;
     } else {
         banner.style.cssText = `
-            background-color: var(--danger-background);
+            background-color: var(--brand-red-light);
             border: 2px solid var(--danger);
             color: var(--danger);
             padding: 12px 16px;

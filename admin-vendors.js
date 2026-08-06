@@ -162,11 +162,11 @@ async function renderVendorDirectory() {
     vendors.forEach(v => {
         const isActive = v.isActive !== false;
         const statusBadge = isActive
-            ? '<span class="userBadge" style="background: #e6fffa; color: #007a5a; border-color: #007a5a;">🟢 Active</span>'
-            : '<span class="userBadge" style="background: #ffe6e6; color: #cc0000; border-color: #cc0000;">🔴 Inactive</span>';
+            ? '<span class="userBadge">🟢 Active</span>'
+            : '<span class="userBadge">🔴 Inactive</span>';
 
         const actionButton = isActive
-            ? `<button class="secondaryButton deactivateVendorBtn" data-id="${v.id}" data-name="${v.name}" style="padding: 4px 12px; color: #cc0000; border-color: #cc0000; font-size: 0.85rem;">Deactivate</button>`
+            ? `<button class="secondaryButton deactivateVendorBtn" data-id="${v.id}" data-name="${v.name}" style="padding: 4px 12px; font-size: 0.85rem;">Deactivate</button>`
             : `<button class="secondaryButton reactivateVendorBtn" data-id="${v.id}" data-name="${v.name}" style="padding: 4px 12px; font-size: 0.85rem;">Reactivate</button>`;
 
         html += `

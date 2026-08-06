@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (vendorBadge) {
             vendorBadge.textContent = '🔒 Account Deactivated';
-            vendorBadge.style.color = '#cc0000';
+            vendorBadge.style.color = 'var(--brand-red)';
         }
     }
 
@@ -161,8 +161,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         const openStatus = getVendorOpenStatus(operatingHours);
         const statusText = openStatus.isOpen ? 'Open' : 'Closed';
         const statusIcon = openStatus.isOpen ? '🟢' : '🔴';
-        const statusColor = openStatus.isOpen ? '#2e7d32' : '#c62828';
-        const statusBackground = openStatus.isOpen ? '#e8f5e9' : '#ffebee';
+        const statusColor = openStatus.isOpen ? 'var(--brand-green)' : 'var(--brand-red)';
+        const statusBackground = openStatus.isOpen ? 'var(--brand-green-light)' : 'var(--brand-red-light)';
         const header = document.querySelector('.pageHeader');
 
         if (!header) {
@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             ? `
                 <p style="
                     color:${status === 'Rejected'
-                ? '#c62828'
+                ? 'var(--brand-red)'
                 : 'var(--grey)'};
                     font-weight:600;
                     font-size:0.85rem;
@@ -428,7 +428,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                         <p style="
                             font-size:0.85rem;
-                            color:var(--grey);
+                            color:var(--brand-red);
                             margin-top:3px;
                         ">
                             Student:
@@ -440,7 +440,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     <span style="
                         font-size:0.8rem;
-                        color:var(--grey);
+                        color:var(--brand-red);
                     ">
                         ${formatOrderDate(order.orderDate)}
                     </span>
@@ -465,7 +465,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 <div style="
                     margin-bottom:14px;
-                    background:#ffffff;
+                    background:var(--brand-white);
                     padding:12px;
                     border-radius:6px;
                     border:1px solid var(--lightGrey);
@@ -586,7 +586,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (currentStatus === 'Rejected') {
             return `
                 <span style="
-                    color:#c62828;
+                    color:var(--brand-red);
                     font-weight:600;
                 ">
                     ❌ Rejected and Refunded
@@ -780,15 +780,15 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function getStatusColor(status) {
         const colors = {
-            Pending: '#c5922e',
-            Accepted: '#1f478d',
-            Preparing: '#1b3a28',
-            Ready: '#2c4c38',
-            Complete: '#3d5c47',
-            Rejected: '#c62828'
+            Pending: 'var(--brand-gold)',
+            Accepted: 'var(--brand-blue)',
+            Preparing: 'var(--brand-purple)',
+            Ready: 'var(--brand-green)',
+            Complete: 'var(--brand-green)',
+            Rejected: 'var(--brand-red)'
         };
 
-        return colors[status] || '#3d5c47';
+        return colors[status] || 'var(--brand-black)';
     }
 
     function escapeHtml(value) {
@@ -954,8 +954,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             style="
                                 padding:4px 10px;
                                 font-size:0.8rem;
-                                color:#cc0000;
-                                border-color:#cc0000;
+                                border-color:var(--brand-red);
                             "
                         >
                             Deactivate
@@ -1446,7 +1445,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             openStatus.isOpen ? '🟢 Open' : '🔴 Closed';
 
         const statusColor =
-            openStatus.isOpen ? '#2e7d32' : '#c62828';
+            openStatus.isOpen ? 'var(--brand-green)' : 'var(--brand-red)';
 
         hoursContainer.innerHTML = `
         <div style="
