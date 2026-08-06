@@ -27,7 +27,7 @@
         </div>
     </nav>
 
-    <div class="vendorSelectionContainer">
+    <main class="vendorSelectionContainer">
         <div class="pageHeader">
             <h2>Vendor Dashboard</h2>
             <p>Workflow: Process an Order &amp; Vendor Menu Management</p>
@@ -35,8 +35,10 @@
         </div>
 
         <div style="display: flex; gap: 15px; margin-bottom: 25px;">
-            <button id="tabOrdersBtn" class="defaultButton" style="width: auto; padding: 10px 25px;">Incoming Orders</button>
-            <button id="tabMenuBtn" class="secondaryButton" style="width: auto; padding: 10px 25px;">Menu Management</button>
+            <button id="tabOrdersBtn" class="defaultButton" style="width: auto; padding: 10px 25px;">Incoming
+                Orders</button>
+            <button id="tabMenuBtn" class="secondaryButton" style="width: auto; padding: 10px 25px;">Menu
+                Management</button>
         </div>
 
         <!-- ======================================== -->
@@ -45,7 +47,8 @@
         <div id="ordersSection">
             <div class="orderDetailsBox">
                 <h3>Active Orders Queue</h3>
-                <p style="color: var(--grey); font-size: 0.9rem; margin-top: 4px;">Advance order statuses sequentially: Pending → Accepted → Preparing → Ready → Complete</p>
+                <p style="color: var(--grey); font-size: 0.9rem; margin-top: 4px;">Advance order statuses sequentially:
+                    Pending → Accepted → Preparing → Ready → Complete</p>
                 <div id="vendorOrdersContainer" style="margin-top: 15px;">
                     <!-- Orders rendered by JavaScript -->
                 </div>
@@ -59,30 +62,33 @@
             <div class="orderDetailsBox" style="margin-bottom: 25px;">
                 <h3>Add New Menu Item</h3>
                 <form id="addMenuItemForm" enctype="multipart/form-data">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-        <div class="credentialForm">
-                    <label for="newItemName">Item Name</label>
-                    <input type="text" id="newItemName" placeholder="e.g., Breakfast Sandwich" required>
-                </div>
-                    <div class="credentialForm">
-                        <label for="newItemPrice">Price ($)</label>
-                        <input type="number" id="newItemPrice" placeholder="e.g., 5.99" step="0.01" required>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="credentialForm">
+                            <label for="newItemName">Item Name</label>
+                            <input type="text" id="newItemName" placeholder="e.g., Breakfast Sandwich" required>
+                        </div>
+                        <div class="credentialForm">
+                            <label for="newItemPrice">Price ($)</label>
+                            <input type="number" id="newItemPrice" placeholder="e.g., 5.99" step="0.01" required>
+                        </div>
+                        <div class="credentialForm" style="grid-column: 1 / -1;">
+                            <label for="newItemDesc">Description</label>
+                            <textarea id="newItemDesc"
+                                placeholder="e.g., Egg, cheese, and bacon on a toasted English muffin."></textarea>
+                        </div>
+
+                        <div class="credentialForm" style="grid-column: 1 / -1;">
+                            <label for="newItemImage">Food Picture (Optional)</label>
+                            <input type="file" id="newItemImage" name="image" accept="image/png, image/jpeg"
+                                style="padding: 10px; border: 1px dashed var(--grey); border-radius: 4px; width: 100%; background: #fff;">
+                        </div>
+
+                        <div style="grid-column: 1 / -1;">
+                            <button type="submit" class="defaultButton" style="width: auto; padding: 10px 30px;">➕ Add
+                                Menu Item</button>
+                        </div>
                     </div>
-                    <div class="credentialForm" style="grid-column: 1 / -1;">
-                        <label for="newItemDesc">Description</label>
-                        <textarea id="newItemDesc" placeholder="e.g., Egg, cheese, and bacon on a toasted English muffin."></textarea>
-                    </div>
-        
-                    <div class="credentialForm" style="grid-column: 1 / -1;">
-                        <label for="newItemImage">Food Picture (Optional)</label>
-                        <input type="file" id="newItemImage" name="image" accept="image/png, image/jpeg" style="padding: 10px; border: 1px dashed var(--grey); border-radius: 4px; width: 100%; background: #fff;">
-                    </div>
-        
-                    <div style="grid-column: 1 / -1;">
-                        <button type="submit" class="defaultButton" style="width: auto; padding: 10px 30px;">➕ Add Menu Item</button>
-                    </div>
-                </div>
-            </form>
+                </form>
             </div>
 
             <div class="orderDetailsBox">
@@ -105,13 +111,13 @@
                 <!-- Rendered by JavaScript -->
             </div>
         </div>
-    </div>
+    </main>
 
     <script src="storage.js"></script>
     <script src="vendor-dashboard.js"></script>
 
-    <footer style="background-color:#f1f1f1; text-align:center; padding:10px; font-size:14px; color:#555; border-top:1px solid #ccc;">
-    <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 1.0.4</span>
+    <footer class="siteFooter">
+        <span>🍔 &copy; 2026 CampusFoodLink+. All rights reserved. | Version 1.0.4</span>
     </footer>
 </body>
 

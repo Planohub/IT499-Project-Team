@@ -9,87 +9,166 @@
 }
 
 :root {
-    /* Brand palette */
-    --sage-background: #e4ede2;
-    --forest-green: #1b3a28;
-    --leaf-green: #3d5c47;
-    --warm-gold: #c5922e;
-    --card-background: #f4f8f3;
-    --logo-blue: #1f478d;
+    /* CAMPUSFOODLINK+ BRAND COLORS */
+    --brand-blue: #1F478D;
+    --brand-green: #007326;
+    --brand-red: #94231E;
+    --brand-gold: #C2A800;
+    --brand-white: #FAFAFA;
 
-    /* Supporting colors */
-    --white: #ffffff;
-    --danger: #c62828;
-    --danger-background: #ffebee;
-    --success: #2e7d32;
-    --success-background: #e8f5e9;
-    --border-soft: #b8c9bb;
+    /* BACKGROUNDS */
+    --background: #F2F6FB;
+    --surface: #FAFAFA;
+    --surface-alt: #E8EEF7;
+    --surface-hover: #DFE9F5;
 
-    /*
-       Compatibility aliases.
-       These keep existing teammate code working while the stylesheet
-       gradually moves toward clearer variable names.
-    */
-    --black: var(--forest-green);
-    --grey: var(--leaf-green);
-    --lightGrey: var(--warm-gold);
-    --cardWhite: var(--card-background);
-    --blue: var(--logo-blue);
+    /* PRIMARY / STATUS COLORS */
+    --primary: var(--brand-blue);
+    --primary-hover: #18386F;
+    --primary-light: #E5ECF8;
+    --success: var(--brand-green);
+    --success-hover: #005B1E;
+    --success-light: #E7F6EC;
+    --danger: var(--brand-red);
+    --danger-hover: #741B17;
+    --danger-light: #F8E9E8;
+    --warning: var(--brand-gold);
+    --warning-hover: #A48E00;
+    --warning-light: #FFF9D8;
+
+    /* TEXT */
+    --text-primary: #1D2733;
+    --text-secondary: #56616D;
+    --text-muted: #7A8792;
+    --text-light: #FAFAFA;
+    --text-dark: #1D2733;
+
+    /* BORDERS */
+    --border: #D6DEE8;
+    --border-dark: #B7C5D4;
+    --divider: #E7EDF4;
+
+    /* STATUS COLORS */
+    --status-online: var(--success);
+    --status-offline: var(--danger);
+    --status-warning: var(--warning);
+    --status-info: var(--primary);
+    --status-disabled: #8A939D;
+
+    /* SHADOWS */
+    --shadow-sm: 0 1px 3px rgba(29, 39, 51, 0.06), 0 1px 2px rgba(29, 39, 51, 0.04);
+    --shadow-md: 0 4px 12px rgba(29, 39, 51, 0.08);
+    --shadow-lg: 0 10px 24px rgba(29, 39, 51, 0.12);
+
+    /* BORDER RADIUS */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+
+    /* TRANSITIONS */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s ease;
+    --transition-slow: 0.35s ease;
+
+    /* LEGACY ALIASES — mapped forward so nothing breaks while pages migrate.
+       All styles.css/HTML usages have been migrated to the new tokens above.
+       Still referenced by inline styles generated in: admin-reports.js,
+       checkout.js, admin-students.js, admin-vendors.js, vendor-dashboard.js.
+       Remove this block once those files are updated to the new tokens. */
+    --white: var(--surface);
+    --black: var(--text-primary);
+    --grey: var(--text-secondary);
+    --lightGrey: var(--border);
+    --cardWhite: var(--surface);
+    --border-soft: var(--divider);
+    --forest-green: var(--text-primary);
+    --leaf-green: var(--text-secondary);
+    --logo-blue: var(--primary);
+
+    /* SPACING (8px system) */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+
+    /* TYPE SCALE */
+    --text-xs: 0.8rem;
+    --text-sm: 0.9rem;
+    --text-base: 1rem;
+    --text-lg: 1.15rem;
+    --text-xl: 1.35rem;
+    --text-2xl: 1.8rem;
+    --text-3xl: 2.25rem;
+    --text-4xl: 4rem;
+    --text-hero: clamp(2rem, 5vw, 2.7rem);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-    font-family: Verdana, sans-serif;
-    /* Soft Sage base + Warm Gold glow top-right + Forest Green glow bottom-left */
-    background:
-        radial-gradient(circle at 90% 10%, rgba(197, 146, 46, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 10% 85%, rgba(27, 58, 40, 0.08) 0%, transparent 40%),
-        var(--white);
-    background-attachment: fixed;
-    color: var(--black);
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
     min-height: 100vh;
-    padding-bottom: 90px;
-
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background: var(--background);
+    background-attachment: fixed;
 }
 
+body > main {
+    flex: 1;
+}
+
+/* Repeating watermark — the only background texture now */
 body::before {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    /* Ultra-faint inline SVG pattern */
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 10v10M13 10v6M17 10v6M15 20v10M40 10c2 0 4 2 4 6v4h-8v-4c0-4 2-6 4-6zm0 10v10' stroke='%231b3a28' stroke-width='1.2' fill='none' stroke-linecap='round' opacity='0.10'/%3E%3C/svg%3E");
-    background-repeat: repeat;
+    inset: 0;
+    background-image:
+        url("CFL-Logo.png"),
+        url("CFL-Logo.png");
+    background-repeat: repeat, repeat;
+    background-size: 300px auto, 300px auto;
+    background-position: 0 0, 150px 150px;
+    opacity: 0.03;
     pointer-events: none;
-    /* Allows clicks to pass through */
     z-index: -1;
 }
 
 body::after {
     content: "";
     position: fixed;
-    bottom: -50px;
-    right: -50px;
-    width: 350px;
-    height: 350px;
-    background-image: url('CFL-Logo.png');
-    /* or CFL+Logo.png */
+    bottom: -45px;
+    right: -45px;
+    width: 260px;
+    height: 260px;
+    background-image: url("CFL-Logo.png");
     background-size: contain;
     background-repeat: no-repeat;
-    opacity: 0.08;
-    /* Very faint so text stays clear */
+    background-position: center;
+    opacity: 0.04;
     pointer-events: none;
     z-index: -1;
 }
 
 @media (max-width: 600px) {
     body::after {
-        width: 200px;
-        height: 200px;
+        width: 180px;
+        height: 180px;
         bottom: 40px;
         right: 10px;
-        opacity: 0.03;
+        opacity: 0.025;
     }
 }
 
@@ -98,13 +177,13 @@ body::after {
 }
 
 .pageHeader h2 {
-    font-size: 1.8rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 .pageHeader p {
-    color: var(--grey);
+    color: var(--text-secondary);
     margin-top: 5px;
 }
 
@@ -114,9 +193,9 @@ body::after {
    --------------------- */
 
 .navigationBar {
-    border-bottom: 3px solid var(--black);
+    border-bottom: 3px solid var(--text-primary);
     padding: 15px 30px;
-    background: var(--cardWhite);
+    background: var(--surface);
     box-shadow: 0 2px 8px rgba(27, 58, 40, 0.08);
 }
 
@@ -129,13 +208,13 @@ body::after {
 }
 
 .navigationBrand {
-    font-size: 1.3rem;
+    font-size: var(--text-xl);
     font-weight: 700;
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 .navigationBrand a {
-    color: var(--black);
+    color: var(--text-primary);
     text-decoration: underline;
 }
 
@@ -145,7 +224,7 @@ body::after {
 }
 
 .navigationLinks a {
-    color: var(--black);
+    color: var(--text-primary);
     font-weight: 600;
     text-decoration: none;
     padding: 5px 0;
@@ -154,41 +233,24 @@ body::after {
 
 .navigationLinks a:hover,
 .navigationLinks a.active {
-    border-bottom-color: var(--lightGrey);
-    color: var(--lightGrey);
+    border-bottom-color: var(--border);
+    color: var(--border);
 }
 
 .navigationUser {
     display: flex;
     align-items: center;
     gap: 15px;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
 }
 
 .userBadge {
-    border: 2px solid var(--lightGrey);
+    border: 2px solid var(--border);
     background: #fbf7ee;
-    color: var(--black);
+    color: var(--text-primary);
     padding: 4px 14px;
     border-radius: 20px;
     font-weight: 600;
-}
-
-.balanceBadge {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--cardWhite);
-    border: 2px solid var(--lightGrey);
-    color: var(--black);
-    border-radius: 25px;
-    padding: 10px 24px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    z-index: 9999;
-    box-shadow: 0 4px 14px rgba(27, 58, 40, 0.18);
-    white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -208,15 +270,14 @@ body::after {
 
 @media (max-width: 480px) {
     .pageHeader h2 {
-        font-size: 1.4rem;
+        font-size: var(--text-xl);
     }
 
     .navigationUser {
-        font-size: 0.8rem;
+        font-size: var(--text-xs);
     }
 
-    .userBadge,
-    .balanceBadge {
+    .userBadge {
         padding: 4px 12px;
     }
 }
@@ -228,21 +289,57 @@ body::after {
 .defaultButton {
     width: 100%;
     padding: 12px;
-    background: var(--black);
-    color: #ffffff;
-    border: 2px solid var(--black);
-    border-radius: 6px;
-    font-size: 1rem;
+    background: var(--primary);
+    color: var(--text-light);
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
     font-weight: 600;
     cursor: pointer;
     margin-top: 5px;
-    transition: background 0.2s, border-color 0.2s;
+    transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
 }
 
 .defaultButton:hover {
-    background: var(--logo-blue);
-    border-color: var(--logo-blue);
-    color: var(--white);
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: var(--text-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.defaultButton:active {
+    transform: translateY(0);
+}
+
+.secondaryButton {
+    display: inline-block;
+    padding: 8px 24px;
+    background: var(--surface);
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
+}
+
+.secondaryButton:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-hover);
+    color: var(--primary-hover);
+    transform: translateY(-1px);
 }
 
 .defaultButton:focus-visible,
@@ -252,62 +349,6 @@ body::after {
     outline-offset: 3px;
 }
 
-.secondaryButton {
-    display: inline-block;
-    padding: 8px 24px;
-    border: 2px solid var(--lightGrey);
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: var(--black);
-    background: var(--cardWhite);
-    cursor: pointer;
-    text-decoration: none;
-    transition: background 0.2s, color 0.2s;
-}
-
-.secondaryButton:hover {
-    background: var(--lightGrey);
-    color: #ffffff;
-}
-
-
-/* ========================================
-   CHECKOUT REMOVE BUTTON
-   ======================================== */
-
-.checkout-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--grey);
-}
-
-.checkout-item:last-child {
-    border-bottom: none;
-}
-
-.item-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.remove-item-btn {
-    background: none;
-    border: none;
-    color: #c62828;
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: background 0.2s;
-}
-
-.remove-item-btn:hover {
-    background: #ffebeb;
-}
 
 
 /* ========================================
@@ -318,7 +359,7 @@ body::after {
     display: flex;
     justify-content: space-between;
     padding: 6px 0;
-    border-bottom: 1px solid var(--grey);
+    border-bottom: 1px solid var(--text-secondary);
 }
 
 .order-item-row:last-child {
@@ -327,26 +368,26 @@ body::after {
 
 .order-item-name {
     font-weight: 600;
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 .order-item-price {
     font-weight: 700;
-    color: var(--lightGrey);
+    color: var(--border);
 }
 
 /* Empty cart message */
 #empty-cart-message {
     text-align: center;
     padding: 40px;
-    border: 2px solid var(--black);
+    border: 2px solid var(--text-primary);
     border-radius: 10px;
     margin-bottom: 20px;
-    background: var(--cardWhite);
+    background: var(--surface);
 }
 
 #empty-cart-message p {
-    color: var(--grey);
+    color: var(--text-secondary);
 }
 
 #empty-cart-message .secondaryButton {
@@ -394,16 +435,16 @@ body::after {
 
 .loginHeader h1,
 .roleLandingCard h1 {
-    color: var(--forest-green);
-    font-size: clamp(2rem, 5vw, 2.7rem);
+    color: var(--text-primary);
+    font-size: var(--text-hero);
     line-height: 1.1;
     letter-spacing: 0.5px;
 }
 
 .loginSubtitle {
-    color: var(--leaf-green);
+    color: var(--text-secondary);
     margin-top: 7px;
-    font-size: 1rem;
+    font-size: var(--text-base);
 }
 
 .loginCredentials,
@@ -413,7 +454,7 @@ body::after {
     padding: 34px;
     text-align: center;
     background: rgba(244, 248, 243, 0.96);
-    border: 2px solid var(--forest-green);
+    border: 2px solid var(--text-primary);
     border-radius: 16px;
     box-shadow: 0 12px 32px rgba(27, 58, 40, 0.14);
 }
@@ -424,14 +465,14 @@ body::after {
 
 .roleLandingIntro h2,
 .loginCredentials h2 {
-    color: var(--forest-green);
+    color: var(--text-primary);
     margin-bottom: 7px;
-    font-size: 1.35rem;
+    font-size: var(--text-xl);
 }
 
 .roleLandingIntro p,
 .loginRoleDescription {
-    color: var(--leaf-green);
+    color: var(--text-secondary);
     line-height: 1.5;
 }
 
@@ -451,7 +492,7 @@ body::after {
 
 .loginRoleIcon {
     margin-bottom: 8px;
-    font-size: 2.25rem;
+    font-size: var(--text-3xl);
 }
 
 .roleLoginSection {
@@ -462,24 +503,24 @@ body::after {
 .roleLoginSection label {
     display: block;
     margin-bottom: 7px;
-    color: var(--forest-green);
-    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-size: var(--text-sm);
     font-weight: 700;
 }
 
 .roleLoginSection select {
     width: 100%;
     padding: 12px 14px;
-    border: 2px solid var(--border-soft);
+    border: 2px solid var(--divider);
     border-radius: 7px;
-    background: var(--white);
-    color: var(--forest-green);
+    background: var(--surface);
+    color: var(--text-primary);
     font: inherit;
 }
 
 .roleLoginSection select:focus {
     outline: 3px solid rgba(31, 71, 141, 0.16);
-    border-color: var(--logo-blue);
+    border-color: var(--primary);
 }
 
 .roleLoginSection .defaultButton {
@@ -492,16 +533,16 @@ body::after {
     border: 1px solid rgba(197, 146, 46, 0.55);
     border-radius: 7px;
     background: rgba(197, 146, 46, 0.08);
-    color: var(--leaf-green);
-    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
     line-height: 1.45;
 }
 
 .backToRoleSelection {
     display: inline-block;
     margin-top: 18px;
-    color: var(--logo-blue);
-    font-size: 0.9rem;
+    color: var(--primary);
+    font-size: var(--text-sm);
     font-weight: 700;
     text-decoration: none;
 }
@@ -511,17 +552,41 @@ body::after {
 }
 
 .siteFooter {
-    position: relative;
-    padding: 12px 20px;
-    border-top: 1px solid var(--border-soft);
-    background: rgba(244, 248, 243, 0.95);
-    color: var(--leaf-green);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 24px;
+    border-top: 1px solid var(--divider);
+    background: var(--surface);
+    color: var(--text-secondary);
     text-align: center;
-    font-size: 0.8rem;
+    font-size: var(--text-xs);
+}
+
+.balanceBadge {
+    display: block;
+    width: fit-content;
+    margin: 1rem auto;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    border-radius: 20px;
+    padding: 10px 24px;
+    font-weight: 700;
+    font-size: var(--text-lg);
+    white-space: nowrap;
+    box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 480px) {
+    .balanceBadge {
+        padding: 4px 12px;
+    }
 }
 
 @media (max-width: 600px) {
-
     .loginBox,
     .roleLandingPage {
         justify-content: flex-start;
@@ -539,7 +604,6 @@ body::after {
     }
 }
 
-
 /* ----------
    Login form
    ---------- */
@@ -551,8 +615,8 @@ body::after {
 .credentialForm label {
     display: block;
     font-weight: 600;
-    color: var(--black);
-    font-size: 0.85rem;
+    color: var(--text-primary);
+    font-size: var(--text-xs);
     margin-bottom: 4px;
 }
 
@@ -560,17 +624,17 @@ body::after {
 .credentialForm select {
     width: 100%;
     padding: 10px 12px;
-    border: 2px solid var(--grey);
+    border: 2px solid var(--text-secondary);
     border-radius: 6px;
-    font-size: 1rem;
+    font-size: var(--text-base);
     background: #ffffff;
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 .credentialForm input:focus,
 .credentialForm select:focus {
     outline: none;
-    border-color: var(--lightGrey);
+    border-color: var(--border);
 }
 
 @media (max-width: 480px) {
@@ -579,7 +643,7 @@ body::after {
     }
 
     .loginHeader h1 {
-        font-size: 1.8rem;
+        font-size: var(--text-2xl);
     }
 }
 
@@ -589,6 +653,7 @@ body::after {
    -------------------- */
 
 .vendorSelectionContainer {
+    width: 100%;
     max-width: 1200px;
     margin: 30px auto;
     padding: 0 20px;
@@ -601,13 +666,13 @@ body::after {
 }
 
 .vendorBox {
-    border: 2px solid var(--black);
+    border: 2px solid var(--text-primary);
     border-radius: 10px;
     padding: 30px 20px;
-    background: var(--cardWhite);
+    background: var(--surface);
     transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
     text-decoration: none;
-    color: var(--black);
+    color: var(--text-primary);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -618,33 +683,33 @@ body::after {
 }
 
 .vendorBox:hover {
-    border-color: var(--lightGrey);
+    border-color: var(--border);
     transform: translateY(-3px);
     box-shadow: 0 6px 16px rgba(197, 146, 46, 0.2);
 }
 
 .vendorBox h4 {
-    font-size: 1.2rem;
+    font-size: var(--text-lg);
     font-weight: 700;
     text-align: center;
     margin-bottom: 5px;
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 .vendorBox p {
     text-align: center;
-    color: var(--grey);
+    color: var(--text-secondary);
 }
 
 .vendorGridMessage {
     grid-column: 1 / -1;
     padding: 60px 20px;
     text-align: center;
-    color: var(--grey);
+    color: var(--text-secondary);
 }
 
 .vendorGridMessage p:first-child {
-    font-size: 1.15rem;
+    font-size: var(--text-lg);
     font-weight: 700;
 }
 
@@ -658,7 +723,7 @@ body::after {
 
 .vendorStatus {
     margin-top: 4px;
-    font-size: 0.8rem;
+    font-size: var(--text-xs);
     font-weight: 700;
 }
 
@@ -672,8 +737,8 @@ body::after {
 
 .vendorHours {
     margin-top: 2px;
-    color: var(--grey);
-    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
 }
 
 @media (max-width: 768px) {
@@ -703,19 +768,19 @@ body::after {
 }
 
 .menuPageHeader h2 {
-    font-size: 1.8rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     margin-top: 10px;
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 .menuPageHeader .vendorLocation {
-    color: var(--grey);
-    font-size: 1rem;
+    color: var(--text-secondary);
+    font-size: var(--text-base);
 }
 
 .goBackLink {
-    color: var(--black);
+    color: var(--text-primary);
     font-weight: 600;
     text-decoration: none;
     display: inline-block;
@@ -724,8 +789,8 @@ body::after {
 }
 
 .goBackLink:hover {
-    border-bottom-color: var(--lightGrey);
-    color: var(--lightGrey);
+    border-bottom-color: var(--border);
+    color: var(--border);
 }
 
 .menuItemGrid {
@@ -745,16 +810,16 @@ body::after {
 
 .itemNameAbove {
     font-weight: 700;
-    font-size: 1rem;
-    color: var(--black);
+    font-size: var(--text-base);
+    color: var(--text-primary);
     margin-bottom: 8px;
 }
 
 .menuItemBox {
-    border: 2px solid var(--black);
+    border: 2px solid var(--text-primary);
     border-radius: 10px;
     overflow: hidden;
-    background: var(--cardWhite);
+    background: var(--surface);
     transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
     cursor: pointer;
     text-align: center;
@@ -763,11 +828,11 @@ body::after {
 }
 
 .menuItemBox.added {
-    border-color: var(--lightGrey);
+    border-color: var(--border);
 }
 
 .menuItemBox:hover {
-    border-color: var(--lightGrey);
+    border-color: var(--border);
     transform: scale(1.04);
     box-shadow: 0 6px 16px rgba(197, 146, 46, 0.2);
 }
@@ -794,10 +859,10 @@ body::after {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 1.1rem;
+    font-size: var(--text-lg);
     font-weight: 700;
     color: #ffffff;
-    background: var(--black);
+    background: var(--text-primary);
     padding: 8px 20px;
     border-radius: 20px;
     opacity: 0;
@@ -812,21 +877,21 @@ body::after {
 
 .menuItemDescription {
     padding: 0 14px 14px;
-    color: var(--grey);
-    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
     line-height: 1.4;
 }
 
 .menuItemPriceArea {
     padding: 10px 16px 14px 16px;
-    border-top: 2px solid var(--black);
-    background: var(--cardWhite);
+    border-top: 2px solid var(--text-primary);
+    background: var(--surface);
 }
 
 .menuItemPrice {
     font-weight: 700;
-    font-size: 1.15rem;
-    color: var(--lightGrey);
+    font-size: var(--text-lg);
+    color: var(--border);
 }
 
 .menuActions {
@@ -859,16 +924,16 @@ body::after {
     }
 
     .itemNameAbove {
-        font-size: 0.9rem;
+        font-size: var(--text-sm);
     }
 
     .menuItemPictureOverlay {
-        font-size: 0.95rem;
+        font-size: var(--text-sm);
         padding: 6px 14px;
     }
 
     .menuItemPrice {
-        font-size: 1rem;
+        font-size: var(--text-base);
     }
 }
 
@@ -888,16 +953,16 @@ body::after {
     }
 
     .menuItemPrice {
-        font-size: 0.9rem;
+        font-size: var(--text-sm);
     }
 
     .itemNameAbove {
-        font-size: 0.8rem;
+        font-size: var(--text-xs);
         margin-bottom: 5px;
     }
 
     .menuItemPictureOverlay {
-        font-size: 0.85rem;
+        font-size: var(--text-xs);
         padding: 6px 12px;
     }
 }
@@ -908,10 +973,10 @@ body::after {
    ---------------- */
 
 .checkoutItems {
-    border: 2px solid var(--black);
+    border: 2px solid var(--text-primary);
     border-radius: 10px;
     padding: 20px;
-    background: var(--cardWhite);
+    background: var(--surface);
     margin-bottom: 20px;
     box-shadow: 0 2px 8px rgba(27, 58, 40, 0.06);
 }
@@ -923,7 +988,7 @@ body::after {
     align-items: center;
     gap: 1rem;
     padding: 1rem 0;
-    border-bottom: 1px solid var(--grey);
+    border-bottom: 1px solid var(--text-secondary);
 }
 
 .checkoutItem:last-child,
@@ -940,28 +1005,28 @@ body::after {
 
 .itemName {
     font-weight: 700;
-    font-size: 1rem;
-    color: var(--black);
+    font-size: var(--text-base);
+    color: var(--text-primary);
 }
 
 .itemQty {
     min-width: 2rem;
     text-align: center;
     padding: .25rem .5rem;
-    border-left: 1px solid var(--grey);
-    border-right: 1px solid var(--grey);
+    border-left: 1px solid var(--text-secondary);
+    border-right: 1px solid var(--text-secondary);
 }
 
 .itemPrice {
     font-weight: 700;
-    color: var(--lightGrey);
+    color: var(--border);
 }
 
 .quantityControls {
     display: inline-flex;
     width: fit-content;
     align-items: center;
-    border: 2px solid var(--black);
+    border: 2px solid var(--text-primary);
     border-radius: 6px;
     overflow: hidden;
     background: #ffffff;
@@ -972,16 +1037,16 @@ body::after {
     background: transparent;
     padding: .35rem .6rem;
     cursor: pointer;
-    font-size: 1rem;
-    color: var(--black);
+    font-size: var(--text-base);
+    color: var(--text-primary);
     font-weight: 700;
 }
 
 .orderSummary {
-    border: 2px solid var(--black);
+    border: 2px solid var(--text-primary);
     border-radius: 10px;
     padding: 20px;
-    background: var(--cardWhite);
+    background: var(--surface);
     margin-bottom: 25px;
     box-shadow: 0 2px 8px rgba(27, 58, 40, 0.06);
 }
@@ -990,16 +1055,16 @@ body::after {
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
-    color: var(--grey);
+    color: var(--text-secondary);
 }
 
 .summaryRow.total {
     font-weight: 700;
-    font-size: 1.2rem;
-    border-top: 2px solid var(--lightGrey);
+    font-size: var(--text-lg);
+    border-top: 2px solid var(--border);
     padding-top: 12px;
     margin-top: 8px;
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 .checkoutOptions {
@@ -1023,15 +1088,15 @@ body::after {
     border: none;
     background: none;
     cursor: pointer;
-    font-size: 1.3rem;
+    font-size: var(--text-xl);
 }
 
 .studentOrderCard {
     margin-bottom: 20px;
     padding: 20px;
-    border: 2px solid var(--black);
+    border: 2px solid var(--text-primary);
     border-radius: 10px;
-    background: var(--cardWhite);
+    background: var(--surface);
     box-shadow: 0 2px 8px rgba(27, 58, 40, 0.08);
 }
 
@@ -1042,33 +1107,33 @@ body::after {
     gap: 12px;
     padding-bottom: 10px;
     margin-bottom: 12px;
-    border-bottom: 1px solid var(--lightGrey);
+    border-bottom: 1px solid var(--border);
     flex-wrap: wrap;
 }
 
 .studentOrderHeader h3 {
     margin: 0;
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 .studentOrderDate {
     margin-top: 3px;
-    color: var(--grey);
-    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
 }
 
 .studentOrderDetails {
     padding: 12px;
-    border: 1px solid var(--lightGrey);
+    border: 1px solid var(--border);
     border-radius: 6px;
-    background: var(--white);
+    background: var(--surface);
 }
 
 .studentOrderDetails ul {
     padding-left: 20px;
     margin-bottom: 8px;
-    color: var(--black);
-    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-size: var(--text-sm);
 }
 
 .studentOrderItem {
@@ -1078,8 +1143,8 @@ body::after {
 .studentOrderTotal {
     margin: 0;
     padding-top: 7px;
-    border-top: 1px solid var(--border-soft);
-    color: var(--black);
+    border-top: 1px solid var(--divider);
+    color: var(--text-primary);
     font-weight: 700;
 }
 
@@ -1118,46 +1183,46 @@ body::after {
     max-width: 500px;
     margin: 40px auto;
     text-align: center;
-    border: 2px solid var(--black);
+    border: 2px solid var(--text-primary);
     border-radius: 12px;
     padding: 40px 30px;
-    background: var(--cardWhite);
+    background: var(--surface);
     box-shadow: 0 4px 18px rgba(27, 58, 40, 0.12);
 }
 
 .confirmationIcon {
-    font-size: 4rem;
+    font-size: var(--text-4xl);
     display: block;
     margin-bottom: 15px;
 }
 
 .confirmationBox h2 {
-    font-size: 1.8rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
-    color: var(--black);
+    color: var(--text-primary);
     margin-bottom: 10px;
 }
 
 .confirmationMessage {
-    color: var(--grey);
-    font-size: 1.1rem;
+    color: var(--text-secondary);
+    font-size: var(--text-lg);
     margin-bottom: 25px;
 }
 
 .orderDetailsBox {
     text-align: left;
-    border: 2px solid var(--black);
+    border: 2px solid var(--text-primary);
     border-radius: 8px;
     padding: 16px 20px;
     margin-bottom: 20px;
-    background: var(--cardWhite);
+    background: var(--surface);
 }
 
 .orderDetailRow {
     display: flex;
     justify-content: space-between;
     padding: 6px 0;
-    border-bottom: 1px solid var(--grey);
+    border-bottom: 1px solid var(--text-secondary);
 }
 
 .orderDetailRow:last-child {
@@ -1166,17 +1231,17 @@ body::after {
 
 .orderDetailLabel {
     font-weight: 600;
-    color: var(--grey);
+    color: var(--text-secondary);
 }
 
 .detailsOfOrder {
     font-weight: 700;
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 .orderNote {
-    color: var(--grey);
-    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
     margin-bottom: 25px;
 }
 
@@ -1202,10 +1267,10 @@ body::after {
    ========================================================================= */
 
 .vendorOrderCard {
-    border: 2px solid var(--black);
+    border: 2px solid var(--text-primary);
     border-radius: 10px;
     padding: 20px;
-    background: var(--cardWhite);
+    background: var(--surface);
     margin-bottom: 20px;
     box-shadow: 0 2px 8px rgba(27, 58, 40, 0.08);
 }
@@ -1216,7 +1281,7 @@ body::after {
     align-items: center;
     gap: 12px;
     padding-bottom: 12px;
-    border-bottom: 1px solid var(--grey);
+    border-bottom: 1px solid var(--text-secondary);
     margin-bottom: 12px;
 }
 
@@ -1225,7 +1290,7 @@ body::after {
     padding: 6px 14px;
     border-radius: 20px;
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: var(--text-xs);
     white-space: nowrap;
     /* PREVENTS TEXT WRAPPING ON MOBILE */
     color: #ffffff;
