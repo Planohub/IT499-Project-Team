@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 : `<div style="width: 100%; height: 160px; background: #eee; display: flex; align-items:center; justify-content:center; color:#999; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--lightGrey); font-size: 0.9rem;">No Image Available</div>`;
 
             const buttonHTML = isOpen 
-                ? `<button class="defaultButton addToCartBtn" data-id="${item.id}" data-name="${escapeHtml(item.name)}" data-price="${item.price}" style="width: 100%; padding: 10px; font-weight: bold;">➕ Add to Cart</button>`
+                ? `<button class="defaultButton addToCartBtn" data-id="${item.id}" data-name="${escapeHtml(item.name)}" data-price="${item.price}" style="width: 100%; padding: 10px; font-weight: bold;">Add to Cart</button>`
                 : `<button class="secondaryButton" disabled style="width: 100%; padding: 10px; opacity: 0.6; cursor: not-allowed;">Closed</button>`;
 
             return `
