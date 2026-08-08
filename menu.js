@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Set Vendor Header Details
     const vendorNameHeader = document.getElementById('vendor-name');
     const vendorLocationHeader = document.getElementById('vendorLocation');
-    
+
     if (vendorNameHeader) vendorNameHeader.textContent = selectedVendor.name || 'Vendor Menu';
     if (vendorLocationHeader) vendorLocationHeader.textContent = selectedVendor.location || '';
 
@@ -74,11 +74,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         // 4. RENDER THE MENU ITEMS WITH PICTURES
         menuGrid.innerHTML = menuItems.map(item => {
             // 🔥 NEW IMAGE DISPLAY LOGIC 🔥
-            const imageHTML = item.imageUrl 
-                ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--lightGrey);">` 
+            const imageHTML = item.imageUrl
+                ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--lightGrey);">`
                 : `<div style="width: 100%; height: 160px; background: #eee; display: flex; align-items:center; justify-content:center; color:#999; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--lightGrey); font-size: 0.9rem;">No Image Available</div>`;
 
-            const buttonHTML = isOpen 
+            const buttonHTML = isOpen
                 ? `<button class="defaultButton addToCartBtn" data-id="${item.id}" data-name="${escapeHtml(item.name)}" data-price="${item.price}" style="width: 100%; padding: 10px; font-weight: bold;">Add to Cart</button>`
                 : `<button class="secondaryButton" disabled style="width: 100%; padding: 10px; opacity: 0.6; cursor: not-allowed;">Closed</button>`;
 
@@ -97,27 +97,37 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
         }).join('');
 
-        // 5. ATTACH ADD-TO-CART EVENT LISTENERS
         document.querySelectorAll('.addToCartBtn').forEach(button => {
             button.addEventListener('click', function () {
                 const itemId = Number(this.dataset.id);
                 const name = this.dataset.name;
                 const price = Number(this.dataset.price);
 
-                const cart = getCart();
-                const existingItem = cart.find(i => Number(i.itemId) === itemId);
+                let cart = getCart();
+
+                const existingItem = cart.find(
+                    item => Number(item.itemId) === itemId
+                );
 
                 if (existingItem) {
                     existingItem.quantity += 1;
                 } else {
-                    cart.push({ itemId, name, price, quantity: 1 });
+                    cart.push({
+                        itemId: itemId,
+                        name: name,
+                        price: price,
+                        quantity: 1,
+                        vendorId: Number(selectedVendor.vendorId),
+                        vendorName: selectedVendor.name
+                    });
                 }
 
                 saveCart(cart);
                 updateCartCount();
 
-                // Visual Feedback (Button flashes green)
+                // Visual feedback
                 const originalText = this.innerHTML;
+
                 this.innerHTML = '✅ Added!';
                 this.style.backgroundColor = 'var(--success)';
                 this.style.borderColor = 'var(--success)';
@@ -131,11 +141,18 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }, 1000);
             });
         });
-
     } catch (error) {
         console.error('Unable to load vendor menu:', error);
+
         menuGrid.innerHTML = `
-            <div class="vendorGridMessage vendorGridError" style="grid-column: 1 / -1; text-align: center; color: var(--danger);">
+            <div
+                class="vendorGridMessage vendorGridError"
+                style="
+                    grid-column:1 / -1;
+                    text-align:center;
+                    color:var(--danger);
+                "
+            >
                 <p>Unable to load the menu.</p>
                 <p>Please refresh the page or try again later.</p>
             </div>
@@ -348,53 +365,6 @@ function renderMenuItems(items, menuGrid) {
             </div>
         </div>
     `).join('');
-}
-
-
-function attachCartListeners(vendor) {
-    const menuCards =
-        document.querySelectorAll('.menuItemBox[data-item-id]');
-
-    menuCards.forEach(card => {
-        card.addEventListener('click', function () {
-            const itemId = Number(this.dataset.itemId);
-            const itemName = this.dataset.itemName;
-            const itemPrice = Number(this.dataset.itemPrice);
-
-            const cart = getCart();
-
-            const existingItem = cart.find(item =>
-                Number(item.itemId) === itemId
-            );
-
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({
-                    itemId: itemId,
-                    item: itemName,
-                    price: itemPrice,
-                    quantity: 1,
-                    vendorId: vendor.id,
-                    vendorName: vendor.name
-                });
-            }
-
-            const saved = saveCart(cart);
-
-            if (!saved) {
-                alert('Unable to add this item to the cart.');
-                return;
-            }
-
-            updateCartCount();
-            showAddedFeedback(this);
-
-            console.log(
-                `✅ Added SQLite menu item ${itemId} to local cart`
-            );
-        });
-    });
 }
 
 

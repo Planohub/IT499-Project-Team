@@ -1841,24 +1841,27 @@ def get_student_profile(student_id):
 # Student order creation endpoint
 @app.route("/api/orders", methods=["POST"])
 def create_order():
-    """Validate and create a student order in SQLite."""
+    """Validate a cart and create vendor-specific orders in SQLite."""
+
     order_data = request.get_json(silent=True)
 
     if not isinstance(order_data, dict):
-        return jsonify({"error": "A valid JSON request body is required"}), 400
+        return jsonify({
+            "error": "A valid JSON request body is required"
+        }), 400
 
     student_id = order_data.get("studentId")
-    vendor_id = order_data.get("vendorId")
     cart_items = order_data.get("items")
 
     if not isinstance(student_id, int):
-        return jsonify({"error": "A valid student ID is required"}), 400
-
-    if not isinstance(vendor_id, int):
-        return jsonify({"error": "A valid vendor ID is required"}), 400
+        return jsonify({
+            "error": "A valid student ID is required"
+        }), 400
 
     if not isinstance(cart_items, list) or len(cart_items) == 0:
-        return jsonify({"error": "The order must contain at least one item"}), 400
+        return jsonify({
+            "error": "The order must contain at least one item"
+        }), 400
 
     connection = get_db_connection()
 
@@ -1882,77 +1885,84 @@ def create_order():
             return jsonify({"error": "Student not found"}), 404
 
         if student["AccountStatus"] != "Active":
-            return jsonify({"error": "Student account is inactive"}), 403
+            return jsonify({
+                "error": "Student account is inactive"
+            }), 403
 
-        vendor = connection.execute(
-            """
-            SELECT
-                VendorID,
-                VendorName,
-                OperatingStatus
-            FROM Vendor
-            WHERE VendorID = ?
-            """,
-            (vendor_id,),
-        ).fetchone()
-
-        if vendor is None:
-            return jsonify({"error": "Vendor not found"}), 404
-
-        if vendor["OperatingStatus"] != "Active":
-            return jsonify({"error": "Vendor is inactive"}), 400
-
-        validated_items = []
-        subtotal = 0.0
+        # Group validated items by their actual vendor in SQLite.
+        vendor_groups = {}
 
         for cart_item in cart_items:
             if not isinstance(cart_item, dict):
-                return jsonify({"error": "Invalid cart item"}), 400
+                return jsonify({
+                    "error": "Invalid cart item"
+                }), 400
 
             menu_item_id = cart_item.get("itemId")
             quantity = cart_item.get("quantity")
 
             if not isinstance(menu_item_id, int):
                 return jsonify({
-                    "error": "Every cart item must include a valid item ID"
+                    "error":
+                        "Every cart item must include a valid item ID"
                 }), 400
 
             if not isinstance(quantity, int) or quantity <= 0:
                 return jsonify({
-                    "error": "Every cart item must have a positive quantity"
+                    "error":
+                        "Every cart item must have a positive quantity"
                 }), 400
 
             menu_item = connection.execute(
                 """
                 SELECT
-                    MenuItemID,
-                    VendorID,
-                    ItemName,
-                    Price,
-                    IsAvailable,
-                    IsActive
+                    MenuItem.MenuItemID,
+                    MenuItem.VendorID,
+                    MenuItem.ItemName,
+                    MenuItem.Price,
+                    MenuItem.IsAvailable,
+                    MenuItem.IsActive,
+                    Vendor.VendorName,
+                    Vendor.OperatingStatus
                 FROM MenuItem
-                WHERE MenuItemID = ?
-                  AND VendorID = ?
+                JOIN Vendor
+                    ON Vendor.VendorID = MenuItem.VendorID
+                WHERE MenuItem.MenuItemID = ?
                 """,
-                (menu_item_id, vendor_id),
+                (menu_item_id,),
             ).fetchone()
 
             if menu_item is None:
                 return jsonify({
-                    "error": f"Menu item {menu_item_id} was not found"
+                    "error":
+                        f"Menu item {menu_item_id} was not found"
                 }), 400
 
             if not menu_item["IsActive"] or not menu_item["IsAvailable"]:
                 return jsonify({
-                    "error": f"{menu_item['ItemName']} is unavailable"
+                    "error":
+                        f"{menu_item['ItemName']} is unavailable"
                 }), 400
 
+            if menu_item["OperatingStatus"] != "Active":
+                return jsonify({
+                    "error":
+                        f"{menu_item['VendorName']} is inactive"
+                }), 400
+
+            vendor_id = menu_item["VendorID"]
             unit_price = float(menu_item["Price"])
             item_total = round(unit_price * quantity, 2)
-            subtotal += item_total
 
-            validated_items.append({
+            if vendor_id not in vendor_groups:
+                vendor_groups[vendor_id] = {
+                    "vendorId": vendor_id,
+                    "vendorName": menu_item["VendorName"],
+                    "items": [],
+                    "subtotal": 0.0,
+                }
+
+            vendor_groups[vendor_id]["items"].append({
                 "menuItemId": menu_item["MenuItemID"],
                 "name": menu_item["ItemName"],
                 "quantity": quantity,
@@ -1960,72 +1970,158 @@ def create_order():
                 "itemTotal": item_total,
             })
 
-        subtotal = round(subtotal, 2)
-        tax = round(subtotal * 0.075, 2)
-        order_total = round(subtotal + tax, 2)
+            vendor_groups[vendor_id]["subtotal"] += item_total
+
+        # Calculate each vendor-specific order.
+        combined_total = 0.0
+
+        for group in vendor_groups.values():
+            group["subtotal"] = round(group["subtotal"], 2)
+            group["tax"] = round(group["subtotal"] * 0.075, 2)
+            group["total"] = round(
+                group["subtotal"] + group["tax"],
+                2
+            )
+
+            combined_total += group["total"]
+
+        combined_total = round(combined_total, 2)
 
         previous_balance = float(student["MealPlanBalance"])
 
-        if order_total > previous_balance:
-            return jsonify({"error": "Insufficient meal-plan balance"}), 400
-
-        new_balance = round(previous_balance - order_total, 2)
+        if combined_total > previous_balance:
+            return jsonify({
+                "error": "Insufficient meal-plan balance"
+            }), 400
 
         cursor = connection.cursor()
+        created_orders = []
+        running_balance = previous_balance
 
-        cursor.execute(
-            """
-            INSERT INTO FoodOrder (
-                StudentID,
-                VendorID,
-                OrderTotal,
-                CurrentStatus
-            )
-            VALUES (?, ?, ?, ?)
-            """,
-            (student_id, vendor_id, order_total, "Pending"),
-        )
-
-        order_id = cursor.lastrowid
-
-        for item in validated_items:
+        for group in vendor_groups.values():
             cursor.execute(
                 """
-                INSERT INTO OrderItem (
-                    OrderID,
-                    MenuItemID,
-                    Quantity,
-                    UnitPrice,
-                    ItemTotal
+                INSERT INTO FoodOrder (
+                    StudentID,
+                    VendorID,
+                    OrderTotal,
+                    CurrentStatus
                 )
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?)
                 """,
                 (
-                    order_id,
-                    item["menuItemId"],
-                    item["quantity"],
-                    item["unitPrice"],
-                    item["itemTotal"],
+                    student_id,
+                    group["vendorId"],
+                    group["total"],
+                    "Pending",
                 ),
             )
 
-        cursor.execute(
-            """
-            INSERT INTO OrderStatus (
-                OrderID,
-                Status,
-                ChangedBy,
-                Notes
+            order_id = cursor.lastrowid
+
+            for item in group["items"]:
+                cursor.execute(
+                    """
+                    INSERT INTO OrderItem (
+                        OrderID,
+                        MenuItemID,
+                        Quantity,
+                        UnitPrice,
+                        ItemTotal
+                    )
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        order_id,
+                        item["menuItemId"],
+                        item["quantity"],
+                        item["unitPrice"],
+                        item["itemTotal"],
+                    ),
+                )
+
+            cursor.execute(
+                """
+                INSERT INTO OrderStatus (
+                    OrderID,
+                    Status,
+                    ChangedBy,
+                    Notes
+                )
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    order_id,
+                    "Pending",
+                    student_id,
+                    "Order placed by student",
+                ),
             )
-            VALUES (?, ?, ?, ?)
-            """,
-            (
-                order_id,
-                "Pending",
-                student_id,
-                "Order placed by student",
-            ),
-        )
+
+            balance_before_order = running_balance
+
+            running_balance = round(
+                running_balance - group["total"],
+                2
+            )
+
+            cursor.execute(
+                """
+                INSERT INTO TransactionLog (
+                    UserID,
+                    OrderID,
+                    TransactionType,
+                    Amount,
+                    PreviousBalance,
+                    PostBalance,
+                    CreatedBy
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    student_id,
+                    order_id,
+                    "Deduction",
+                    group["total"],
+                    balance_before_order,
+                    running_balance,
+                    student_id,
+                ),
+            )
+
+            created_order = connection.execute(
+                """
+                SELECT OrderDate
+                FROM FoodOrder
+                WHERE OrderID = ?
+                """,
+                (order_id,),
+            ).fetchone()
+
+            created_orders.append({
+                "orderId": order_id,
+                "studentId": student_id,
+                "vendorId": group["vendorId"],
+                "vendorName": group["vendorName"],
+                "orderDate": created_order["OrderDate"],
+                "items": [
+                    {
+                        "itemId": item["menuItemId"],
+                        "name": item["name"],
+                        "price": item["unitPrice"],
+                        "quantity": item["quantity"],
+                        "total": item["itemTotal"],
+                    }
+                    for item in group["items"]
+                ],
+                "subtotal": group["subtotal"],
+                "tax": group["tax"],
+                "total": group["total"],
+                "currentStatus": "Pending",
+                "completedTime": None,
+            })
+
+        new_balance = running_balance
 
         cursor.execute(
             """
@@ -2036,66 +2132,16 @@ def create_order():
             (new_balance, student_id),
         )
 
-        cursor.execute(
-            """
-            INSERT INTO TransactionLog (
-                UserID,
-                OrderID,
-                TransactionType,
-                Amount,
-                PreviousBalance,
-                PostBalance,
-                CreatedBy
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                student_id,
-                order_id,
-                "Deduction",
-                order_total,
-                previous_balance,
-                new_balance,
-                student_id,
-            ),
-        )
-
         connection.commit()
-
-        created_order = connection.execute(
-            """
-            SELECT OrderDate
-            FROM FoodOrder
-            WHERE OrderID = ?
-            """,
-            (order_id,),
-        ).fetchone()
 
         return jsonify({
             "message": "Order created successfully",
             "newBalance": new_balance,
-            "order": {
-                "orderId": order_id,
-                "studentId": student_id,
-                "vendorId": vendor_id,
-                "vendorName": vendor["VendorName"],
-                "orderDate": created_order["OrderDate"],
-                "items": [
-                    {
-                        "itemId": item["menuItemId"],
-                        "name": item["name"],
-                        "price": item["unitPrice"],
-                        "quantity": item["quantity"],
-                        "total": item["itemTotal"],
-                    }
-                    for item in validated_items
-                ],
-                "subtotal": subtotal,
-                "tax": tax,
-                "total": order_total,
-                "currentStatus": "Pending",
-                "completedTime": None,
-            },
+            "orders": created_orders,
+
+            # Preserve compatibility with existing
+            # single-order frontend code.
+            "order": created_orders[0],
         }), 201
 
     except Exception:
@@ -2212,9 +2258,14 @@ def get_student_orders(student_id):
             # 🟢 Dynamically figure out what your Total column is called
             keys = order.keys()
             total_val = 0.0
-            if "Total" in keys: total_val = order["Total"]
-            elif "TotalAmount" in keys: total_val = order["TotalAmount"]
-            elif "Amount" in keys: total_val = order["Amount"]
+            if "OrderTotal" in keys:
+                total_val = order["OrderTotal"]
+            elif "Total" in keys:
+                total_val = order["Total"]
+            elif "TotalAmount" in keys:
+                total_val = order["TotalAmount"]
+            elif "Amount" in keys:
+                total_val = order["Amount"]
 
             # 🟢 Dynamically figure out what your Date column is called
             date_val = "Unknown Date"

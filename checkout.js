@@ -202,14 +202,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
 
-            const selectedVendor = getSelectedVendor();
-
-            if (!selectedVendor) {
-                alert('Please select a vendor before placing an order.');
-                window.location.href = 'student-dashboard.html';
-                return;
-            }
-
             const itemsWithoutIds = currentCart.filter(item =>
                 !Number.isInteger(Number(item.itemId))
             );
@@ -220,10 +212,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 );
                 return;
             }
-
-            const targetVendorId = Number(
-                selectedVendor.vendorId || selectedVendor.id
-            );
 
             placeOrderButton.disabled = true;
             placeOrderButton.textContent = 'Placing Order...';
@@ -236,7 +224,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     },
                     body: JSON.stringify({
                         studentId: Number(studentId),
-                        vendorId: targetVendorId,
                         items: currentCart.map(item => ({
                             itemId: Number(item.itemId),
                             quantity: Number(item.quantity)
@@ -254,8 +241,16 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 clearCart();
 
-                window.location.href =
-                    `confirmation.html?orderId=${result.order.orderId}`;
+                const createdOrders = Array.isArray(result.orders)
+                    ? result.orders
+                    : [result.order].filter(Boolean);
+
+                if (createdOrders.length > 1) {
+                    window.location.href = 'orders.html';
+                } else {
+                    window.location.href =
+                        `confirmation.html?orderId=${createdOrders[0].orderId}`;
+                }
 
             } catch (error) {
                 console.error('Unable to place order:', error);
