@@ -140,6 +140,13 @@ function renderOrders(orders, ordersContainer) {
             `).join('')
             : '<li>No item details available.</li>';
 
+        const statusNoteHTML = order.latestStatusNote
+            ? `
+                <p class="studentOrderStatusNote">
+                    ${escapeHtml(order.latestStatusNote)}
+                </p>
+            `
+            : '';
         return `
             <article class="studentOrderCard">
                 <div class="studentOrderHeader">
@@ -161,6 +168,8 @@ function renderOrders(orders, ordersContainer) {
                         ${escapeHtml(order.currentStatus || 'Pending')}
                     </span>
                 </div>
+
+                ${statusNoteHTML}
 
                 <div class="studentOrderDetails">
                     <ul>

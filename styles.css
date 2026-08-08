@@ -833,8 +833,8 @@ body::after {
 }
 
 .goBackLink:hover {
-    border-bottom-color: var(--border);
-    color: var(--border);
+    border-bottom-color: var(--brand-green);
+    color: var(--brand-green);
 }
 
 .menuItemGrid {
@@ -1194,6 +1194,17 @@ body::after {
 
 .studentOrderViewButton {
     margin-top: 14px;
+}
+
+.studentOrderStatusNote {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    background: var(--primary-light);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
 }
 
 @media (max-width: 600px) {

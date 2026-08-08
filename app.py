@@ -1,8 +1,8 @@
-# Require the existing 24-hour format used throughout the prototype.
 import os
 import re
+import uuid
 
-from werkzeug.utils import secure_filename   # <--- NEW image upload security
+from werkzeug.utils import secure_filename
 from flask import Flask, abort, jsonify, request, send_from_directory
 from database import get_db_connection
 
@@ -10,7 +10,21 @@ app = Flask(__name__)
 
 # --- NEW UPLOAD CONFIGURATION ---
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # Limits uploads to 5MB max
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+
+ALLOWED_IMAGE_EXTENSIONS = {
+    'png',
+    'jpg',
+    'jpeg'
+}
+
+
+def allowed_image_file(filename):
+    """Return True if the uploaded file uses an allowed image extension."""
+    return (
+        '.' in filename
+        and filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+    )
 
 # Existing frontend files that Flask is allowed to serve.
 ALLOWED_FRONTEND_FILES = {
@@ -1252,19 +1266,54 @@ def add_menu_item(vendor_id):
         except ValueError:
             return jsonify({"error": "Invalid price format"}), 400
 
-        # 2. Handle the Image File
+        # 2. Handle the optional image file.
         image_url = None
-        if 'image' in request.files:
-            file = request.files['image']
-            if file and file.filename != '':
-                # Clean the filename to prevent security issues
-                filename = secure_filename(file.filename)
-                # Build the save path: static/uploads/filename.jpg
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                # Save the physical file
-                file.save(filepath)
-                # Create the URL we will save in the database
-                image_url = f"/static/uploads/{filename}"
+
+        if "image" in request.files:
+            image_file = request.files["image"]
+
+            if image_file and image_file.filename:
+
+                if not allowed_image_file(image_file.filename):
+                    return jsonify({
+                        "error": "Only PNG and JPEG images are allowed"
+                    }), 400
+
+                original_filename = secure_filename(
+                    image_file.filename
+                )
+
+                if not original_filename:
+                    return jsonify({
+                        "error": "Invalid image filename"
+                    }), 400
+
+                extension = os.path.splitext(
+                    original_filename
+                )[1].lower()
+
+                filename = (
+                    f"menu_new_"
+                    f"{uuid.uuid4().hex}"
+                    f"{extension}"
+                )
+
+                # Ensure uploads directory exists on every machine.
+                os.makedirs(
+                    app.config["UPLOAD_FOLDER"],
+                    exist_ok=True
+                )
+
+                filepath = os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    filename
+                )
+
+                image_file.save(filepath)
+
+                image_url = (
+                    f"/static/uploads/{filename}"
+                )
 
         # 3. Insert into the database (including the new ImageURL)
         cursor = connection.cursor()
@@ -1297,6 +1346,138 @@ def add_menu_item(vendor_id):
     finally:
         connection.close()
 
+
+# Image-update route
+@app.route("/api/menu-items/<int:menu_item_id>/image", methods=["PATCH"])
+def update_menu_item_image(menu_item_id):
+    """Upload or replace the image for an existing menu item."""
+
+    raw_vendor_id = request.form.get("vendorId")
+
+    try:
+        vendor_id = int(raw_vendor_id)
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "A valid vendor ID is required"
+        }), 400
+
+    image_file = request.files.get("image")
+
+    if not image_file or not image_file.filename:
+        return jsonify({
+            "error": "An image file is required"
+        }), 400
+
+    connection = get_db_connection()
+
+    try:
+        menu_item = connection.execute(
+            """
+            SELECT
+                MenuItemID,
+                VendorID,
+                ImageURL
+            FROM MenuItem
+            WHERE MenuItemID = ?
+            """,
+            (menu_item_id,),
+        ).fetchone()
+
+        if menu_item is None:
+            return jsonify({
+                "error": "Menu item not found"
+            }), 404
+
+        if menu_item["VendorID"] != vendor_id:
+            return jsonify({
+                "error": "This menu item does not belong to the selected vendor"
+            }), 403
+
+        if not allowed_image_file(image_file.filename):
+            return jsonify({
+                "error": "Only PNG and JPEG images are allowed"
+            }), 400
+
+        original_filename = secure_filename(image_file.filename)
+
+        if not original_filename:
+            return jsonify({
+                "error": "Invalid image filename"
+            }), 400
+
+        extension = os.path.splitext(original_filename)[1].lower()
+
+        filename = (
+            f"menu_{menu_item_id}_"
+            f"{uuid.uuid4().hex}"
+            f"{extension}"
+        )
+
+        os.makedirs(
+            app.config["UPLOAD_FOLDER"],
+            exist_ok=True
+        )
+
+        filepath = os.path.join(
+            app.config["UPLOAD_FOLDER"],
+            filename
+        )
+
+        image_file.save(filepath)
+
+        image_url = f"/static/uploads/{filename}"
+
+        old_image_url = menu_item["ImageURL"]
+
+        connection.execute(
+            """
+            UPDATE MenuItem
+            SET ImageURL = ?
+            WHERE MenuItemID = ?
+            """,
+            (
+                image_url,
+                menu_item_id,
+            ),
+        )
+
+        connection.commit()
+
+        # Remove the previous image if one existed and it is different.
+        if old_image_url and old_image_url != image_url:
+            old_filename = os.path.basename(old_image_url)
+
+            old_filepath = os.path.join(
+                app.config["UPLOAD_FOLDER"],
+                old_filename
+            )
+
+            if os.path.exists(old_filepath):
+                try:
+                    os.remove(old_filepath)
+                except OSError as error:
+                    print(
+                        f"Unable to remove old menu image: {error}"
+                    )
+
+        return jsonify({
+            "message": "Menu item image updated successfully",
+            "imageUrl": image_url
+        })
+
+    except Exception as error:
+        connection.rollback()
+
+        print(
+            f"Error updating menu item image: {error}"
+        )
+
+        return jsonify({
+            "error": "An internal server error occurred"
+        }), 500
+
+    finally:
+        connection.close()
 
 # Menu item update endpoint
 @app.route("/api/menu-items/<int:menu_item_id>", methods=["PATCH"])
