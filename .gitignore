@@ -2,6 +2,4 @@
 venv/
 __pycache__/
 *.pyc
-campus_food_link.db
 campus_food_link_before_images.db
-static/uploads/*
